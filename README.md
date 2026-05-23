@@ -1,6 +1,6 @@
 # DiceCraft
 
-基于多Agent的桌游创作与游玩平台。
+基于多Agent的桌游创作与游玩平台。[项目规划与开题报告](task.md)
 
 ## 技术栈
 
@@ -50,4 +50,8 @@ tests/
 ├── model/openai.test.ts   # 流式响应解析测试
 ├── tool/time.test.ts      # 时间工具测试
 └── agent/loop.test.ts     # Agent 循环测试
+
+docs/
+├── PLAN-agent-loop.md     # Agent Loop 实现计划（已完成）
+└── PLAN-subagent.md       # Subagent 设计计划
 ```
