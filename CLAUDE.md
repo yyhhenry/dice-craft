@@ -46,6 +46,12 @@ bun run check
 1. 所有测试通过
 2. 没有类型错误
 
+## Git 规范
+
+- 不要主动进行 `git commit` 或 `git push`
+- 用户说"commit and push"时，只执行一次，后续不要再自动 commit/push
+- 完成任务后可以问用户是否需要 commit，但不要自行决定
+
 ## 代码规范
 
 - 源码中的字符串（错误信息、日志、CLI 提示）使用英文
