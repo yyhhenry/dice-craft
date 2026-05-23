@@ -2,12 +2,13 @@ import { OpenAIModel, type ModelConfig } from "./model/openai"
 import { ToolRegistry } from "./tool/base"
 import { loadBuiltinTools } from "./tool/builtin"
 import { createSpawnSubagentTool } from "./tool/task"
-import { createSkillTool } from "./tool/skill"
+import { createSkillTool, discoverSkills, fmtSkills } from "./tool/skill"
 import { AgentRegistry, loadAgents } from "./agent"
 import { SubagentDispatcher } from "./agent/subagent"
 import { AgentLoop } from "./agent/loop"
 import { SessionStore } from "./session/store"
 import { SessionManager } from "./session/manager"
+import { WorkspaceGuard } from "./workspace/guard"
 import type { WorkspaceID } from "./workspace/types"
 
 export interface App {
@@ -18,6 +19,7 @@ export interface App {
   dispatcher: SubagentDispatcher
   primaryAgent: AgentLoop
   primaryPrompt: string
+  workspacePath: string
 }
 
 function loadConfig(): ModelConfig {
@@ -34,6 +36,7 @@ function loadConfig(): ModelConfig {
 export function createApp(options?: {
   dataDir?: string
   workspaceId?: WorkspaceID
+  workspacePath?: string
   skillsDir?: string
 }): App {
   const config = loadConfig()
@@ -44,8 +47,11 @@ export function createApp(options?: {
   const primary = agentRegistry.getPrimary()
   if (!primary) throw new Error("No primary agent found")
 
+  const workspacePath = options?.workspacePath ?? process.cwd()
+  const guard = new WorkspaceGuard(workspacePath)
+
   const toolRegistry = new ToolRegistry()
-  for (const tool of loadBuiltinTools()) {
+  for (const tool of loadBuiltinTools(guard)) {
     toolRegistry.register(tool)
   }
 
@@ -58,12 +64,18 @@ export function createApp(options?: {
   toolRegistry.register(createSpawnSubagentTool(dispatcher))
 
   // Register skill tool if skillsDir is provided
-  if (options?.skillsDir) {
-    toolRegistry.register(createSkillTool(options.skillsDir))
+  const skillsDir = options?.skillsDir
+  if (skillsDir) {
+    toolRegistry.register(createSkillTool(skillsDir))
   }
 
+  // Build available skills section for system prompt
+  const skillsSection = skillsDir ? fmtSkills(discoverSkills(skillsDir), true) : ""
+
+  const fullPrompt = [primary.systemPrompt ?? "", skillsSection].filter(Boolean).join("\n\n")
+
   const primaryAgent = new AgentLoop(model, toolRegistry, {
-    systemPrompt: primary.systemPrompt,
+    systemPrompt: fullPrompt,
   })
 
   return {
@@ -73,6 +85,7 @@ export function createApp(options?: {
     sessionManager,
     dispatcher,
     primaryAgent,
-    primaryPrompt: primary.systemPrompt ?? "",
+    primaryPrompt: fullPrompt,
+    workspacePath,
   }
 }

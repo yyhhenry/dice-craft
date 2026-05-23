@@ -19,4 +19,9 @@ export class WorkspaceGuard {
     if (path.isAbsolute(filepath)) return filepath
     return path.resolve(this.workspacePath, filepath)
   }
+
+  /** Get the workspace root path for display */
+  getWorkspacePath(): string {
+    return this.workspacePath
+  }
 }

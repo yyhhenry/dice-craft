@@ -12,6 +12,7 @@ async function main() {
   const app = createApp({
     dataDir: "data",
     workspaceId: workspace.id,
+    workspacePath: workspace.path,
     skillsDir: workspace.skillsDir,
   })
 

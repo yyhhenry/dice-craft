@@ -1,20 +1,20 @@
 import type { Tool, ToolResult } from "./base"
 
-export const GetCurrentTimeTool: Tool = {
-  id: "get_current_time",
-  description: "Get current time, supports specifying timezone offset (hours from UTC)",
-  parameters: {
-    type: "object",
-    properties: {
-      timezone_offset: {
-        type: "number",
-        description: "Timezone offset from UTC in hours. e.g. 8 for UTC+8, -5 for UTC-5. Defaults to 8 (Beijing time)",
+export function createTimeTool(): Tool {
+  return {
+    id: "get_current_time",
+    description: "Get current time, supports specifying timezone offset (hours from UTC)",
+    parameters: {
+      type: "object",
+      properties: {
+        timezone_offset: {
+          type: "number",
+          description: "Timezone offset from UTC in hours. e.g. 8 for UTC+8, -5 for UTC-5. Defaults to 8 (Beijing time)",
+        },
       },
+      required: [],
     },
-    required: [],
-  },
-  execute: async (args: Record<string, unknown>): Promise<ToolResult> => {
-    try {
+    async execute(args: Record<string, unknown>): Promise<ToolResult> {
       const offset = (args.timezone_offset as number) ?? 8
       const now = new Date()
       const utc = now.getTime() + now.getTimezoneOffset() * 60000
@@ -32,11 +32,6 @@ export const GetCurrentTimeTool: Tool = {
       return {
         content: `Current time: ${year}-${month}-${day} ${hours}:${minutes}:${seconds} (${timezoneName})`,
       }
-    } catch (error) {
-      return {
-        content: `Failed to get time: ${error instanceof Error ? error.message : String(error)}`,
-        isError: true,
-      }
-    }
-  },
+    },
+  }
 }

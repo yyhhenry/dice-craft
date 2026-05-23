@@ -4,9 +4,11 @@ import { type WorkspaceID, type UserID, type WorkspaceInfo } from "./types"
 
 export class WorkspaceManager {
   private baseDir: string
+  private metaDir: string
 
   constructor(baseDir: string) {
     this.baseDir = path.resolve(baseDir)
+    this.metaDir = path.join(this.baseDir, ".meta")
   }
 
   initCLI(): WorkspaceInfo {
@@ -21,6 +23,7 @@ export class WorkspaceManager {
     const skillsDir = path.join(wsPath, "skills")
 
     fs.mkdirSync(skillsDir, { recursive: true })
+    fs.mkdirSync(this.metaDir, { recursive: true })
 
     const info: WorkspaceInfo = {
       id,
@@ -31,22 +34,30 @@ export class WorkspaceManager {
       createdAt: new Date().toISOString(),
     }
 
-    const infoPath = path.join(wsPath, "info.json")
-    fs.writeFileSync(infoPath, JSON.stringify(info, null, 2))
+    const metaPath = path.join(this.metaDir, `${id}.json`)
+    fs.writeFileSync(metaPath, JSON.stringify(info, null, 2))
 
     return info
   }
 
   get(id: WorkspaceID): WorkspaceInfo | undefined {
-    const infoPath = path.join(this.baseDir, id, "info.json")
-    if (!fs.existsSync(infoPath)) return undefined
-    return JSON.parse(fs.readFileSync(infoPath, "utf-8"))
+    const metaPath = path.join(this.metaDir, `${id}.json`)
+    if (!fs.existsSync(metaPath)) return undefined
+    return JSON.parse(fs.readFileSync(metaPath, "utf-8"))
   }
 
   list(): WorkspaceInfo[] {
-    if (!fs.existsSync(this.baseDir)) return []
-    return fs.readdirSync(this.baseDir)
-      .map((id) => this.get(id as WorkspaceID))
+    if (!fs.existsSync(this.metaDir)) return []
+    return fs
+      .readdirSync(this.metaDir)
+      .filter((f) => f.endsWith(".json"))
+      .map((f) => {
+        try {
+          return JSON.parse(fs.readFileSync(path.join(this.metaDir, f), "utf-8"))
+        } catch {
+          return undefined
+        }
+      })
       .filter((ws): ws is WorkspaceInfo => ws !== undefined)
   }
 
@@ -58,6 +69,10 @@ export class WorkspaceManager {
     const wsPath = path.join(this.baseDir, id)
     if (fs.existsSync(wsPath)) {
       fs.rmSync(wsPath, { recursive: true, force: true })
+    }
+    const metaPath = path.join(this.metaDir, `${id}.json`)
+    if (fs.existsSync(metaPath)) {
+      fs.unlinkSync(metaPath)
     }
   }
 }

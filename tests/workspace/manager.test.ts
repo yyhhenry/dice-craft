@@ -38,7 +38,8 @@ describe("WorkspaceManager", () => {
     expect(ws.ownerId).toBe(userId("user1"))
     expect(fs.existsSync(ws.path)).toBe(true)
     expect(fs.existsSync(ws.skillsDir)).toBe(true)
-    expect(fs.existsSync(path.join(ws.path, "info.json"))).toBe(true)
+    // info.json should NOT be in workspace directory
+    expect(fs.existsSync(path.join(ws.path, "info.json"))).toBe(false)
   })
 
   test("get workspace by id", () => {
