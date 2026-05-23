@@ -6,13 +6,19 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "bun run index.ts",
-    "test": "bun test"
+    "dev": "bun run src/index.ts",
+    "test": "bun test tests/",
+    "typecheck": "bunx tsc --noEmit",
+    "check": "bun test tests/ && bunx tsc --noEmit"
   },
   "devDependencies": {
     "@types/bun": "latest"
   },
   "peerDependencies": {
     "typescript": "^5"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "openai": "^6.39.0"
   }
 }
