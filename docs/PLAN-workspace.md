@@ -26,7 +26,8 @@ Subagent 系统已完成。现在需要设计 Workspace 和 Session 系统：
 ```
 项目根目录/
 ├── src/
-│   ├── assembly.ts               # 组装模块：创建 model、注册 agent/tool、返回 App
+│   ├── app.ts                    # 应用组装：创建 model、注册 agent/tool、返回 App
+│   ├── index.ts                  # CLI 入口（REPL loop）
 │   ├── workspace/
 │   │   ├── index.ts              # 导出
 │   │   ├── types.ts              # 类型定义
@@ -48,12 +49,19 @@ Subagent 系统已完成。现在需要设计 Workspace 和 Session 系统：
 │   │   ├── base.ts               # Tool 接口 + ToolRegistry
 │   │   ├── builtin.ts            # loadBuiltinTools()
 │   │   ├── time.ts               # get_current_time
-│   │   └── task.ts               # spawn_subagent
-│   └── index.ts                  # CLI 入口（REPL loop）
+│   │   ├── task.ts               # spawn_subagent
+│   │   ├── read.ts               # 读取文件
+│   │   ├── write.ts              # 写入文件
+│   │   ├── edit.ts               # 编辑文件
+│   │   ├── glob.ts               # Glob 搜索
+│   │   ├── grep.ts               # 正则搜索
+│   │   └── skill.ts              # Skill 发现
+│   └── model/
+│       └── openai.ts             # OpenAI SDK 封装
 ├── templates/                    # 预制 skill 模板（git 追踪，后续阶段添加内容）
 │   └── skills/                   # 当前为空目录
 ├── data/                         # 运行时数据（.gitignore）
-│   ├── workspaces/<wsId>/        # Workspace 数据 + agent/skills/ 目录
+│   ├── workspaces/<wsId>/        # Workspace 数据（info.json + skills/）
 │   ├── sessions/<sessionId>/     # Session 数据（info.json + messages.jsonl）
 │   └── users/<userId>/           # 用户数据（后续）
 └── ...
@@ -145,8 +153,7 @@ interface Workspace {
   name: string
   ownerId: UserID
   path: string              // workspace/<wsId>/
-  agentDir: string          // workspace/<wsId>/agent/
-  skillsDir: string         // workspace/<wsId>/agent/skills/
+  skillsDir: string         // workspace/<wsId>/skills/
   createdAt: string
 }
 
@@ -489,21 +496,21 @@ async function main() {
 | `src/agent/subagent.ts` | 依赖 SessionManager，spawn 时持久化，支持 restore | ✅ |
 | `src/agent/loop.ts` | 新增 setHistory/getHistory，内部维护 savedHistory | ✅ |
 
-### Phase 4: 文件操作工具
+### Phase 4: 文件操作工具 ✅
 
-| 文件 | 内容 |
-|------|------|
-| `src/tool/read.ts` | 读取文件，offset/limit |
-| `src/tool/write.ts` | 写入文件 |
-| `src/tool/edit.ts` | 编辑文件 |
+| 文件 | 内容 | 状态 |
+|------|------|------|
+| `src/tool/read.ts` | 读取文件，offset/limit | ✅ |
+| `src/tool/write.ts` | 写入文件 | ✅ |
+| `src/tool/edit.ts` | 编辑文件 | ✅ |
 
-### Phase 5: 搜索工具
+### Phase 5: 搜索工具 ✅
 
-| 文件 | 内容 |
-|------|------|
-| `src/tool/glob.ts` | Glob 搜索 |
-| `src/tool/grep.ts` | 正则搜索 |
-| `src/tool/skill.ts` | 在 agent/skills/ 下搜索 SKILL.md |
+| 文件 | 内容 | 状态 |
+|------|------|------|
+| `src/tool/glob.ts` | Glob 搜索 | ✅ |
+| `src/tool/grep.ts` | 正则搜索 | ✅ |
+| `src/tool/skill.ts` | 在 skills/ 下搜索 SKILL.md | ✅ |
 
 ### Phase 6: 集成 ✅
 
@@ -514,12 +521,12 @@ async function main() {
 
 ### Phase 7: 测试（部分完成）
 
-- ✅ Workspace 创建（验证 agent/skills/ 目录创建）
+- ✅ Workspace 创建（验证 skills/ 目录创建）
 - ✅ Session CRUD + 消息追加
 - ✅ Subagent spawn → 持久化 → 恢复
 - 路径越界拒绝
-- 文件操作工具
-- Skill 发现
+- ✅ 文件操作工具（read/write/edit）
+- ✅ 搜索工具（glob/grep/skill）
 
 ### Phase 8（后续）: 预制 Skill 模板
 

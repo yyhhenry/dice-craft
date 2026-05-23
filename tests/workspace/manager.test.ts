@@ -36,7 +36,7 @@ describe("WorkspaceManager", () => {
     expect(ws.id).toBe(wsId("test-ws"))
     expect(ws.name).toBe("Test Workspace")
     expect(ws.ownerId).toBe(userId("user1"))
-    expect(fs.existsSync(ws.agentDir)).toBe(true)
+    expect(fs.existsSync(ws.path)).toBe(true)
     expect(fs.existsSync(ws.skillsDir)).toBe(true)
     expect(fs.existsSync(path.join(ws.path, "info.json"))).toBe(true)
   })
@@ -83,7 +83,8 @@ describe("WorkspaceManager", () => {
     const ws = manager.initCLI()
     expect(ws.id).toBe(wsId("cli"))
     expect(ws.name).toBe("CLI Workspace")
-    expect(fs.existsSync(ws.agentDir)).toBe(true)
+    expect(fs.existsSync(ws.path)).toBe(true)
+    expect(fs.existsSync(ws.skillsDir)).toBe(true)
   })
 
   test("initCLI returns existing workspace on second call", () => {

@@ -9,7 +9,11 @@ async function main() {
   const workspaceManager = new WorkspaceManager("data/workspaces")
   const workspace = workspaceManager.initCLI()
 
-  const app = createApp({ dataDir: "data", workspaceId: workspace.id })
+  const app = createApp({
+    dataDir: "data",
+    workspaceId: workspace.id,
+    skillsDir: workspace.skillsDir,
+  })
 
   // Restore last session
   const lastSession = app.sessionManager.getLastSession(workspace.id)

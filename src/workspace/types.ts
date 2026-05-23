@@ -25,7 +25,6 @@ export interface WorkspaceInfo {
   name: string
   ownerId: UserID
   path: string
-  agentDir: string
   skillsDir: string
   createdAt: string
 }

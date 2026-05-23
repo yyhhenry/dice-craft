@@ -18,8 +18,7 @@ export class WorkspaceManager {
 
   create(id: WorkspaceID, opts: { name: string; ownerId: UserID }): WorkspaceInfo {
     const wsPath = path.join(this.baseDir, id)
-    const agentDir = path.join(wsPath, "agent")
-    const skillsDir = path.join(agentDir, "skills")
+    const skillsDir = path.join(wsPath, "skills")
 
     fs.mkdirSync(skillsDir, { recursive: true })
 
@@ -28,7 +27,6 @@ export class WorkspaceManager {
       name: opts.name,
       ownerId: opts.ownerId,
       path: wsPath,
-      agentDir,
       skillsDir,
       createdAt: new Date().toISOString(),
     }

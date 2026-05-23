@@ -2,6 +2,7 @@ import { OpenAIModel, type ModelConfig } from "./model/openai"
 import { ToolRegistry } from "./tool/base"
 import { loadBuiltinTools } from "./tool/builtin"
 import { createSpawnSubagentTool } from "./tool/task"
+import { createSkillTool } from "./tool/skill"
 import { AgentRegistry, loadAgents } from "./agent"
 import { SubagentDispatcher } from "./agent/subagent"
 import { AgentLoop } from "./agent/loop"
@@ -30,7 +31,11 @@ function loadConfig(): ModelConfig {
   return { baseUrl, apiKey, model }
 }
 
-export function createApp(options?: { dataDir?: string; workspaceId?: WorkspaceID }): App {
+export function createApp(options?: {
+  dataDir?: string
+  workspaceId?: WorkspaceID
+  skillsDir?: string
+}): App {
   const config = loadConfig()
   const model = new OpenAIModel(config)
 
@@ -51,6 +56,11 @@ export function createApp(options?: { dataDir?: string; workspaceId?: WorkspaceI
 
   const dispatcher = new SubagentDispatcher(model, toolRegistry, agentRegistry, sessionManager, workspaceId)
   toolRegistry.register(createSpawnSubagentTool(dispatcher))
+
+  // Register skill tool if skillsDir is provided
+  if (options?.skillsDir) {
+    toolRegistry.register(createSkillTool(options.skillsDir))
+  }
 
   const primaryAgent = new AgentLoop(model, toolRegistry, {
     systemPrompt: primary.systemPrompt,
