@@ -48,6 +48,12 @@ export class SessionManager {
       .filter((s): s is SessionInfo => s !== undefined && !s.parentSessionId)
   }
 
+  getLastSession(workspaceId: WorkspaceID): SessionInfo | undefined {
+    const sessions = this.listByWorkspace(workspaceId)
+    if (sessions.length === 0) return undefined
+    return sessions.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))[0]
+  }
+
   listSubagents(parentSessionId: string): SessionInfo[] {
     const parent = this.get(parentSessionId)
     if (!parent) return []
@@ -79,6 +85,16 @@ export class SessionManager {
 
   getMessages(sessionId: string): StoredMessage[] {
     return this.store.readMessages(sessionId)
+  }
+
+  clearMessages(sessionId: string): void {
+    this.store.clearMessages(sessionId)
+    const info = this.get(sessionId)
+    if (info) {
+      info.messageCount = 0
+      info.updatedAt = new Date().toISOString()
+      this.store.writeSessionInfo(info)
+    }
   }
 
   update(id: string, updates: Partial<Pick<SessionInfo, "title">>): void {

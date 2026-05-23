@@ -14,19 +14,23 @@
 bun install          # 安装依赖
 bun run dev          # 运行项目
 bun test             # 运行测试
+bun run lint         # ESLint 检查
 bun run typecheck    # 类型检查
-bun run check        # 测试 + 类型检查（每次改完代码必跑）
+bun run check        # 测试 + 类型检查 + lint（每次改完代码必跑）
 ```
 
 ## 项目结构
 
 ```
 src/
+├── app.ts           # 应用组装：创建 model、注册 agent/tool、返回 App
+├── index.ts         # CLI 入口（REPL loop）
 ├── model/           # AI SDK 封装
 ├── tool/            # 工具定义
 ├── agent/           # Agent 循环
 │   └── prompt/      # System prompt 文本文件
-├── index.ts         # 入口
+├── workspace/       # Workspace 管理（目录结构、路径权限）
+├── session/         # Session 管理（JSONL 持久化）
 tests/
 ├── helpers/         # 测试工具（mock server 等）
 ├── model/           # Model 层测试
@@ -42,9 +46,10 @@ tests/
 bun run check
 ```
 
-这会依次执行 `bun test` 和 `bunx tsc --noEmit`，确保：
+这会依次执行 `bun test`、`bunx tsc --noEmit` 和 `eslint`，确保：
 1. 所有测试通过
 2. 没有类型错误
+3. 没有 lint 错误
 
 ## Git 规范
 

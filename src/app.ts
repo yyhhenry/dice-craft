@@ -5,11 +5,15 @@ import { createSpawnSubagentTool } from "./tool/task"
 import { AgentRegistry, loadAgents } from "./agent"
 import { SubagentDispatcher } from "./agent/subagent"
 import { AgentLoop } from "./agent/loop"
+import { SessionStore } from "./session/store"
+import { SessionManager } from "./session/manager"
+import type { WorkspaceID } from "./workspace/types"
 
 export interface App {
   model: OpenAIModel
   agentRegistry: AgentRegistry
   toolRegistry: ToolRegistry
+  sessionManager: SessionManager
   dispatcher: SubagentDispatcher
   primaryAgent: AgentLoop
   primaryPrompt: string
@@ -26,7 +30,7 @@ function loadConfig(): ModelConfig {
   return { baseUrl, apiKey, model }
 }
 
-export function createApp(): App {
+export function createApp(options?: { dataDir?: string; workspaceId?: WorkspaceID }): App {
   const config = loadConfig()
   const model = new OpenAIModel(config)
 
@@ -40,7 +44,12 @@ export function createApp(): App {
     toolRegistry.register(tool)
   }
 
-  const dispatcher = new SubagentDispatcher(model, toolRegistry, agentRegistry)
+  const dataDir = options?.dataDir ?? "data"
+  const workspaceId = (options?.workspaceId ?? "ws_cli") as WorkspaceID
+  const sessionStore = new SessionStore(dataDir)
+  const sessionManager = new SessionManager(sessionStore)
+
+  const dispatcher = new SubagentDispatcher(model, toolRegistry, agentRegistry, sessionManager, workspaceId)
   toolRegistry.register(createSpawnSubagentTool(dispatcher))
 
   const primaryAgent = new AgentLoop(model, toolRegistry, {
@@ -51,6 +60,7 @@ export function createApp(): App {
     model,
     agentRegistry,
     toolRegistry,
+    sessionManager,
     dispatcher,
     primaryAgent,
     primaryPrompt: primary.systemPrompt ?? "",

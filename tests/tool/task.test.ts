@@ -1,9 +1,10 @@
-import { describe, test, expect, mock, beforeEach } from "bun:test"
+import { describe, test, expect, mock, beforeEach, afterEach } from "bun:test"
 import { createSpawnSubagentTool } from "../../src/tool/task"
 import { SubagentDispatcher } from "../../src/agent/subagent"
 import { AgentRegistry } from "../../src/agent/registry"
 import { OpenAIModel, type ChatResponse } from "../../src/model/openai"
 import { ToolRegistry } from "../../src/tool/base"
+import { createTestSessionManager } from "../helpers/session"
 
 function createMockModel(response: ChatResponse): OpenAIModel {
   const config = {
@@ -21,6 +22,7 @@ describe("SpawnSubagentTool", () => {
   let dispatcher: SubagentDispatcher
   let agentRegistry: AgentRegistry
   let toolRegistry: ToolRegistry
+  let sessionManager: ReturnType<typeof createTestSessionManager>
 
   beforeEach(() => {
     agentRegistry = new AgentRegistry()
@@ -31,11 +33,18 @@ describe("SpawnSubagentTool", () => {
       systemPrompt: "You are an explorer.",
     })
     toolRegistry = new ToolRegistry()
+    sessionManager = createTestSessionManager()
     dispatcher = new SubagentDispatcher(
       createMockModel({ content: "Done", toolCalls: null, finishReason: "stop" }),
       toolRegistry,
-      agentRegistry
+      agentRegistry,
+      sessionManager.sessionManager,
+      sessionManager.workspaceId
     )
+  })
+
+  afterEach(() => {
+    sessionManager.cleanup()
   })
 
   test("tool has correct id and description", () => {

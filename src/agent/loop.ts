@@ -18,12 +18,21 @@ export class AgentLoop {
   private maxIterations: number
   private systemPrompt: string | undefined
   private eventQueue: PendingEvent[] = []
+  private savedHistory: ChatCompletionMessageParam[] = []
 
   constructor(model: OpenAIModel, registry: ToolRegistry, config: AgentConfig = {}) {
     this.model = model
     this.registry = registry
     this.maxIterations = config.maxIterations ?? 20
     this.systemPrompt = config.systemPrompt
+  }
+
+  setHistory(history: ChatCompletionMessageParam[]): void {
+    this.savedHistory = [...history]
+  }
+
+  getHistory(): ChatCompletionMessageParam[] {
+    return [...this.savedHistory]
   }
 
   injectEvent(source: string, content: string): void {
@@ -42,7 +51,7 @@ export class AgentLoop {
 
   async run(
     userMessage: string,
-    history: ChatCompletionMessageParam[] = [],
+    history?: ChatCompletionMessageParam[],
     callbacks?: StreamCallbacks
   ): Promise<{ response: string; history: ChatCompletionMessageParam[] }> {
     const messages: ChatCompletionMessageParam[] = []
@@ -51,7 +60,8 @@ export class AgentLoop {
       messages.push({ role: "system", content: this.systemPrompt })
     }
 
-    messages.push(...history, { role: "user", content: userMessage })
+    const effectiveHistory = history ?? this.savedHistory
+    messages.push(...effectiveHistory, { role: "user", content: userMessage })
 
     const tools = this.registry.all()
     let iterations = 0
@@ -63,10 +73,9 @@ export class AgentLoop {
 
       if (result.content && !result.toolCalls) {
         messages.push({ role: "assistant", content: result.content })
-        return {
-          response: result.content,
-          history: messages.slice(1),
-        }
+        const outHistory = messages.slice(1)
+        this.savedHistory = outHistory
+        return { response: result.content, history: outHistory }
       }
 
       if (result.toolCalls) {
@@ -115,16 +124,14 @@ export class AgentLoop {
 
       if (result.content) {
         messages.push({ role: "assistant", content: result.content })
-        return {
-          response: result.content,
-          history: messages.slice(1),
-        }
+        const outHistory = messages.slice(1)
+        this.savedHistory = outHistory
+        return { response: result.content, history: outHistory }
       }
     }
 
-    return {
-      response: "Max iterations reached. Please try again.",
-      history: messages.slice(1),
-    }
+    const outHistory = messages.slice(1)
+    this.savedHistory = outHistory
+    return { response: "Max iterations reached. Please try again.", history: outHistory }
   }
 }

@@ -52,6 +52,13 @@ export class SessionStore {
     })
   }
 
+  clearMessages(sessionId: string): void {
+    const filePath = path.join(this.sessionDir(sessionId), "messages.jsonl")
+    if (fs.existsSync(filePath)) {
+      fs.writeFileSync(filePath, "")
+    }
+  }
+
   deleteSession(sessionId: string): void {
     const dir = this.sessionDir(sessionId)
     if (fs.existsSync(dir)) {

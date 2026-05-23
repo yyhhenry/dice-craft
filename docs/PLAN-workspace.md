@@ -484,10 +484,10 @@ async function main() {
 
 ### Phase 3: Subagent 改造 ✅
 
-| 文件 | 内容 |
-|------|------|
-| `src/agent/subagent.ts` | 依赖 SessionManager，spawn 时持久化，支持 restore |
-| `src/agent/loop.ts` | 新增 setHistory/getHistory，内部维护 savedHistory |
+| 文件 | 内容 | 状态 |
+|------|------|------|
+| `src/agent/subagent.ts` | 依赖 SessionManager，spawn 时持久化，支持 restore | ✅ |
+| `src/agent/loop.ts` | 新增 setHistory/getHistory，内部维护 savedHistory | ✅ |
 
 ### Phase 4: 文件操作工具
 
@@ -507,10 +507,10 @@ async function main() {
 
 ### Phase 6: 集成 ✅
 
-| 文件 | 内容 |
-|------|------|
-| `src/assembly.ts` | 组装模块：创建 model、注册 agent/tool、返回 App |
-| `src/index.ts` | CLI 启动、session 恢复、展示历史 |
+| 文件 | 内容 | 状态 |
+|------|------|------|
+| `src/app.ts` | 组装模块：创建 model、注册 agent/tool、返回 App | ✅ |
+| `src/index.ts` | CLI 启动、session 恢复、展示历史 | ✅ |
 
 ### Phase 7: 测试（部分完成）
 
