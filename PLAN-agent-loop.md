@@ -1,5 +1,7 @@
 # DiceCraft v0 - AI SDK & Agent Loop 实现计划
 
+> **Status: COMPLETED** — 所有 Phase 已实现并通过测试。
+
 ## Context
 
 实现 DiceCraft 的核心模块：AI SDK 封装、Tool 接口、Agent 循环。参考 opencode 项目的设计，简化为 TypeScript + Bun 版本。
