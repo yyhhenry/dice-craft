@@ -1,7 +1,7 @@
 import { describe, test, expect, mock, beforeEach } from "bun:test"
 import { createSpawnSubagentTool } from "../../src/tool/task"
 import { SubagentDispatcher } from "../../src/agent/subagent"
-import { AgentRegistry } from "../../src/agent/agent"
+import { AgentRegistry } from "../../src/agent/registry"
 import { OpenAIModel, type ChatResponse } from "../../src/model/openai"
 import { ToolRegistry } from "../../src/tool/base"
 

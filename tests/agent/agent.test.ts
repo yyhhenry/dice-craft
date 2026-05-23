@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test"
-import { AgentRegistry, type AgentInfo } from "../../src/agent/agent"
+import { AgentRegistry, type AgentInfo } from "../../src/agent/registry"
 
 describe("AgentRegistry", () => {
   test("register and get agent", () => {

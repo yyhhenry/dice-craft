@@ -6,7 +6,7 @@ export interface ModelConfig {
   baseUrl: string
   apiKey: string
   model: string
-  maxTokens: number
+  maxTokens?: number
 }
 
 export interface ChatResponse {

@@ -2,7 +2,7 @@ import type { ChatCompletionMessageParam } from "openai/resources/chat/completio
 import { OpenAIModel } from "../model/openai"
 import { ToolRegistry, type Tool } from "../tool/base"
 import { AgentLoop } from "./loop"
-import type { AgentRegistry } from "./agent"
+import type { AgentRegistry } from "./registry"
 
 export interface SpawnOptions {
   background?: boolean
