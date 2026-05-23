@@ -41,8 +41,9 @@ async function main() {
   })
 
   const ask = () => {
-    rl.question("You: ", async (input) => {
+    rl.question("user$ ", async (input) => {
       const trimmed = input.trim()
+      console.log("")
 
       if (trimmed === "/quit") {
         console.log("Goodbye!")
@@ -56,11 +57,11 @@ async function main() {
       }
 
       try {
-        process.stdout.write("Agent: ")
+        console.log("<agent>")
         const { response } = await agent.run(trimmed, [], {
           onToken: (token) => process.stdout.write(token),
         })
-        console.log("\n")
+        console.log("\n</agent>\n")
       } catch (error) {
         console.error("\nError:", error instanceof Error ? error.message : error)
       }

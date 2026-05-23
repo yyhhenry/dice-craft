@@ -6,43 +6,118 @@ PLAN-agent-loop 已完成：AI SDK 封装、Tool 接口、Agent 循环、CLI 入
 
 现在需要设计 Subagent 系统，让 Primary Agent 能够派发子任务给专门的 Agent 处理。参考 opencode 的 `task.ts` 和 `agent.ts` 设计。
 
-## 两种 Subagent 模式
+## 统一 Subagent 模型
 
-### 1. Task Subagent（fork 模式）
+所有 subagent 都通过 `spawn` 创建，区别仅在于参数配置：
 
-**用途**：派发一个子任务，等待结果返回。一次性执行，不保留上下文。
+| 参数 | 含义 |
+|------|------|
+| `background` | `true` = 后台运行，立即返回 sessionId；`false` = 等待执行完毕，返回结果 |
+| `visible` | `true` = 结果直接展示给用户；`false` = 结果作为 tool 返回值给 Primary |
 
-**对应角色**：Explore（探索研究）、General（细节执行）、Review（质量审查）
+### 典型组合
 
-**特点**：
-- 独立上下文，只看到 Primary 传入的 prompt
-- 执行完毕后返回结果文本给 Primary
-- 不保留会话历史（每次都是新 session）
-- Primary 可以并行派发多个 Task Subagent
+| 场景 | background | visible | 行为 |
+|------|------------|---------|------|
+| Explore/Review | false | false | 等待结果，作为 tool 返回值给 Primary 整合 |
+| NPC 对话 | true | true | 启动后自主运行，直接向群聊发消息 |
+| 后台任务 | true | false | 启动后返回 sessionId，结果可通过 send() 获取 |
 
-**opencode 对应**：`task.ts` 中 `background=false` 的场景
+### Session 生命周期
 
-### 2. NPC Subagent（spawn 模式）
+- `spawn()` 创建 subagent，返回 sessionId
+- subagent 执行完后**不销毁**，保留 session
+- 主 agent 或其他群聊成员可通过 `send(sessionId, message)` 继续与 subagent 交互
+- 异步接收 subagent 完成的消息后，subagent 仍然可用
 
-**用途**：持久化的独立 Agent，拥有自己的知识和性格，可以跨多轮交互。
+## AgentLoop 事件注入机制
 
-**对应角色**：游戏中的 NPC 角色
+异步消息（用户输入、subagent 完成通知等）需要在不打断当前执行的情况下注入到 AgentLoop 中。
 
-**特点**：
-- 独立上下文，只知道自己应知的信息（信息隔离）
-- 有唯一 ID，可以跨多轮对话
-- GM Agent 通过 ID 引用已有的 NPC Subagent
-- NPC 不知道其他 NPC 的私有信息
-- 可以有自己的 system prompt（角色设定）
+### 设计方案
 
-**opencode 对应**：`task.ts` 中 `task_id` 恢复已有 session 的机制
+```typescript
+// src/agent/loop.ts
+interface PendingEvent {
+  source: string  // "user" | "subagent:sessionId" | etc.
+  content: string
+}
+
+class AgentLoop {
+  private eventQueue: PendingEvent[] = []
+
+  // 外部注入事件（线程安全，不打断当前执行）
+  injectEvent(source: string, content: string): void {
+    this.eventQueue.push({ source, content })
+  }
+
+  // 内部检查：在每次工具调用结束后调用
+  private flushEvents(): ChatCompletionMessageParam[] {
+    if (this.eventQueue.length === 0) return []
+
+    const events = this.eventQueue.splice(0)
+    return events.map(e => ({
+      role: "user" as const,
+      content: `[Event from ${e.source}]: ${e.content}`
+    }))
+  }
+
+  async run(...) {
+    // 在工具调用循环中，每次工具执行完毕后检查事件队列
+    for (const call of result.toolCalls) {
+      // ... 执行工具 ...
+
+      // 注入等待中的事件
+      const eventMessages = this.flushEvents()
+      messages.push(...eventMessages)
+    }
+  }
+}
+```
+
+### 行为说明
+
+1. **不打断执行**：事件队列是异步的，`injectEvent()` 立即返回，不阻塞当前流程
+2. **时机**：事件在工具调用结束后、下一次 LLM 调用前注入
+3. **来源标注**：每条事件标注来源（用户、subagent、系统等），让 LLM 知道上下文
+4. **批量处理**：一次工具调用期间积累的事件会批量注入
+
+### 消息格式规范
+
+**事件注入**（XML 包裹，防止内容污染）：
+```
+<event source="user">
+再帮我查一下天气
+</event>
+
+<event source="subagent:abc123">
+探索完成，找到了3个相关文件
+</event>
+
+<event source="system">
+时间已到，请尽快完成任务
+</event>
+```
+
+### 使用场景
+
+```typescript
+// 用户在 agent 执行过程中输入新消息
+loop.injectEvent("user", "再帮我查一下天气")
+
+// subagent 完成后台任务，通知主 agent
+loop.injectEvent(`subagent:${sessionId}`, "探索完成，找到了3个相关文件")
+
+// 系统事件
+loop.injectEvent("system", "时间已到，请尽快完成任务")
+```
 
 ## 目录结构
 
 ```
 src/
 ├── agent/
-│   ├── loop.ts            # Agent 循环（已有）
+│   ├── loop.ts            # Agent 循环（已有，需添加事件注入）
 │   ├── agent.ts           # Agent 类型定义、注册表
 │   ├── subagent.ts        # Subagent 调度器
 │   └── prompt/
@@ -52,7 +127,7 @@ src/
 ├── tool/
 │   ├── base.ts            # Tool 接口（已有）
 │   ├── time.ts            # get_current_time（已有）
-│   └── task.ts            # dispatch_subagent 工具
+│   └── task.ts            # spawn_subagent 工具
 └── ...
 ```
 
@@ -81,6 +156,11 @@ class AgentRegistry {
 
 ```typescript
 // src/agent/subagent.ts
+interface SpawnOptions {
+  background?: boolean  // default: false
+  visible?: boolean     // default: false
+}
+
 interface SubagentResult {
   content: string
   sessionId: string
@@ -89,36 +169,41 @@ interface SubagentResult {
 class SubagentDispatcher {
   constructor(model: OpenAIModel, toolRegistry: ToolRegistry, agentRegistry: AgentRegistry)
 
-  // fork 模式：执行一次，返回结果
-  async fork(agentName: string, prompt: string): Promise<SubagentResult>
-
-  // spawn 模式：创建持久 NPC，返回 sessionId
-  async spawn(agentName: string, sessionId?: string): Promise<string>
+  // 统一 spawn 接口
+  async spawn(agentName: string, prompt: string, options?: SpawnOptions): Promise<SubagentResult>
 
   // 向已存在的 subagent 发送消息
   async send(sessionId: string, message: string): Promise<SubagentResult>
 }
 ```
 
-### Tool：dispatch_subagent
+### Tool：spawn_subagent
 
 ```typescript
 // src/tool/task.ts
 // 给 Primary Agent 使用的 tool
 {
-  id: "dispatch_subagent",
-  description: "Launch a subagent to handle a specific task.",
+  id: "spawn_subagent",
+  description: "Spawn a subagent to handle a specific task.",
   parameters: {
     type: "object",
     properties: {
       agent_type: {
         type: "string",
-        description: "The type of agent to use: explore, general, review"
+        description: "The type of agent to use: explore, general, review, npc"
       },
       prompt: {
         type: "string",
         description: "Detailed task description for the subagent"
       },
+      background: {
+        type: "boolean",
+        description: "If true, return sessionId immediately without waiting for result"
+      },
+      visible: {
+        type: "boolean",
+        description: "If true, subagent output is shown directly to user instead of returned as tool result"
+      }
     },
     required: ["agent_type", "prompt"]
   }
@@ -127,77 +212,41 @@ class SubagentDispatcher {
 
 ## 实现步骤
 
-### Phase 1: Agent 注册表
+### Phase 1: 基础设施
 
-**文件**: `src/agent/agent.ts`
-- `AgentInfo` 接口定义
-- `AgentRegistry` 类
+- `AgentInfo` 接口、`AgentRegistry` 类
 - 注册内置 agents：`build`（primary）、`explore`、`general`、`review`
+- `SubagentDispatcher` 类，实现 `spawn()` 和 `send()`
 
-### Phase 2: Subagent 调度器（fork 模式）
+### Phase 2: AgentLoop 事件注入
 
-**文件**: `src/agent/subagent.ts`
-- `SubagentDispatcher` 类
-- `fork()` 方法：创建新 AgentLoop，传入 subagent 的 systemPrompt + prompt，执行到返回文本
-- 每次 fork 都是全新的上下文（不保留历史）
+- 添加 `eventQueue` 和 `injectEvent()` 方法
+- 在工具调用循环中调用 `flushEvents()` 注入等待的事件
+- 测试：模拟异步事件注入，验证不打断执行
 
-### Phase 3: dispatch_subagent Tool
+### Phase 3: 工具集成
 
-**文件**: `src/tool/task.ts`
-- 实现 `DispatchSubagentTool`
-- 通过 `SubagentDispatcher.fork()` 执行
-- 返回结果文本给 Primary Agent
+- `SpawnSubagentTool` 实现
+- 支持 `background=false` 模式（等待结果返回）
+- subagent 执行完后保留 session，可通过 send() 继续对话
+- 集成到 CLI，测试 Primary 派发 explore subagent
 
 ### Phase 4: Subagent Prompts
 
-**文件**: `src/agent/prompt/explore.txt`
-- 研究型 subagent prompt
-- 专注于搜索、分析、总结
+- `explore.txt` - 研究型 subagent prompt（搜索、分析、总结）
+- `review.txt` - 审查型 subagent prompt（发现问题、逻辑验证）
 
-**文件**: `src/agent/prompt/review.txt`
-- 审查型 subagent prompt
-- 专注于发现问题、逻辑验证
+### Phase 5: 后台与可见模式
 
-### Phase 5: 集成到 CLI
-
-- `AgentRegistry` 注册所有 agents
-- `SubagentDispatcher` 创建
-- `DispatchSubagentTool` 注册到 Primary 的 toolRegistry
-- 测试：Primary 派发 explore subagent 搜索信息
-
-### Phase 6: NPC Subagent 预留设计（不实现）
-
-NPC Subagent 的 spawn 模式需要：
-- 持久化的 session 存储（Map<sessionId, ChatCompletionMessageParam[]>）
-- GM Agent 可以通过 sessionId 引用已有 NPC
-- NPC 的 system prompt 包含角色设定和应知信息
-- 向 NPC 发消息时，在其已有上下文基础上继续对话
-
-```typescript
-// 伪代码 - 未来实现
-const npcSessionId = await dispatcher.spawn("npc", {
-  name: "店主老王",
-  systemPrompt: "你是老王，一家杂货店的老板...",
-  knowledge: ["店里有三把钥匙", "昨晚听到了奇怪的声音"]
-})
-
-// 玩家和 NPC 对话
-const reply = await dispatcher.send(npcSessionId, "老板，昨晚发生了什么？")
-```
-
-NPC Subagent 的 `send()` 会：
-1. 找到 sessionId 对应的消息历史
-2. 追加新的 user message
-3. 用 AgentLoop 继续对话（保留之前的上下文）
-4. 返回 NPC 的回复
-
-这与 fork 模式的关键区别：**fork 是无状态的一次性执行，spawn 是有状态的持续对话**。
+- 支持 `background=true` 模式（立即返回 sessionId）
+- 支持 `visible=true` 模式（结果直接展示给用户）
+- 群聊/频道抽象，subagent 直接向群聊发消息
 
 ## 关键设计决策
 
-1. **Agent 与 Tool 分离**：AgentRegistry 管理 agent 定义，ToolRegistry 管理工具。dispatch_subagent 是一个 tool，但内部通过 SubagentDispatcher 调度 agent。
-2. **fork 优先实现**：v0 阶段只实现 fork 模式，满足 Explore/General/Review 需求。
-3. **NPC 预留接口**：SubagentDispatcher 的 spawn/send 接口先定义，实现留到 NPC 阶段。
+1. **统一 spawn 模型**：所有 subagent 都通过 spawn 创建，用参数控制行为。
+2. **Session 持久化**：subagent 执行完后不销毁，保留 session 供后续 send() 使用。
+3. **事件注入**：通过 `injectEvent()` 实现异步消息注入，不打断当前执行。
 4. **上下文隔离**：subagent 拿不到 Primary 的完整历史，只看到传入的 prompt。
 5. **工具共享**：subagent 可以有自己的 ToolRegistry（比如 explore 只需要 read/glob/grep）。
 
@@ -206,8 +255,10 @@ NPC Subagent 的 `send()` 会：
 1. `bun run check` 全部通过
 2. CLI 中输入需要探索的任务，Primary 自动派发 explore subagent
 3. subagent 返回结果后，Primary 整合回复用户
-4. 测试 fork 模式：独立上下文、结果正确返回
-5. 测试未知 agent type 的错误处理
+4. 测试 spawn(background=false)：独立上下文、结果正确返回
+5. 测试 send()：向已有 subagent 继续发消息
+6. 测试事件注入：模拟异步事件，验证正确注入且不打断执行
+7. 测试未知 agent type 的错误处理
 
 ## 参考文件
 
