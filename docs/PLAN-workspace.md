@@ -12,7 +12,7 @@ Subagent 系统已完成。现在需要设计 Workspace 和 Session 系统：
 
 ## 设计目标
 
-1. **CLI 默认 Workspace**：调试阶段使用 `workspace/cli` 作为默认工作区
+1. **CLI 默认 Workspace**：调试阶段使用 `data/workspaces/cli` 作为默认工作区
 2. **Agent 可修改目录**：workspace 下 `agent/` 目录供 Agent 自由修改
 3. **Skill 作为普通文件**：放在 `agent/skills/` 下，预制 skill 通过 Bun macro 内嵌，创建时写入
 4. **多用户支持**：每个用户有独立的 user ID，可创建多个工作区
@@ -28,11 +28,12 @@ Subagent 系统已完成。现在需要设计 Workspace 和 Session 系统：
 ├── src/
 │   ├── assembly.ts               # 组装模块：创建 model、注册 agent/tool、返回 App
 │   ├── workspace/
+│   │   ├── index.ts              # 导出
 │   │   ├── types.ts              # 类型定义
 │   │   ├── manager.ts            # Workspace 管理器
-│   │   ├── guard.ts              # 路径权限检查
-│   │   └── templates.macro.ts    # Bun macro：内嵌预制 skill 模板
+│   │   └── guard.ts              # 路径权限检查
 │   ├── session/
+│   │   ├── index.ts              # 导出
 │   │   ├── types.ts              # 类型定义
 │   │   ├── manager.ts            # Session 管理器
 │   │   └── store.ts              # JSON/JSONL 文件存储
@@ -51,14 +52,10 @@ Subagent 系统已完成。现在需要设计 Workspace 和 Session 系统：
 │   └── index.ts                  # CLI 入口（REPL loop）
 ├── templates/                    # 预制 skill 模板（git 追踪，后续阶段添加内容）
 │   └── skills/                   # 当前为空目录
-├── workspace/                    # 运行时 workspace（.gitignore）
-│   └── cli/
-│       └── agent/
-│           └── skills/
-├── data/                         # 持久化数据（.gitignore）
-│   ├── users/<userId>/
-│   ├── workspaces/<workspaceId>/
-│   └── sessions/<sessionId>/
+├── data/                         # 运行时数据（.gitignore）
+│   ├── workspaces/<wsId>/        # Workspace 数据 + agent/skills/ 目录
+│   ├── sessions/<sessionId>/     # Session 数据（info.json + messages.jsonl）
+│   └── users/<userId>/           # 用户数据（后续）
 └── ...
 ```
 
@@ -465,29 +462,32 @@ async function main() {
 
 ## 实现步骤
 
-### Phase 1: Workspace 基础
+### Phase 1: Workspace 基础 ✅
 
 | 文件 | 内容 |
 |------|------|
 | `src/workspace/types.ts` | UserID, WorkspaceID, SessionID 类型 |
 | `src/workspace/guard.ts` | WorkspaceGuard 路径权限 |
 | `src/workspace/manager.ts` | WorkspaceManager，含 initCLI、create（创建空的 agent/skills/ 目录）|
+| `src/workspace/index.ts` | 导出 |
 
 > 注意：当前阶段只创建空的 `agent/skills/` 目录，不预制任何 skill。
 
-### Phase 2: Session 存储
+### Phase 2: Session 存储 ✅
 
 | 文件 | 内容 |
 |------|------|
-| `src/session/types.ts` | Session, StoredMessage 类型 |
+| `src/session/types.ts` | `StoredMessage = ChatCompletionMessageParam & { _meta? }`, SessionInfo |
 | `src/session/store.ts` | JSON/JSONL 文件读写 |
 | `src/session/manager.ts` | SessionManager CRUD + subagent 索引 |
+| `src/session/index.ts` | 导出 |
 
-### Phase 3: Subagent 改造
+### Phase 3: Subagent 改造 ✅
 
 | 文件 | 内容 |
 |------|------|
 | `src/agent/subagent.ts` | 依赖 SessionManager，spawn 时持久化，支持 restore |
+| `src/agent/loop.ts` | 新增 setHistory/getHistory，内部维护 savedHistory |
 
 ### Phase 4: 文件操作工具
 
@@ -505,17 +505,18 @@ async function main() {
 | `src/tool/grep.ts` | 正则搜索 |
 | `src/tool/skill.ts` | 在 agent/skills/ 下搜索 SKILL.md |
 
-### Phase 6: 集成
+### Phase 6: 集成 ✅
 
 | 文件 | 内容 |
 |------|------|
-| `src/index.ts` | CLI 启动、恢复、注册工具 |
+| `src/assembly.ts` | 组装模块：创建 model、注册 agent/tool、返回 App |
+| `src/index.ts` | CLI 启动、session 恢复、展示历史 |
 
-### Phase 7: 测试
+### Phase 7: 测试（部分完成）
 
-- Workspace 创建（验证 agent/skills/ 目录创建）
-- Session CRUD + 消息追加
-- Subagent spawn → 持久化 → 恢复
+- ✅ Workspace 创建（验证 agent/skills/ 目录创建）
+- ✅ Session CRUD + 消息追加
+- ✅ Subagent spawn → 持久化 → 恢复
 - 路径越界拒绝
 - 文件操作工具
 - Skill 发现
@@ -546,7 +547,7 @@ async function main() {
 ## 验证方式
 
 1. `bun run check` 全部通过
-2. CLI 启动 → workspace/cli/ 目录创建 + 空的 agent/skills/ 目录
+2. CLI 启动 → data/workspaces/cli/ 目录创建 + 空的 agent/skills/ 目录
 3. 对话 → session 持久化到 data/sessions/
 4. spawn subagent → subagent session 持久化
 5. 重启 → 恢复主 session + subagent

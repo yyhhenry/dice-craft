@@ -30,7 +30,7 @@ async function main() {
 
     try {
       console.log("<agent>")
-      const { response } = await app.primaryAgent.run(input, [], {
+      await app.primaryAgent.run(input, [], {
         onToken: (token) => process.stdout.write(token),
       })
       console.log("\n</agent>\n")

@@ -1,6 +1,6 @@
 import type { ChatCompletionMessageParam } from "openai/resources/chat/completions"
 import { OpenAIModel } from "../model/openai"
-import { ToolRegistry, type Tool } from "../tool/base"
+import { ToolRegistry } from "../tool/base"
 import { AgentLoop } from "./loop"
 import type { AgentRegistry } from "./registry"
 

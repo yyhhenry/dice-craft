@@ -1,5 +1,3 @@
-import type { Server } from "bun"
-
 interface MockResponse {
   content?: string | null
   toolCalls?: Array<{ id: string; name: string; arguments: Record<string, unknown> }> | null

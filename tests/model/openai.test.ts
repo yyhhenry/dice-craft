@@ -1,4 +1,4 @@
-import { describe, test, expect, afterAll } from "bun:test"
+import { describe, test, expect } from "bun:test"
 import { OpenAIModel } from "../../src/model/openai"
 import { createMockOpenAIServer, type RequestHandler } from "../helpers/mock-server"
 

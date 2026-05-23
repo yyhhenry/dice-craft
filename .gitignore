@@ -22,8 +22,5 @@ Thumbs.db
 # Bun
 bun.lockb
 
-# Runtime workspace data
-workspace/
-
-# Persistent session/user data
+# Runtime data (workspaces, sessions, users)
 data/

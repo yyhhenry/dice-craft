@@ -1,5 +1,5 @@
 import OpenAI from "openai"
-import type { ChatCompletionMessageParam, ChatCompletionTool } from "openai/resources/chat/completions"
+import type { ChatCompletionMessageParam } from "openai/resources/chat/completions"
 import type { Tool, ToolCall } from "../tool/base"
 
 export interface ModelConfig {
