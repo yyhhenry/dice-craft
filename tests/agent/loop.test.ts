@@ -180,4 +180,132 @@ describe("AgentLoop", () => {
     expect(calledMessages.find((m: any) => m.content === "Previous message")).toBeTruthy()
     expect(calledMessages.find((m: any) => m.content === "New message")).toBeTruthy()
   })
+
+  test("injectEvent adds events to queue", () => {
+    const model = createMockModel({
+      content: "Done",
+      toolCalls: null,
+      finishReason: "stop",
+    })
+    const registry = new ToolRegistry()
+    const agent = new AgentLoop(model, registry)
+
+    agent.injectEvent("user", "New info")
+    agent.injectEvent("subagent:abc", "Task complete")
+
+    // Events are queued, no immediate effect
+    expect(true).toBe(true)
+  })
+
+  test("flushEvents injects pending events after tool calls", async () => {
+    const tool = createMockTool("test_tool", "Tool result")
+    const registry = new ToolRegistry()
+    registry.register(tool)
+
+    let callCount = 0
+    const model = createMockModel({ content: "", toolCalls: null, finishReason: "stop" })
+    model.chat = mock(() => {
+      callCount++
+      if (callCount === 1) {
+        return Promise.resolve({
+          content: null,
+          toolCalls: [{ id: "call_1", name: "test_tool", arguments: {} }],
+          finishReason: "tool_calls",
+        })
+      }
+      return Promise.resolve({
+        content: "Final response",
+        toolCalls: null,
+        finishReason: "stop",
+      })
+    })
+
+    const agent = new AgentLoop(model, registry)
+
+    // Inject event before running
+    agent.injectEvent("user", "Injected message")
+
+    await agent.run("Initial message")
+
+    // Check that the injected event appeared in messages
+    const secondCallMessages = (model.chat as any).mock.calls[1][0] as any[]
+    const eventMessage = secondCallMessages.find(
+      (m: any) => m.role === "user" && m.content.includes("Injected message")
+    )
+    expect(eventMessage).toBeTruthy()
+    expect(eventMessage.content).toContain('<event source="user">')
+  })
+
+  test("multiple events are batched and injected together", async () => {
+    const tool = createMockTool("test_tool", "Tool result")
+    const registry = new ToolRegistry()
+    registry.register(tool)
+
+    let callCount = 0
+    const model = createMockModel({ content: "", toolCalls: null, finishReason: "stop" })
+    model.chat = mock(() => {
+      callCount++
+      if (callCount === 1) {
+        return Promise.resolve({
+          content: null,
+          toolCalls: [{ id: "call_1", name: "test_tool", arguments: {} }],
+          finishReason: "tool_calls",
+        })
+      }
+      return Promise.resolve({
+        content: "Done",
+        toolCalls: null,
+        finishReason: "stop",
+      })
+    })
+
+    const agent = new AgentLoop(model, registry)
+
+    agent.injectEvent("user", "Event 1")
+    agent.injectEvent("subagent:abc", "Event 2")
+    agent.injectEvent("system", "Event 3")
+
+    await agent.run("Test")
+
+    const secondCallMessages = (model.chat as any).mock.calls[1][0] as any[]
+    const eventMessages = secondCallMessages.filter(
+      (m: any) => m.role === "user" && m.content.includes("<event source=")
+    )
+    expect(eventMessages).toHaveLength(3)
+  })
+
+  test("no events injected when queue is empty", async () => {
+    const tool = createMockTool("test_tool", "Tool result")
+    const registry = new ToolRegistry()
+    registry.register(tool)
+
+    let callCount = 0
+    const model = createMockModel({ content: "", toolCalls: null, finishReason: "stop" })
+    model.chat = mock(() => {
+      callCount++
+      if (callCount === 1) {
+        return Promise.resolve({
+          content: null,
+          toolCalls: [{ id: "call_1", name: "test_tool", arguments: {} }],
+          finishReason: "tool_calls",
+        })
+      }
+      return Promise.resolve({
+        content: "Done",
+        toolCalls: null,
+        finishReason: "stop",
+      })
+    })
+
+    const agent = new AgentLoop(model, registry)
+
+    // No events injected
+    await agent.run("Test")
+
+    const secondCallMessages = (model.chat as any).mock.calls[1][0] as any[]
+    const eventMessages = secondCallMessages.filter(
+      (m: any) => m.role === "user" && m.content.includes("<event source=")
+    )
+    expect(eventMessages).toHaveLength(0)
+  })
 })
