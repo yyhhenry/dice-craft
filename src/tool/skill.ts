@@ -83,22 +83,21 @@ export function createSkillTool(skillsDir: string): Tool {
       properties: {
         name: {
           type: "string",
-          description: "The name of the skill from available_skills",
+          description: "The name of the skill from available_skills. Leave empty to list all available skills.",
         },
       },
-      required: ["name"],
+      required: [],
     },
     async execute(args: Record<string, unknown>): Promise<ToolResult> {
-      const name = args.name as string
+      const name = args.name as string | undefined
+      const skills = discoverSkills(skillsDir)
 
+      // List available skills if no name provided
       if (!name) {
         return {
-          content: "<error>name is required</error>",
-          isError: true,
+          content: fmtSkills(skills, true),
         }
       }
-
-      const skills = discoverSkills(skillsDir)
       const skill = skills.find((s) => s.name === name)
 
       if (!skill) {

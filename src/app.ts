@@ -2,7 +2,7 @@ import { OpenAIModel, type ModelConfig } from "./model/openai"
 import { ToolRegistry } from "./tool/base"
 import { loadBuiltinTools } from "./tool/builtin"
 import { createSpawnSubagentTool } from "./tool/task"
-import { createSkillTool, discoverSkills, fmtSkills } from "./tool/skill"
+import { createSkillTool } from "./tool/skill"
 import { AgentRegistry, loadAgents } from "./agent"
 import { SubagentDispatcher } from "./agent/subagent"
 import { AgentLoop } from "./agent/loop"
@@ -18,7 +18,6 @@ export interface App {
   sessionManager: SessionManager
   dispatcher: SubagentDispatcher
   primaryAgent: AgentLoop
-  primaryPrompt: string
   workspacePath: string
 }
 
@@ -69,13 +68,8 @@ export function createApp(options?: {
     toolRegistry.register(createSkillTool(skillsDir))
   }
 
-  // Build available skills section for system prompt
-  const skillsSection = skillsDir ? fmtSkills(discoverSkills(skillsDir), true) : ""
-
-  const fullPrompt = [primary.systemPrompt ?? "", skillsSection].filter(Boolean).join("\n\n")
-
   const primaryAgent = new AgentLoop(model, toolRegistry, {
-    systemPrompt: fullPrompt,
+    systemPrompt: primary.systemPrompt,
   })
 
   return {
@@ -85,7 +79,6 @@ export function createApp(options?: {
     sessionManager,
     dispatcher,
     primaryAgent,
-    primaryPrompt: fullPrompt,
     workspacePath,
   }
 }
