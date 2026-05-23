@@ -20,10 +20,11 @@
 ## 技术选型
 
 - **语言**：Python，uv管理依赖
-- **Agent SDK**：Anthropic SDK（兼容 MiMo API）
+- **Agent SDK**：Anthropic SDK + OpenAI SDK（均兼容 MiMo API）
 - **模型**：MiMo-V2.5-Pro
 - **API 配置**：
-  - `ANTHROPIC_BASE_URL=https://api.xiaomimimo.com/anthropic`
+  - Anthropic: `ANTHROPIC_BASE_URL=https://api.xiaomimimo.com/anthropic`
+  - OpenAI: `OPENAI_BASE_URL=https://api.xiaomimimo.com/v1`（仅支持 chat completions，不支持 responses）
   - `MIMO_API_KEY=sk-xxx`（在 .env 文件中配置）
 - **项目结构**：新建独立项目目录
 
