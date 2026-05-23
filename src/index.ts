@@ -4,7 +4,12 @@ import { OpenAIModel, type ModelConfig } from "./model/openai"
 import { ToolRegistry } from "./tool/base"
 import { GetCurrentTimeTool } from "./tool/time"
 import { AgentLoop } from "./agent/loop"
+import { AgentRegistry } from "./agent/agent"
+import { SubagentDispatcher } from "./agent/subagent"
+import { createSpawnSubagentTool } from "./tool/task"
 import systemPrompt from "./agent/prompt/builder.txt" with { type: "text" }
+import explorePrompt from "./agent/prompt/explore.txt" with { type: "text" }
+import reviewPrompt from "./agent/prompt/review.txt" with { type: "text" }
 
 function loadConfig(): ModelConfig {
   const baseUrl = process.env.OPENAI_BASE_URL
@@ -24,14 +29,40 @@ function loadConfig(): ModelConfig {
 
 async function main() {
   console.log("🎲 DiceCraft - Tabletop Game Creation & Play Platform")
-  console.log("Phase: Agent Loop Validation")
+  console.log("Phase: Subagent Support")
   console.log("Type /quit to exit\n")
 
   const config = loadConfig()
   const model = new OpenAIModel(config)
 
+  // Register agents
+  const agentRegistry = new AgentRegistry()
+  agentRegistry.register({
+    name: "build",
+    description: "Primary agent for building and creating",
+    mode: "primary",
+    systemPrompt,
+  })
+  agentRegistry.register({
+    name: "explore",
+    description: "Research and search for information",
+    mode: "subagent",
+    systemPrompt: explorePrompt,
+  })
+  agentRegistry.register({
+    name: "review",
+    description: "Review code and find issues",
+    mode: "subagent",
+    systemPrompt: reviewPrompt,
+  })
+
+  // Register tools
   const registry = new ToolRegistry()
   registry.register(GetCurrentTimeTool)
+
+  // Create subagent dispatcher
+  const dispatcher = new SubagentDispatcher(model, registry, agentRegistry)
+  registry.register(createSpawnSubagentTool(dispatcher))
 
   const agent = new AgentLoop(model, registry, { systemPrompt })
 

@@ -2,6 +2,11 @@ import type { ChatCompletionMessageParam } from "openai/resources/chat/completio
 import { OpenAIModel, type StreamCallbacks } from "../model/openai"
 import { ToolRegistry } from "../tool/base"
 
+export interface PendingEvent {
+  source: string
+  content: string
+}
+
 export interface AgentConfig {
   maxIterations?: number
   systemPrompt?: string
@@ -12,12 +17,27 @@ export class AgentLoop {
   private registry: ToolRegistry
   private maxIterations: number
   private systemPrompt: string | undefined
+  private eventQueue: PendingEvent[] = []
 
   constructor(model: OpenAIModel, registry: ToolRegistry, config: AgentConfig = {}) {
     this.model = model
     this.registry = registry
     this.maxIterations = config.maxIterations ?? 20
     this.systemPrompt = config.systemPrompt
+  }
+
+  injectEvent(source: string, content: string): void {
+    this.eventQueue.push({ source, content })
+  }
+
+  private flushEvents(): ChatCompletionMessageParam[] {
+    if (this.eventQueue.length === 0) return []
+
+    const events = this.eventQueue.splice(0)
+    return events.map((e) => ({
+      role: "user" as const,
+      content: `<event source="${e.source}">\n${e.content}\n</event>`,
+    }))
   }
 
   async run(
@@ -85,6 +105,11 @@ export class AgentLoop {
             content: toolResult,
           })
         }
+
+        // Inject pending events after tool calls
+        const eventMessages = this.flushEvents()
+        messages.push(...eventMessages)
+
         continue
       }
 
