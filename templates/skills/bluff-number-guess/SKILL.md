@@ -35,8 +35,14 @@ python skills/bluff-number-guess/game.py --undo
 
 JSON format:
 ```json
-{"round": 3, "type": "number", "guess": 500, "result": "小了", "remaining_count": 499}
+{"round": 3, "type": "number", "guess": 500, "result": "往小猜", "remaining_count": 499}
 ```
+
+Result meanings:
+- `往小猜` — answer is smaller than your guess (guess lower)
+- `往大猜` — answer is bigger than your guess (guess higher)
+- `猜对了` — correct!
+- `是` / `否` — expression results
 
 When `remaining_count <= 10`, a `candidates` field lists the remaining numbers:
 ```json
@@ -45,7 +51,7 @@ When `remaining_count <= 10`, a `candidates` field lists the remaining numbers:
 
 ## How It Works
 
-The system maintains a candidate set. When the user guesses, it splits candidates into groups (small/equal/big or yes/no), then uses weighted random to pick a result. The weighting favors smaller groups (configurable via `--bluff`), so the candidate set shrinks quickly and the user feels like they're guessing well.
+The system maintains a candidate set. When the user guesses, it splits candidates into groups, then uses weighted random to pick a result. The weighting favors smaller groups (configurable via `--bluff`), so the candidate set shrinks quickly and the user feels like they're guessing well.
 
 ## GM Instructions
 

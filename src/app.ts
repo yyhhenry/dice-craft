@@ -1,8 +1,9 @@
+import path from "path"
 import { OpenAIModel, type ModelConfig } from "./model/openai"
 import { ToolRegistry } from "./tool/base"
 import { loadBuiltinTools } from "./tool/builtin"
 import { createSpawnSubagentTool } from "./tool/task"
-import { createSkillTool } from "./tool/skill"
+import { createSkillTool, discoverSkills, fmtSkills } from "./tool/skill"
 import { createMessageTool } from "./tool/message"
 import { createNotifyTool } from "./tool/notify"
 import { AgentRegistry, loadAgents } from "./agent"
@@ -126,8 +127,13 @@ export function createApp(options?: {
     }),
   )
 
+  // Inject discovered skills into system prompt
+  const skills = discoverSkills(skillsDir ?? path.join(workspacePath, "skills"))
+  const skillsSection = fmtSkills(skills, false)
+  const systemPrompt = [primary.systemPrompt, "", skillsSection].join("\n")
+
   const primaryAgent = new AgentLoop(model, toolRegistry, {
-    systemPrompt: primary.systemPrompt,
+    systemPrompt,
     onResponse: (response) => {
       if (onMessage) onMessage(primary.name ?? "Agent", response)
     },

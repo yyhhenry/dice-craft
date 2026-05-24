@@ -83,20 +83,22 @@ def do_guess_num(state: dict, guess: int):
     eq = [guess] if guess in cands else []
     hi = [x for x in cands if x > guess]
 
+    # "往小猜" = answer is smaller → lo
+    # "往大猜" = answer is bigger → hi
     dirs: dict[str, int] = {}
     if lo:
-        dirs["小了"] = len(lo)
+        dirs["往小猜"] = len(lo)
     if eq:
         dirs["猜对了"] = len(eq)
     if hi:
-        dirs["大了"] = len(hi)
+        dirs["往大猜"] = len(hi)
 
     if not dirs:
         print(json.dumps({"error": f"{guess} 不在候选范围内"}))
         return
 
     chosen = pick(bluff_weights(dirs, state["bluff_n"]))
-    remaining = {"猜对了": eq, "小了": lo, "大了": hi}[chosen]
+    remaining = {"猜对了": eq, "往小猜": lo, "往大猜": hi}[chosen]
     apply_guess(state, remaining, chosen, str(guess), "number")
 
 
@@ -149,20 +151,18 @@ def do_undo(state: dict):
     state["history"].pop()
     state["round"] -= 1
 
-    # Rebuild candidates by replaying history
     cands = list(range(1, state["max_num"] + 1))
     for entry in state["history"]:
         if entry["type"] == "number":
             g = int(entry["guess"])
             if entry["result"] == "猜对了":
                 cands = [g]
-            elif entry["result"] == "小了":
+            elif entry["result"] == "往小猜":
                 cands = [x for x in cands if x < g]
             else:
                 cands = [x for x in cands if x > g]
         else:
-            expr = entry["guess"]
-            pred = eval(f"lambda x: {expr}", {"__builtins__": {}}, {})
+            pred = eval(f"lambda x: {entry['guess']}", {"__builtins__": {}}, {})
             if entry["result"] == "是":
                 cands = [x for x in cands if pred(x)]
             else:
