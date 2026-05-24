@@ -10,6 +10,7 @@ export interface PendingEvent {
 export interface AgentConfig {
   maxIterations?: number
   systemPrompt?: string
+  onMessage?: (content: string) => void
 }
 
 export class AgentLoop {
@@ -19,12 +20,17 @@ export class AgentLoop {
   private systemPrompt: string | undefined
   private eventQueue: PendingEvent[] = []
   private savedHistory: ChatCompletionMessageParam[] = []
+  private running = false
+  private pendingMessage: string | null = null
+  private onMessage: ((content: string) => void) | undefined
+  private idleResolvers: Array<() => void> = []
 
   constructor(model: OpenAIModel, registry: ToolRegistry, config: AgentConfig = {}) {
     this.model = model
     this.registry = registry
     this.maxIterations = config.maxIterations ?? 20
     this.systemPrompt = config.systemPrompt
+    this.onMessage = config.onMessage
   }
 
   setHistory(history: ChatCompletionMessageParam[]): void {
@@ -37,6 +43,42 @@ export class AgentLoop {
 
   injectEvent(source: string, content: string): void {
     this.eventQueue.push({ source, content })
+  }
+
+  /** Receive a message. If idle, starts a new loop. If busy, injects as event. */
+  receiveMessage(xmlContent: string): void {
+    if (this.running) {
+      this.injectEvent("chat", xmlContent)
+    } else {
+      this.pendingMessage = xmlContent
+      this.runLoop()
+    }
+  }
+
+  /** Returns a promise that resolves when the current loop finishes. */
+  waitForIdle(): Promise<void> {
+    if (!this.running) return Promise.resolve()
+    return new Promise<void>((resolve) => {
+      this.idleResolvers.push(resolve)
+    })
+  }
+
+  isRunning(): boolean {
+    return this.running
+  }
+
+  private async runLoop(): Promise<void> {
+    this.running = true
+    while (this.pendingMessage) {
+      const msg = this.pendingMessage
+      this.pendingMessage = null
+      await this.run(msg)
+    }
+    this.running = false
+    for (const resolve of this.idleResolvers) {
+      resolve()
+    }
+    this.idleResolvers = []
   }
 
   private flushEvents(): ChatCompletionMessageParam[] {
@@ -52,7 +94,7 @@ export class AgentLoop {
   async run(
     userMessage: string,
     history?: ChatCompletionMessageParam[],
-    callbacks?: StreamCallbacks
+    callbacks?: StreamCallbacks,
   ): Promise<{ response: string; history: ChatCompletionMessageParam[] }> {
     const messages: ChatCompletionMessageParam[] = []
 
@@ -69,7 +111,11 @@ export class AgentLoop {
     while (iterations < this.maxIterations) {
       iterations++
 
-      const result = await this.model.chat(messages, tools.length > 0 ? tools : undefined, callbacks)
+      const result = await this.model.chat(
+        messages,
+        tools.length > 0 ? tools : undefined,
+        callbacks,
+      )
 
       if (result.content && !result.toolCalls) {
         messages.push({ role: "assistant", content: result.content })
@@ -115,7 +161,6 @@ export class AgentLoop {
           })
         }
 
-        // Inject pending events after tool calls
         const eventMessages = this.flushEvents()
         messages.push(...eventMessages)
 
