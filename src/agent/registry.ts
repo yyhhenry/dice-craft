@@ -32,6 +32,7 @@ export class AgentRegistry {
 import builderPrompt from "./prompt/builder.txt" with { type: "text" }
 import explorePrompt from "./prompt/explore.txt" with { type: "text" }
 import reviewPrompt from "./prompt/review.txt" with { type: "text" }
+import npcPrompt from "./prompt/npc.txt" with { type: "text" }
 
 export function loadAgents(): AgentRegistry {
   const registry = new AgentRegistry()
@@ -55,6 +56,13 @@ export function loadAgents(): AgentRegistry {
     description: "Review code and find issues",
     mode: "subagent",
     systemPrompt: reviewPrompt,
+  })
+
+  registry.register({
+    name: "npc",
+    description: "NPC character in a game",
+    mode: "subagent",
+    systemPrompt: npcPrompt,
   })
 
   return registry
