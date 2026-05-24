@@ -93,9 +93,8 @@ export function createApp(options?: {
         npcRegistry.register(tool)
       }
       npcRegistry.register(
-        createMessageTool(chatManager, sessionRef, ctx.sessionId, "npc", (content) => {
-          const identity = chatManager.getIdentity(ctx.sessionId)
-          if (onMessage) onMessage(identity?.name ?? ctx.agentName, content)
+        createMessageTool(chatManager, sessionRef, ctx.sessionId, "npc", (name, _content) => {
+          if (onMessage) onMessage(name, _content)
         }),
       )
       return npcRegistry
@@ -122,8 +121,8 @@ export function createApp(options?: {
 
   // Register message tool for primary agent
   toolRegistry.register(
-    createMessageTool(chatManager, sessionRef, "agent", "agent", (content) => {
-      if (onMessage) onMessage(primary.name ?? "Agent", content)
+    createMessageTool(chatManager, sessionRef, "agent", "agent", (name, _content) => {
+      if (onMessage) onMessage(name, _content)
     }),
   )
 

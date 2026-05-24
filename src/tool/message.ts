@@ -13,23 +13,25 @@ export function createMessageTool(
     id: "message",
     description:
       "Send a message to the chat. The message will be visible to the user. " +
-      "Use this to communicate: narration, system events, or NPC dialogue. " +
-      "Your identity is determined by who you are - you cannot impersonate others.",
+      "Write ONLY what you want to say — like typing in a chat box. " +
+      "You can wrap your own actions in () but do NOT write other characters' actions.",
     parameters: {
       type: "object",
       properties: {
         content: {
           type: "string",
-          description: "The message content to send",
+          description:
+            "What you want to say. Keep it short like a chat message. " +
+            "Wrap your own actions in (), e.g. '(smiles) Hello there!'",
         },
         sender_name: {
           type: "string",
           description:
-            "Display name for this message. For NPCs: your character name (e.g. '莉莉安', '凯尔'). " +
-            "For GM: usually omit to use default.",
+            "Your display name. NPCs MUST set this to their character name (e.g. 'Alice', 'Bob'). " +
+            "GM can omit to use default.",
         },
       },
-      required: ["content"],
+      required: ["content", "sender_name"],
     },
     async execute(args: Record<string, unknown>): Promise<ToolResult> {
       const content = args.content as string
