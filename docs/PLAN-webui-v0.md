@@ -1,8 +1,8 @@
-# Plan: Frontend v0 — DiceCraft Web UI
+# Plan: WebUI v0 — DiceCraft Web 界面
 
 ## 目标
 
-为 DiceCraft 创建一个 Web 前端，将 CLI 交互升级为浏览器界面。v0 聚焦左侧 sidebar + 聊天流，**右侧画布为空**——这是本版本的主要短板，后续版本再填充场景内容。
+为 DiceCraft 创建 WebUI，将 CLI 交互升级为浏览器界面。v0 聚焦左侧 sidebar + 聊天流，**右侧画布为空**——这是本版本的主要短板，后续版本再填充场景内容。
 
 本系统定位为本地使用的 OpenClaw 类工具，不涉及多用户，因此 v0 不做账号系统。
 
@@ -15,7 +15,7 @@
 - **图标**: Lucide（shadcn 推荐，tree-shakeable）
 - **校验**: Zod（API 响应 & 表单校验，类型推导共享前后端 schema）
 - **实时通信**: WebSocket（场景推送、消息流）
-- **位置**: 前端 `packages/dice-craft-frontend/`，后端与现有 `src/` 同项目（Hono 路由集成在现有 Bun 应用中）
+- **位置**: WebUI `packages/dice-craft-webui/`，后端与现有 `src/` 同项目（Hono 路由集成在现有 Bun 应用中）
 
 ### UI 风格
 
@@ -278,7 +278,7 @@ src/                                    # 后端（现有项目，新增 server 
 └── shared/                             # 前后端共享 Zod schema
     └── schemas.ts
 
-packages/dice-craft-frontend/           # 前端
+packages/dice-craft-webui/              # WebUI
 ├── src/
 │   ├── App.tsx                         # 全局布局
 │   ├── main.tsx                        # 入口
@@ -321,8 +321,8 @@ packages/dice-craft-frontend/           # 前端
 
 ```bash
 cd packages
-bunx --bun shadcn@latest init --preset b0 --template vite --pointer dice-craft-frontend
-cd dice-craft-frontend
+bunx --bun shadcn@latest init --preset b0 --template vite --pointer dice-craft-webui
+cd dice-craft-webui
 bun install
 bun add lucide-react zod
 ```
@@ -374,5 +374,4 @@ bun add hono
 - 账号/认证系统（本地工具，无需多用户）
 - 场景渲染（地图、角色状态面板）—— v1 优先，WebSocket 协议已预留
 - 高级设置：文件阅览/编辑界面，用于直接管理 workspace 内容（Skill 文件、游戏状态等）
-- Session 创建/删除操作
 - 移动端适配
