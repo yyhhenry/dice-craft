@@ -1,5 +1,7 @@
 # Chat Message 系统设计计划
 
+> **Status: COMPLETED** — 已实现。ChatManager、message/notify 工具、receiveMessage 抽象、CLI 适配均已完成。
+
 ## 核心思路
 
 把对话抽象成 IM 聊天。Agent 的中间思考、tool call 对用户不可见（只在模型上下文内），模型通过 `message` 工具主动发送消息给用户。一条用户输入可以触发模型发多条消息——有一点进展就先发一条稳住用户。
