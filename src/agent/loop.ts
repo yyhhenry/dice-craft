@@ -10,7 +10,8 @@ export interface PendingEvent {
 export interface AgentConfig {
   maxIterations?: number
   systemPrompt?: string
-  onMessage?: (content: string) => void
+  /** Called when model produces text without using any tool. Fallback output. */
+  onResponse?: (response: string) => void
 }
 
 export class AgentLoop {
@@ -22,7 +23,7 @@ export class AgentLoop {
   private savedHistory: ChatCompletionMessageParam[] = []
   private running = false
   private pendingMessage: string | null = null
-  private onMessage: ((content: string) => void) | undefined
+  private onResponse: ((response: string) => void) | undefined
   private idleResolvers: Array<() => void> = []
 
   constructor(model: OpenAIModel, registry: ToolRegistry, config: AgentConfig = {}) {
@@ -30,7 +31,7 @@ export class AgentLoop {
     this.registry = registry
     this.maxIterations = config.maxIterations ?? 20
     this.systemPrompt = config.systemPrompt
-    this.onMessage = config.onMessage
+    this.onResponse = config.onResponse
   }
 
   setHistory(history: ChatCompletionMessageParam[]): void {
@@ -72,7 +73,11 @@ export class AgentLoop {
     while (this.pendingMessage) {
       const msg = this.pendingMessage
       this.pendingMessage = null
-      await this.run(msg)
+      const { response } = await this.run(msg)
+      // If model produced text without using tools, forward via callback
+      if (response && this.onResponse) {
+        this.onResponse(response)
+      }
     }
     this.running = false
     for (const resolve of this.idleResolvers) {

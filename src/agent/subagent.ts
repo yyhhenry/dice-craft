@@ -100,8 +100,14 @@ export class SubagentDispatcher {
     loop.receiveMessage(content)
 
     if (expectReply) {
-      return loop.waitForIdle()
+      return loop.waitForIdle().then(() => {
+        this.persistLoopHistory(sessionId, loop)
+      })
     }
+    // Fire and forget, persist when done
+    loop.waitForIdle().then(() => {
+      this.persistLoopHistory(sessionId, loop)
+    }).catch(() => {})
     return Promise.resolve()
   }
 
@@ -144,6 +150,14 @@ export class SubagentDispatcher {
 
   getLoop(sessionId: string): AgentLoop | undefined {
     return this.activeLoops.get(sessionId)
+  }
+
+  private persistLoopHistory(sessionId: string, loop: AgentLoop): void {
+    const history = loop.getHistory()
+    this.sessionManager.clearMessages(sessionId)
+    for (const msg of history) {
+      this.sessionManager.appendMessage(sessionId, msg)
+    }
   }
 
   private persistHistory(sessionId: string, history: ChatCompletionMessageParam[]): void {

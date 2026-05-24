@@ -128,6 +128,9 @@ export function createApp(options?: {
 
   const primaryAgent = new AgentLoop(model, toolRegistry, {
     systemPrompt: primary.systemPrompt,
+    onResponse: (response) => {
+      if (onMessage) onMessage(primary.name ?? "Agent", response)
+    },
   })
 
   return {
