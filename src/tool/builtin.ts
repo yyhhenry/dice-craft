@@ -6,6 +6,7 @@ import { createWriteTool } from "./write"
 import { createEditTool } from "./edit"
 import { createGlobTool } from "./glob"
 import { createGrepTool } from "./grep"
+import { createBashTool } from "./bash"
 
 export function loadBuiltinTools(guard: WorkspaceGuard): Tool[] {
   return [
@@ -15,5 +16,6 @@ export function loadBuiltinTools(guard: WorkspaceGuard): Tool[] {
     createEditTool(guard),
     createGlobTool(guard),
     createGrepTool(guard),
+    createBashTool(guard),
   ]
 }
