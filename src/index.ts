@@ -2,39 +2,55 @@ import * as readline from "readline"
 import { createApp } from "./app"
 import { WorkspaceManager } from "./workspace/manager"
 
+function wrapChatXml(sender: string, senderName: string, content: string): string {
+  return `<chat sender="${sender}" sender_name="${senderName}">${content}</chat>`
+}
+
 async function main() {
   console.log("🎲 DiceCraft - Tabletop Game Creation & Play Platform")
-  console.log("Phase: Workspace & Session Support\n")
+  console.log("Chat Mode: messages flow through chat.jsonl\n")
 
   const workspaceManager = new WorkspaceManager("data/workspaces")
   const workspace = workspaceManager.initCLI()
+
+  let primarySessionId = "sess_primary"
 
   const app = createApp({
     dataDir: "data",
     workspaceId: workspace.id,
     workspacePath: workspace.path,
     skillsDir: workspace.skillsDir,
+    primarySessionId,
+    onMessage: (senderName, content) => {
+      console.log(`[${senderName}] ${content}\n`)
+    },
   })
 
   // Restore last session
   const lastSession = app.sessionManager.getLastSession(workspace.id)
-  let sessionId: string | undefined
 
   if (lastSession) {
-    sessionId = lastSession.id
+    primarySessionId = lastSession.id
     const messages = app.sessionManager.getMessages(lastSession.id)
-    // Strip _meta and set as history (skip system prompt, which is handled by AgentLoop)
     const history = messages.map(({ _meta, ...rest }) => rest)
     app.primaryAgent.setHistory(history)
     console.log(`Restored session: ${lastSession.title} (${lastSession.messageCount} messages)`)
 
-    // Restore subagent sessions
     const subagents = app.sessionManager.listSubagents(lastSession.id)
     for (const sub of subagents) {
       app.dispatcher.restore(sub.id)
     }
     if (subagents.length > 0) {
       console.log(`Restored ${subagents.length} subagent session(s)`)
+    }
+
+    // Show recent chat history
+    const chatHistory = app.chatManager.getRecentMessages(primarySessionId, 5)
+    if (chatHistory.length > 0) {
+      console.log("\nRecent chat:")
+      for (const msg of chatHistory) {
+        console.log(`  [${msg.senderName}] ${msg.content}`)
+      }
     }
     console.log("")
   }
@@ -60,26 +76,34 @@ async function main() {
     if (!input) continue
 
     // Create session on first message if needed
-    if (!sessionId) {
+    if (!lastSession) {
       const session = app.sessionManager.create({
         workspaceId: workspace.id,
         agentType: "primary",
         title: input.slice(0, 50),
       })
-      sessionId = session.id
+      primarySessionId = session.id
     }
 
     try {
-      console.log("<agent>")
-      const { history } = await app.primaryAgent.run(input, undefined, {
-        onToken: (token) => process.stdout.write(token),
+      // Write user message to chat
+      app.chatManager.sendMessage(primarySessionId, {
+        content: input,
+        senderId: "user",
+        senderName: "玩家",
+        senderRole: "user",
       })
-      console.log("\n</agent>\n")
 
-      // Persist messages to session
-      app.sessionManager.clearMessages(sessionId)
+      // Send to primary agent via receiveMessage
+      const chatXml = wrapChatXml("user", "玩家", input)
+      app.primaryAgent.receiveMessage(chatXml)
+      await app.primaryAgent.waitForIdle()
+
+      // Persist agent internal messages
+      const history = app.primaryAgent.getHistory()
+      app.sessionManager.clearMessages(primarySessionId)
       for (const msg of history) {
-        app.sessionManager.appendMessage(sessionId, msg)
+        app.sessionManager.appendMessage(primarySessionId, msg)
       }
     } catch (error) {
       console.error("\nError:", error instanceof Error ? error.message : error)

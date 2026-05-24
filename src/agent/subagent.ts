@@ -5,6 +5,7 @@ import { AgentLoop } from "./loop"
 import type { AgentRegistry } from "./registry"
 import type { SessionManager } from "../session/manager"
 import type { WorkspaceID } from "../workspace/types"
+import type { NotifyTarget } from "../tool/notify"
 
 export interface SpawnOptions {
   background?: boolean
@@ -16,6 +17,13 @@ export interface SubagentResult {
   sessionId: string
 }
 
+export interface LoopSetupContext {
+  sessionId: string
+  agentName: string
+}
+
+export type LoopSetupFn = (ctx: LoopSetupContext) => ToolRegistry | undefined
+
 export class SubagentDispatcher {
   private model: OpenAIModel
   private toolRegistry: ToolRegistry
@@ -23,33 +31,35 @@ export class SubagentDispatcher {
   private sessionManager: SessionManager
   private workspaceId: WorkspaceID
   private activeLoops = new Map<string, AgentLoop>()
+  private setupLoop: LoopSetupFn | undefined
 
   constructor(
     model: OpenAIModel,
     toolRegistry: ToolRegistry,
     agentRegistry: AgentRegistry,
     sessionManager: SessionManager,
-    workspaceId: WorkspaceID
+    workspaceId: WorkspaceID,
+    setupLoop?: LoopSetupFn,
   ) {
     this.model = model
     this.toolRegistry = toolRegistry
     this.agentRegistry = agentRegistry
     this.sessionManager = sessionManager
     this.workspaceId = workspaceId
+    this.setupLoop = setupLoop
   }
 
   async spawn(
     agentName: string,
     prompt: string,
     options: SpawnOptions = {},
-    parentSessionId?: string
+    parentSessionId?: string,
   ): Promise<SubagentResult> {
     const agentInfo = this.agentRegistry.get(agentName)
     if (!agentInfo) {
       throw new Error(`Unknown agent type: ${agentName}`)
     }
 
-    // Create persisted session
     const session = this.sessionManager.create({
       workspaceId: this.workspaceId,
       agentType: agentName,
@@ -58,38 +68,48 @@ export class SubagentDispatcher {
       parentSessionId,
     })
 
-    const loop = new AgentLoop(this.model, this.toolRegistry, {
+    const ctx = { sessionId: session.id, agentName }
+    const customRegistry = this.setupLoop?.(ctx)
+    const registry = customRegistry ?? this.toolRegistry
+
+    const loop = new AgentLoop(this.model, registry, {
       systemPrompt: agentInfo.systemPrompt,
     })
     this.activeLoops.set(session.id, loop)
 
     if (options.background) {
-      // Background mode: return sessionId immediately
-      loop.run(prompt).then(({ history }) => {
-        this.persistHistory(session.id, history)
-      }).catch(() => {
-        // Background execution failed
-      })
+      loop.receiveMessage(prompt)
       return { content: "", sessionId: session.id }
     }
 
-    // Foreground mode: wait for result
-    const { response, history } = await loop.run(prompt)
+    loop.receiveMessage(prompt)
+    await loop.waitForIdle()
+    const history = loop.getHistory()
     this.persistHistory(session.id, history)
 
-    return { content: response, sessionId: session.id }
+    return { content: "", sessionId: session.id }
   }
 
-  async send(sessionId: string, message: string): Promise<SubagentResult> {
+  /** Send a message to a subagent via receiveMessage. */
+  send(sessionId: string, content: string, expectReply: boolean): Promise<void> {
     const loop = this.activeLoops.get(sessionId)
     if (!loop) {
       throw new Error(`Session not found: ${sessionId}`)
     }
 
-    const { response, history } = await loop.run(message)
-    this.overwriteHistory(sessionId, history)
+    loop.receiveMessage(content)
 
-    return { content: response, sessionId }
+    if (expectReply) {
+      return loop.waitForIdle()
+    }
+    return Promise.resolve()
+  }
+
+  /** Notify multiple NPCs in parallel. */
+  async notifyMultiple(targets: NotifyTarget[], content: string): Promise<void> {
+    await Promise.all(
+      targets.map((t) => this.send(t.session_id, content, t.expect_reply ?? false)),
+    )
   }
 
   /** Restore an existing session from persisted data into memory */
@@ -98,16 +118,18 @@ export class SubagentDispatcher {
     if (!session) return
 
     const messages = this.sessionManager.getMessages(sessionId)
-    // Convert StoredMessage back to ChatCompletionMessageParam (strip _meta)
     const history: ChatCompletionMessageParam[] = messages.map((m) => {
       const { _meta, ...rest } = m
       return rest as ChatCompletionMessageParam
     })
 
-    const loop = new AgentLoop(this.model, this.toolRegistry, {
+    const ctx = { sessionId, agentName: session.agentType }
+    const customRegistry = this.setupLoop?.(ctx)
+    const registry = customRegistry ?? this.toolRegistry
+
+    const loop = new AgentLoop(this.model, registry, {
       systemPrompt: session.systemPrompt,
     })
-    // Skip the first user message (prompt), rest is history
     loop.setHistory(history.slice(1))
     this.activeLoops.set(sessionId, loop)
   }
@@ -116,19 +138,15 @@ export class SubagentDispatcher {
     return this.activeLoops.has(sessionId)
   }
 
-  /** List subagent sessions for a parent session */
   listSubagents(parentSessionId: string) {
     return this.sessionManager.listSubagents(parentSessionId)
   }
 
-  private persistHistory(sessionId: string, history: ChatCompletionMessageParam[]): void {
-    for (const msg of history) {
-      this.sessionManager.appendMessage(sessionId, msg)
-    }
+  getLoop(sessionId: string): AgentLoop | undefined {
+    return this.activeLoops.get(sessionId)
   }
 
-  private overwriteHistory(sessionId: string, history: ChatCompletionMessageParam[]): void {
-    this.sessionManager.clearMessages(sessionId)
+  private persistHistory(sessionId: string, history: ChatCompletionMessageParam[]): void {
     for (const msg of history) {
       this.sessionManager.appendMessage(sessionId, msg)
     }

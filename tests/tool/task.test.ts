@@ -68,7 +68,8 @@ describe("SpawnSubagentTool", () => {
     })
 
     expect(result.isError).toBeFalsy()
-    expect(result.content).toBe("Done")
+    expect(result.content).toContain("explore")
+    expect(result.content).toContain("sessionId")
   })
 
   test("execute returns error for unknown agent type", async () => {

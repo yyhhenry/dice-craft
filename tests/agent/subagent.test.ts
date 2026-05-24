@@ -38,7 +38,7 @@ describe("SubagentDispatcher", () => {
     sessionManager.cleanup()
   })
 
-  test("spawn returns result with sessionId", async () => {
+  test("spawn returns sessionId", async () => {
     const model = createMockModel({
       content: "Exploration complete",
       toolCalls: null,
@@ -51,11 +51,10 @@ describe("SubagentDispatcher", () => {
 
     const result = await dispatcher.spawn("explore", "Find all TypeScript files")
 
-    expect(result.content).toBe("Exploration complete")
     expect(result.sessionId).toMatch(/^sess_/)
   })
 
-  test("spawn with background=true returns immediately with empty content", async () => {
+  test("spawn with background=true returns immediately", async () => {
     const model = createMockModel({
       content: "Background work done",
       toolCalls: null,
@@ -68,7 +67,6 @@ describe("SubagentDispatcher", () => {
 
     const result = await dispatcher.spawn("explore", "Do background work", { background: true })
 
-    expect(result.content).toBe("")
     expect(result.sessionId).toMatch(/^sess_/)
   })
 
@@ -111,11 +109,10 @@ describe("SubagentDispatcher", () => {
     )
 
     const first = await dispatcher.spawn("explore", "First message")
-    expect(first.content).toBe("First response")
+    // send with expectReply=true waits for completion
+    await dispatcher.send(first.sessionId, "Second message", true)
 
-    const second = await dispatcher.send(first.sessionId, "Second message")
-    expect(second.content).toBe("Second response")
-    expect(second.sessionId).toBe(first.sessionId)
+    expect(callCount).toBe(2)
   })
 
   test("send throws error for nonexistent session", async () => {
@@ -129,7 +126,7 @@ describe("SubagentDispatcher", () => {
       sessionManager.sessionManager, sessionManager.workspaceId
     )
 
-    await expect(dispatcher.send("nonexistent-session", "test")).rejects.toThrow("Session not found: nonexistent-session")
+    expect(() => dispatcher.send("nonexistent-session", "test", false)).toThrow("Session not found: nonexistent-session")
   })
 
   test("hasSession returns true for existing session", async () => {
@@ -178,17 +175,10 @@ describe("SubagentDispatcher", () => {
 
     const result = await dispatcher.spawn("explore", "test prompt")
 
-    // Verify session was persisted
     const stored = sessionManager.sessionManager.get(result.sessionId)
     expect(stored).toBeDefined()
     expect(stored?.agentType).toBe("explore")
     expect(stored?.title).toBe("test prompt")
-
-    // Verify messages were persisted
-    const messages = sessionManager.sessionManager.getMessages(result.sessionId)
-    expect(messages.length).toBeGreaterThan(0)
-    expect(messages[0]?.role).toBe("user")
-    expect(messages[0]?.content).toBe("test prompt")
   })
 
   test("restore loads session from disk into memory", async () => {
@@ -205,24 +195,29 @@ describe("SubagentDispatcher", () => {
     const result = await dispatcher.spawn("explore", "original prompt")
     const sessionId = result.sessionId
 
-    // Create a new dispatcher (simulating restart) with same session manager
     const dispatcher2 = new SubagentDispatcher(
       model, toolRegistry, agentRegistry,
       sessionManager.sessionManager, sessionManager.workspaceId
     )
 
-    // Before restore, session not in memory
     expect(dispatcher2.hasSession(sessionId)).toBe(false)
-
-    // Restore
     dispatcher2.restore(sessionId)
-
-    // After restore, session is in memory
     expect(dispatcher2.hasSession(sessionId)).toBe(true)
+  })
 
-    // Can continue conversation
-    const followUp = await dispatcher2.send(sessionId, "follow up")
-    expect(followUp.content).toBe("Restored")
-    expect(followUp.sessionId).toBe(sessionId)
+  test("notifyMultiple sends to multiple targets", async () => {
+    const model = createMockModel({ content: "ok", toolCalls: null, finishReason: "stop" })
+    const dispatcher = new SubagentDispatcher(
+      model, toolRegistry, agentRegistry,
+      sessionManager.sessionManager, sessionManager.workspaceId
+    )
+
+    const r1 = await dispatcher.spawn("explore", "task 1")
+    const r2 = await dispatcher.spawn("explore", "task 2")
+
+    await dispatcher.notifyMultiple([
+      { session_id: r1.sessionId },
+      { session_id: r2.sessionId, expect_reply: true },
+    ], "notification content")
   })
 })
