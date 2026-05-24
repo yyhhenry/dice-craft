@@ -23,6 +23,8 @@ export interface App {
   dispatcher: SubagentDispatcher
   primaryAgent: AgentLoop
   workspacePath: string
+  /** Mutable session ID reference — message tool closures capture this object */
+  sessionRef: { id: string }
 }
 
 function loadConfig(): ModelConfig {
@@ -66,7 +68,7 @@ export function createApp(options?: {
   const sessionManager = new SessionManager(sessionStore)
   const chatManager = new ChatManager(dataDir)
 
-  const primarySessionId = options?.primarySessionId ?? "sess_primary"
+  const sessionRef = { id: options?.primarySessionId ?? "sess_primary" }
   const onMessage = options?.onMessage
 
   // Register primary agent identity
@@ -91,7 +93,7 @@ export function createApp(options?: {
         npcRegistry.register(tool)
       }
       npcRegistry.register(
-        createMessageTool(chatManager, primarySessionId, ctx.sessionId, "npc", (content) => {
+        createMessageTool(chatManager, sessionRef, ctx.sessionId, "npc", (content) => {
           const identity = chatManager.getIdentity(ctx.sessionId)
           if (onMessage) onMessage(identity?.name ?? ctx.agentName, content)
         }),
@@ -120,7 +122,7 @@ export function createApp(options?: {
 
   // Register message tool for primary agent
   toolRegistry.register(
-    createMessageTool(chatManager, primarySessionId, "agent", "agent", (content) => {
+    createMessageTool(chatManager, sessionRef, "agent", "agent", (content) => {
       if (onMessage) onMessage(primary.name ?? "Agent", content)
     }),
   )
@@ -138,5 +140,6 @@ export function createApp(options?: {
     dispatcher,
     primaryAgent,
     workspacePath,
+    sessionRef,
   }
 }

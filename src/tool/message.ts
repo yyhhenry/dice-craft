@@ -4,7 +4,7 @@ import type { SenderRole } from "../chat/types"
 
 export function createMessageTool(
   chatManager: ChatManager,
-  primarySessionId: string,
+  sessionRef: { id: string },
   senderId: string,
   senderRole: SenderRole,
   onMessage?: (content: string) => void,
@@ -31,7 +31,7 @@ export function createMessageTool(
         return { content: "Error: content is required", isError: true }
       }
 
-      chatManager.sendMessage(primarySessionId, {
+      chatManager.sendMessage(sessionRef.id, {
         content,
         senderId,
         senderRole,
