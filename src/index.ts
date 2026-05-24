@@ -39,21 +39,12 @@ async function main() {
     },
   })
 
-  // Try to restore last session
+  // Show last session info (don't auto-load)
   const lastSession = app.sessionManager.getLastSession(workspace.id)
 
   if (lastSession) {
-    loadSession(app, lastSession.id)
-    console.log(`Restored session: ${lastSession.title} (${lastSession.messageCount} messages)`)
-
-    const chatHistory = app.chatManager.getRecentMessages(lastSession.id, 5)
-    if (chatHistory.length > 0) {
-      console.log("\nRecent chat:")
-      for (const msg of chatHistory) {
-        console.log(`  [${msg.senderName}] ${msg.content}`)
-      }
-    }
-    console.log("")
+    console.log(`Last session: ${lastSession.id} — "${lastSession.title}" (${lastSession.messageCount} messages)`)
+    console.log(`  Load it with: /session ${lastSession.id}\n`)
   }
 
   const rl = readline.createInterface({
@@ -126,6 +117,7 @@ async function main() {
       })
       app.sessionRef.id = session.id
       firstMessage = false
+      console.log(`Created session: ${session.id}\n`)
     }
 
     try {
