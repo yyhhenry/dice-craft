@@ -4,8 +4,8 @@
 Usage:
     python game.py --init [max] [--bluff N]
     python game.py --num 500
-    python game.py --exp "x > 500"
-    python game.py --exp "x % 2 == 0"
+    python game.py --expr "x > 500"
+    python game.py --expr "x % 2 == 0"
     python game.py --status
     python game.py --undo
 """
@@ -57,7 +57,9 @@ def do_init(max_num: int, bluff_n: float):
     print(json.dumps({"status": "new_game", "max_num": max_num, "bluff_n": bluff_n}))
 
 
-def apply_guess(state: dict, remaining: list, result_label: str, guess_repr: str, guess_type: str):
+def apply_guess(
+    state: dict, remaining: list, result_label: str, guess_repr: str, guess_type: str
+):
     entry = {
         "round": state["round"] + 1,
         "type": guess_type,
@@ -100,13 +102,21 @@ def do_guess_num(state: dict, guess: int):
 
 def do_guess_expr(state: dict, expr: str):
     cands = state["candidates"]
-    predicate = eval(f"lambda x: {expr}", {"__builtins__": {}}, {})
-    yes = [x for x in cands if predicate(x)]
-    no = [x for x in cands if not predicate(x)]
+    try:
+        predicate = eval(f"lambda x: {expr}", {"__builtins__": {}}, {})
+        yes = [x for x in cands if predicate(x)]
+    except (ValueError, SyntaxError, NameError) as e:
+        print(json.dumps({"error": f"表达式错误: {e}"}))
+        return
+
+    yes_set = set(yes)
+    no = [x for x in cands if x not in yes_set]
 
     dirs: dict[str, int] = {}
-    if yes: dirs["是"] = len(yes)
-    if no: dirs["否"] = len(no)
+    if yes:
+        dirs["是"] = len(yes)
+    if no:
+        dirs["否"] = len(no)
 
     if not dirs:
         print(json.dumps({"error": "没有符合条件的候选"}))
@@ -151,7 +161,8 @@ def do_undo(state: dict):
             else:
                 cands = [x for x in cands if x > g]
         else:
-            pred = eval(f"lambda x: {entry['guess']}", {"__builtins__": {}}, {})
+            expr = entry["guess"]
+            pred = eval(f"lambda x: {expr}", {"__builtins__": {}}, {})
             if entry["result"] == "是":
                 cands = [x for x in cands if pred(x)]
             else:
@@ -159,15 +170,23 @@ def do_undo(state: dict):
 
     state["candidates"] = cands
     save_state(state)
-    print(json.dumps({"status": "undone", "round": state["round"], "remaining_count": len(cands)}))
+    print(
+        json.dumps(
+            {"status": "undone", "round": state["round"], "remaining_count": len(cands)}
+        )
+    )
 
 
 def main():
     parser = argparse.ArgumentParser(description="Bluff Number Guessing Game")
-    parser.add_argument("--init", nargs="?", const=999, type=int, metavar="MAX", help="Start new game")
-    parser.add_argument("--bluff", type=float, default=10.0, help="Bluff intensity (default 10)")
+    parser.add_argument(
+        "--init", nargs="?", const=999, type=int, metavar="MAX", help="Start new game"
+    )
+    parser.add_argument(
+        "--bluff", type=float, default=10.0, help="Bluff intensity (default 10)"
+    )
     parser.add_argument("--num", type=int, help="Guess a number")
-    parser.add_argument("--exp", type=str, help="Guess an expression, e.g. 'x > 500'")
+    parser.add_argument("--expr", type=str, help="Guess an expression, e.g. 'x > 500'")
     parser.add_argument("--status", action="store_true", help="Show current state")
     parser.add_argument("--undo", action="store_true", help="Undo last round")
     args = parser.parse_args()
@@ -187,8 +206,8 @@ def main():
         do_undo(state)
     elif args.num is not None:
         do_guess_num(state, args.num)
-    elif args.exp is not None:
-        do_guess_expr(state, args.exp)
+    elif args.expr is not None:
+        do_guess_expr(state, args.expr)
     else:
         parser.print_help()
 

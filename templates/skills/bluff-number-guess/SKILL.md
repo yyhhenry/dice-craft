@@ -20,9 +20,9 @@ python skills/bluff-number-guess/game.py --init 500 --bluff 8
 python skills/bluff-number-guess/game.py --num 500
 
 # Guess an expression
-python skills/bluff-number-guess/game.py --exp "x > 500"
-python skills/bluff-number-guess/game.py --exp "x % 2 == 0"
-python skills/bluff-number-guess/game.py --exp "x > 100 and x < 300"
+python skills/bluff-number-guess/game.py --expr "x > 500"
+python skills/bluff-number-guess/game.py --expr "x % 2 == 0"
+python skills/bluff-number-guess/game.py --expr "x > 100 and x < 300"
 
 # Show current state
 python skills/bluff-number-guess/game.py --status
