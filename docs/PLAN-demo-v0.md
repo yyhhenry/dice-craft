@@ -97,9 +97,12 @@ NPC Subagent（海龟汤中可选）
 - GM Agent根据加载的Skill切换行为
 - 验证：换一个Skill定义就能玩另一个谜题
 
-### Step 5（可选）：CLI美化
-- 颜色输出、分隔线、状态提示
-- 命令：`/clue` 查看已揭示线索，`/guess` 直接猜测，`/quit` 退出
+### Step 5（可选）：前端接入准备
+- 将 CLI REPL 替换为 HTTP/WebSocket server（如 Hono / Bun.serve）
+- 定义前后端通信协议（消息格式、事件类型）
+- Agent 循环输出改为流式推送到前端
+- 为前端提供 session/workspace 管理的 API
+- 准备前端项目脚手架（React + Vite）
 
 ## 验证标准
 
@@ -115,10 +118,9 @@ v0完成时应该能做到：
 - [ ] Primary + Subagent构建拆分
 - [ ] Review Subagent
 - [ ] 更多游戏Skill（狼人杀、剧本杀）
-- [ ] Skill内含Python脚本执行
 - [ ] 上下文Compact系统
 - [ ] 持久化记忆
 - [ ] 消息可见性控制
-- [ ] React前端 + 虚拟桌游屋
+- [ ] 虚拟桌游屋（3D/2D桌面场景）
 - [ ] TTS语音合成
-- [ ] 多模态理解
+- [ ] 多模态支持（图片读取/展示、前端富媒体渲染、bash工具、python工具）
