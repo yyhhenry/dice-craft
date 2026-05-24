@@ -38,13 +38,13 @@ describe("createMessageTool", () => {
     expect(msg.senderName).toBe("酒馆老板")
   })
 
-  test("calls onMessage callback", async () => {
-    const received: string[] = []
-    const tool = createMessageTool(chatManager, { id: "sess_1" }, "agent", "agent", (c) =>
-      received.push(c),
+  test("calls onMessage callback with senderName and content", async () => {
+    const received: Array<{ name: string; content: string }> = []
+    const tool = createMessageTool(chatManager, { id: "sess_1" }, "agent", "agent", (name, c) =>
+      received.push({ name, content: c }),
     )
     await tool.execute({ content: "test" })
-    expect(received).toEqual(["test"])
+    expect(received).toEqual([{ name: "agent", content: "test" }])
   })
 
   test("returns error for empty content", async () => {

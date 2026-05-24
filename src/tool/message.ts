@@ -7,7 +7,7 @@ export function createMessageTool(
   sessionRef: { id: string },
   senderId: string,
   senderRole: SenderRole,
-  onMessage?: (content: string) => void,
+  onMessage?: (senderName: string, content: string) => void,
 ): Tool {
   return {
     id: "message",
@@ -22,23 +22,31 @@ export function createMessageTool(
           type: "string",
           description: "The message content to send",
         },
+        sender_name: {
+          type: "string",
+          description:
+            "Display name for this message. For NPCs: your character name (e.g. '莉莉安', '凯尔'). " +
+            "For GM: usually omit to use default.",
+        },
       },
       required: ["content"],
     },
     async execute(args: Record<string, unknown>): Promise<ToolResult> {
       const content = args.content as string
+      const senderName = args.sender_name as string | undefined
       if (!content) {
         return { content: "Error: content is required", isError: true }
       }
 
-      chatManager.sendMessage(sessionRef.id, {
+      const msg = chatManager.sendMessage(sessionRef.id, {
         content,
         senderId,
         senderRole,
+        senderName,
       })
 
       if (onMessage) {
-        onMessage(content)
+        onMessage(msg.senderName, content)
       }
 
       return { content: "Message sent." }
