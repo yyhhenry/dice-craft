@@ -1,6 +1,10 @@
 import fs from "fs"
 import path from "path"
 import { type WorkspaceID, type UserID, type WorkspaceInfo } from "./types"
+import { loadTemplates } from "./templates.macro" with { type: "macro" }
+
+// At bundle time, this becomes a literal { "skills/dice/SKILL.md": "...", ... }
+const TEMPLATES = loadTemplates()
 
 export class WorkspaceManager {
   private baseDir: string
@@ -24,6 +28,13 @@ export class WorkspaceManager {
 
     fs.mkdirSync(skillsDir, { recursive: true })
     fs.mkdirSync(this.metaDir, { recursive: true })
+
+    // Write template files into workspace
+    for (const [relPath, content] of Object.entries(TEMPLATES)) {
+      const filePath = path.join(wsPath, relPath)
+      fs.mkdirSync(path.dirname(filePath), { recursive: true })
+      fs.writeFileSync(filePath, content)
+    }
 
     const info: WorkspaceInfo = {
       id,

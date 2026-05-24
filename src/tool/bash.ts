@@ -7,7 +7,7 @@ const DEFAULT_TIMEOUT = 30_000
 const MAX_TIMEOUT = 120_000
 const MAX_OUTPUT = 50_000
 const MAX_LINES = 2000
-const OUTPUT_DIR = "data/tool-output"
+const OUTPUT_DIR = ".tool-output"
 
 export function createBashTool(guard: WorkspaceGuard): Tool {
   return {
@@ -80,7 +80,7 @@ export function createBashTool(guard: WorkspaceGuard): Tool {
           fullOutput.length > MAX_OUTPUT || lines.length > MAX_LINES
 
         if (needsTruncate) {
-          const outputPath = saveOutput(fullOutput)
+          const outputPath = saveOutput(guard.getWorkspacePath(), fullOutput)
           const tail = tailOutput(lines)
           const content = [
             "...output truncated...",
@@ -109,8 +109,8 @@ export function createBashTool(guard: WorkspaceGuard): Tool {
   }
 }
 
-function saveOutput(content: string): string {
-  const dir = path.resolve(OUTPUT_DIR)
+function saveOutput(workspacePath: string, content: string): string {
+  const dir = path.join(workspacePath, OUTPUT_DIR)
   fs.mkdirSync(dir, { recursive: true })
   const filePath = path.join(dir, `bash_${Date.now()}.txt`)
   fs.writeFileSync(filePath, content, "utf-8")

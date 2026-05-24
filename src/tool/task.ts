@@ -43,7 +43,7 @@ export function createSpawnSubagentTool(dispatcher: SubagentDispatcher): Tool {
         }
 
         return {
-          content: result.content,
+          content: `Subagent ${agentType} completed (sessionId: ${result.sessionId})`,
         }
       } catch (error) {
         return {

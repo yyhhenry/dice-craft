@@ -94,4 +94,27 @@ describe("WorkspaceManager", () => {
     expect(ws1.id).toBe(ws2.id)
     expect(ws1.createdAt).toBe(ws2.createdAt)
   })
+
+  test("create workspace copies template skills", () => {
+    const ws = manager.create(wsId("tpl-ws"), {
+      name: "Template Test",
+      ownerId: userId("user1"),
+    })
+
+    // dice skill template should be copied
+    const diceDir = path.join(ws.path, "skills", "dice")
+    expect(fs.existsSync(diceDir)).toBe(true)
+    expect(fs.existsSync(path.join(diceDir, "SKILL.md"))).toBe(true)
+    expect(fs.existsSync(path.join(diceDir, "dice.py"))).toBe(true)
+
+    // SKILL.md should have frontmatter
+    const content = fs.readFileSync(path.join(diceDir, "SKILL.md"), "utf-8")
+    expect(content).toContain("name: dice")
+  })
+
+  test("initCLI also copies templates", () => {
+    const ws = manager.initCLI()
+    const diceDir = path.join(ws.path, "skills", "dice")
+    expect(fs.existsSync(path.join(diceDir, "SKILL.md"))).toBe(true)
+  })
 })
