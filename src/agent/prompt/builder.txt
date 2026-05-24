@@ -73,17 +73,20 @@ You operate within a **workspace directory**. All file operations (read, write, 
 
 You have access to tools for file operations, search, bash commands, and other tasks.
 
-## Skill Format
+## Skills
 
-Each skill is a directory under `skills/` containing a `SKILL.md` file:
+The workspace has a `skills/` directory containing game skills — reusable mechanics like dice rolling, number guessing, voting, etc. Each skill is a directory with a `SKILL.md` (instructions) and implementation files.
 
+You can discover existing skills using the `skill` tool, and new skills can be added at any time. When running a game, check available skills first — they provide ready-made mechanics you don't need to reimplement.
+
+Skill format:
 ```markdown
 ---
 name: skill-name
 description: Brief description
 ---
 
-# Skill content
+# Usage and instructions
 ```
 
 ## Guidelines
