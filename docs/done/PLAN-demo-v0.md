@@ -27,7 +27,7 @@
 - **API 配置**：
   - Anthropic: `ANTHROPIC_BASE_URL=https://api.xiaomimimo.com/anthropic`
   - OpenAI: `OPENAI_BASE_URL=https://api.xiaomimimo.com/v1`（仅支持 chat completions，不支持 responses）
-  - `MIMO_API_KEY=sk-xxx`（在 .env 文件中配置）
+  - `OPENAI_API_KEY=sk-xxx`（在 .env 文件中配置）
 - **项目结构**：新建独立项目目录
 
 ## 核心架构（v0）

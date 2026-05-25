@@ -55,7 +55,7 @@ async function main() {
   const question = (prompt: string): Promise<string> =>
     new Promise((resolve) => rl.question(prompt, resolve))
 
-  let firstMessage = !lastSession
+  let firstMessage = true
 
   while (true) {
     const input = (await question("user$ ")).trim()

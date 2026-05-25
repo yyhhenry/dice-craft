@@ -16,7 +16,7 @@ bun install
 
 # 配置环境变量
 cp .env.example .env
-# 编辑 .env，填入 MIMO_API_KEY
+# 编辑 .env，填入 OPENAI_API_KEY
 
 # 运行 CLI
 bun run dev

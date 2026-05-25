@@ -30,11 +30,11 @@ export interface App {
 
 function loadConfig(): ModelConfig {
   const baseUrl = process.env.OPENAI_BASE_URL
-  const apiKey = process.env.MIMO_API_KEY
-  const model = process.env.MODEL_NAME ?? "mimo-v2.5-pro"
+  const apiKey = process.env.OPENAI_API_KEY
+  const model = process.env.OPENAI_MODEL_NAME ?? "mimo-v2.5-pro"
 
   if (!baseUrl) throw new Error("Missing OPENAI_BASE_URL environment variable")
-  if (!apiKey) throw new Error("Missing MIMO_API_KEY environment variable")
+  if (!apiKey) throw new Error("Missing OPENAI_API_KEY environment variable")
 
   return { baseUrl, apiKey, model }
 }
@@ -134,9 +134,6 @@ export function createApp(options?: {
 
   const primaryAgent = new AgentLoop(model, toolRegistry, {
     systemPrompt,
-    onResponse: (response) => {
-      if (onMessage) onMessage(primary.name ?? "Agent", response)
-    },
   })
 
   return {
