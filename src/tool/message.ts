@@ -27,17 +27,19 @@ export function createMessageTool(
         sender_name: {
           type: "string",
           description:
-            "Your display name. NPCs MUST set this to their character name (e.g. 'Alice', 'Bob'). " +
-            "GM can omit to use default.",
+            "Your display name. Set to your character/role name (e.g. 'GM', 'Alice', 'Bob').",
         },
       },
       required: ["content", "sender_name"],
     },
     async execute(args: Record<string, unknown>): Promise<ToolResult> {
       const content = args.content as string
-      const senderName = args.sender_name as string | undefined
+      const senderName = args.sender_name as string
       if (!content) {
         return { content: "Error: content is required", isError: true }
+      }
+      if (!senderName) {
+        return { content: "Error: sender_name is required", isError: true }
       }
 
       const msg = chatManager.sendMessage(sessionRef.id, {

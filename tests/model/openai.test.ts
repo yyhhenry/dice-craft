@@ -8,29 +8,22 @@ function createModel(handler: RequestHandler) {
     baseUrl: `${server.baseUrl}/v1`,
     apiKey: "test-key",
     model: "mock-model",
-    maxTokens: 1024,
   })
   return { model, stop: server.stop }
 }
 
-describe("OpenAIModel streaming", () => {
+describe("OpenAIModel", () => {
   test("receives plain text response", async () => {
     const { model, stop } = createModel(() => ({
       content: "Hello, world!",
     }))
 
     try {
-      const tokens: string[] = []
-      const response = await model.chat(
-        [{ role: "user", content: "Hi" }],
-        undefined,
-        { onToken: (t) => tokens.push(t) },
-      )
+      const response = await model.chat([{ role: "user", content: "Hi" }])
 
       expect(response.content).toBe("Hello, world!")
       expect(response.toolCalls).toBeNull()
       expect(response.finishReason).toBe("stop")
-      expect(tokens.join("")).toBe("Hello, world!")
     } finally {
       stop()
     }
@@ -57,28 +50,6 @@ describe("OpenAIModel streaming", () => {
       expect(tc.name).toBe("get_current_time")
       expect(tc.arguments).toEqual({ timezone_offset: 8 })
       expect(response.finishReason).toBe("tool_calls")
-    } finally {
-      stop()
-    }
-  })
-
-  test("onToolCall callback is invoked", async () => {
-    const { model, stop } = createModel(() => ({
-      content: null,
-      toolCalls: [{ id: "call_xyz", name: "test_tool", arguments: { key: "value" } }],
-    }))
-
-    try {
-      const receivedCalls: any[] = []
-      await model.chat(
-        [{ role: "user", content: "Do something" }],
-        [{ id: "test_tool", description: "Test", parameters: {}, execute: async () => ({ content: "" }) }],
-        { onToolCall: (c) => receivedCalls.push(c) },
-      )
-
-      expect(receivedCalls).toHaveLength(1)
-      expect(receivedCalls[0].name).toBe("test_tool")
-      expect(receivedCalls[0].arguments).toEqual({ key: "value" })
     } finally {
       stop()
     }

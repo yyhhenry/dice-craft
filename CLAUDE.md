@@ -109,6 +109,6 @@ bun run check
 在 `.env` 文件中配置：
 ```bash
 OPENAI_BASE_URL=https://api.xiaomimimo.com/v1
-MIMO_API_KEY=sk-xxx
-MODEL_NAME=mimo-v2.5-pro
+OPENAI_API_KEY=sk-xxx
+OPENAI_MODEL_NAME=mimo-v2.5-pro
 ```

@@ -10,7 +10,6 @@ function createMockModel(response: ChatResponse): OpenAIModel {
     baseUrl: "https://test.example.com",
     apiKey: "test",
     model: "test",
-    maxTokens: 1024,
   }
   const model = new OpenAIModel(config)
   model.chat = mock(() => Promise.resolve(response))

@@ -9,7 +9,6 @@ import type { NotifyTarget } from "../tool/notify"
 
 export interface SpawnOptions {
   background?: boolean
-  visible?: boolean
 }
 
 export interface SubagentResult {
@@ -32,6 +31,8 @@ export class SubagentDispatcher {
   private workspaceId: WorkspaceID
   private activeLoops = new Map<string, AgentLoop>()
   private setupLoop: LoopSetupFn | undefined
+
+  onSubagentDone?: (sessionId: string, agentName: string, content: string) => void
 
   constructor(
     model: OpenAIModel,
@@ -79,6 +80,11 @@ export class SubagentDispatcher {
 
     if (options.background) {
       loop.receiveMessage(prompt)
+      loop.waitForIdle().then(() => {
+        this.persistLoopHistory(session.id, loop)
+        const content = this.extractLastAssistantContent(loop.getHistory())
+        this.onSubagentDone?.(session.id, agentName, content)
+      }).catch(() => {})
       return { content: "", sessionId: session.id }
     }
 
@@ -87,7 +93,8 @@ export class SubagentDispatcher {
     const history = loop.getHistory()
     this.persistHistory(session.id, history)
 
-    return { content: "", sessionId: session.id }
+    const content = this.extractLastAssistantContent(history)
+    return { content, sessionId: session.id }
   }
 
   /** Send a message to a subagent via receiveMessage. */
@@ -164,5 +171,10 @@ export class SubagentDispatcher {
     for (const msg of history) {
       this.sessionManager.appendMessage(sessionId, msg)
     }
+  }
+
+  private extractLastAssistantContent(history: ChatCompletionMessageParam[]): string {
+    const last = history.filter((m) => m.role === "assistant" && m.content).pop()
+    return (last?.content as string) ?? ""
   }
 }

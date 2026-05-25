@@ -1,6 +1,6 @@
 import fs from "fs"
 import path from "path"
-import type { ChatMessage, SenderIdentity, SenderRole } from "./types"
+import type { ChatMessage, SenderRole } from "./types"
 
 function generateId(): string {
   return `msg_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
@@ -8,19 +8,10 @@ function generateId(): string {
 
 export class ChatManager {
   private baseDir: string
-  private identities = new Map<string, SenderIdentity>()
   private messageListeners: Array<(msg: ChatMessage) => void> = []
 
   constructor(baseDir: string) {
     this.baseDir = path.resolve(baseDir)
-  }
-
-  registerIdentity(identity: SenderIdentity): void {
-    this.identities.set(identity.id, identity)
-  }
-
-  getIdentity(id: string): SenderIdentity | undefined {
-    return this.identities.get(id)
   }
 
   onMessage(listener: (msg: ChatMessage) => void): void {
@@ -31,19 +22,17 @@ export class ChatManager {
     primarySessionId: string,
     opts: {
       content: string
-      senderId?: string
-      senderName?: string
-      senderRole?: SenderRole
+      senderId: string
+      senderName: string
+      senderRole: SenderRole
     },
   ): ChatMessage {
-    const senderId = opts.senderId ?? "agent"
-    const identity = this.identities.get(senderId)
     const msg: ChatMessage = {
       id: generateId(),
       sessionId: primarySessionId,
-      senderId,
-      senderName: opts.senderName ?? identity?.name ?? "agent",
-      senderRole: opts.senderRole ?? identity?.role ?? "agent",
+      senderId: opts.senderId,
+      senderName: opts.senderName,
+      senderRole: opts.senderRole,
       content: opts.content,
       timestamp: new Date().toISOString(),
     }

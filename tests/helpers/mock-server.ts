@@ -4,98 +4,33 @@ interface MockResponse {
   finishReason?: string
 }
 
-function sseChunk(data: object): string {
-  return `data: ${JSON.stringify(data)}\n\n`
-}
-
-function buildChunks(response: MockResponse): string[] {
-  const chunks: string[] = []
+function buildCompletion(response: MockResponse): object {
   const id = "chatcmpl-mock-001"
+  const toolCalls = response.toolCalls?.map((tc, i) => ({
+    id: tc.id,
+    index: i,
+    type: "function",
+    function: { name: tc.name, arguments: JSON.stringify(tc.arguments) },
+  }))
 
-  if (response.toolCalls) {
-    for (let i = 0; i < response.toolCalls.length; i++) {
-      const tc = response.toolCalls[i]!
-      const argsStr = JSON.stringify(tc.arguments)
-      if (i === 0) {
-        chunks.push(
-          sseChunk({
-            id,
-            object: "chat.completion.chunk",
-            created: Date.now(),
-            model: "mock-model",
-            choices: [{ index: 0, delta: { role: "assistant", content: null }, finish_reason: null }],
-          }),
-          sseChunk({
-            id,
-            object: "chat.completion.chunk",
-            created: Date.now(),
-            model: "mock-model",
-            choices: [{ index: 0, delta: { tool_calls: [{ index: i, id: tc.id, type: "function", function: { name: tc.name, arguments: "" } }] }, finish_reason: null }],
-          }),
-          sseChunk({
-            id,
-            object: "chat.completion.chunk",
-            created: Date.now(),
-            model: "mock-model",
-            choices: [{ index: 0, delta: { tool_calls: [{ index: i, function: { arguments: argsStr } }] }, finish_reason: null }],
-          }),
-        )
-      } else {
-        chunks.push(
-          sseChunk({
-            id,
-            object: "chat.completion.chunk",
-            created: Date.now(),
-            model: "mock-model",
-            choices: [{ index: 0, delta: { tool_calls: [{ index: i, id: tc.id, type: "function", function: { name: tc.name, arguments: argsStr } }] }, finish_reason: null }],
-          }),
-        )
-      }
-    }
-    chunks.push(
-      sseChunk({
-        id,
-        object: "chat.completion.chunk",
-        created: Date.now(),
-        model: "mock-model",
-        choices: [{ index: 0, delta: {}, finish_reason: "tool_calls" }],
-      }),
-    )
-  } else {
-    const content = response.content ?? ""
-    chunks.push(
-      sseChunk({
-        id,
-        object: "chat.completion.chunk",
-        created: Date.now(),
-        model: "mock-model",
-        choices: [{ index: 0, delta: { role: "assistant", content: "" }, finish_reason: null }],
-      }),
-    )
-    for (const char of content) {
-      chunks.push(
-        sseChunk({
-          id,
-          object: "chat.completion.chunk",
-          created: Date.now(),
-          model: "mock-model",
-          choices: [{ index: 0, delta: { content: char }, finish_reason: null }],
-        }),
-      )
-    }
-    chunks.push(
-      sseChunk({
-        id,
-        object: "chat.completion.chunk",
-        created: Date.now(),
-        model: "mock-model",
-        choices: [{ index: 0, delta: {}, finish_reason: response.finishReason ?? "stop" }],
-      }),
-    )
+  return {
+    id,
+    object: "chat.completion",
+    created: Math.floor(Date.now() / 1000),
+    model: "mock-model",
+    choices: [
+      {
+        index: 0,
+        message: {
+          role: "assistant",
+          content: response.content ?? null,
+          ...(toolCalls ? { tool_calls: toolCalls } : {}),
+        },
+        finish_reason: response.finishReason ?? (toolCalls ? "tool_calls" : "stop"),
+      },
+    ],
+    usage: { prompt_tokens: 10, completion_tokens: 5, total_tokens: 15 },
   }
-
-  chunks.push("data: [DONE]\n\n")
-  return chunks
 }
 
 export type RequestHandler = (body: any) => MockResponse
@@ -116,15 +51,8 @@ export function createMockOpenAIServer(handler: RequestHandler) {
       if (url.pathname === "/v1/chat/completions" && req.method === "POST") {
         const body = (await req.json()) as any
         const response = handler(body)
-        const chunks = buildChunks(response)
-
-        return new Response(chunks.join(""), {
-          headers: {
-            "Content-Type": "text/event-stream",
-            "Cache-Control": "no-cache",
-            Connection: "keep-alive",
-          },
-        })
+        const completion = buildCompletion(response)
+        return Response.json(completion)
       }
 
       return new Response("Not Found", { status: 404 })
