@@ -33,6 +33,7 @@ import builderPrompt from "./prompt/builder.txt" with { type: "text" }
 import explorePrompt from "./prompt/explore.txt" with { type: "text" }
 import reviewPrompt from "./prompt/review.txt" with { type: "text" }
 import npcPrompt from "./prompt/npc.txt" with { type: "text" }
+import generalPrompt from "./prompt/general.txt" with { type: "text" }
 
 export function loadAgents(): AgentRegistry {
   const registry = new AgentRegistry()
@@ -49,6 +50,13 @@ export function loadAgents(): AgentRegistry {
     description: "Research and search for information",
     mode: "subagent",
     systemPrompt: explorePrompt,
+  })
+
+  registry.register({
+    name: "general",
+    description: "General-purpose subagent for concrete implementation tasks",
+    mode: "subagent",
+    systemPrompt: generalPrompt,
   })
 
   registry.register({

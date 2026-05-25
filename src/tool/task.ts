@@ -1,7 +1,10 @@
 import type { Tool, ToolResult } from "./base"
 import type { SubagentDispatcher } from "../agent/subagent"
 
-export function createSpawnSubagentTool(dispatcher: SubagentDispatcher): Tool {
+export function createSpawnSubagentTool(
+  dispatcher: SubagentDispatcher,
+  sessionRef: { id: string },
+): Tool {
   return {
     id: "spawn_subagent",
     description: "Spawn a subagent to handle a specific task.",
@@ -20,10 +23,6 @@ export function createSpawnSubagentTool(dispatcher: SubagentDispatcher): Tool {
           type: "boolean",
           description: "If true, return sessionId immediately without waiting for result",
         },
-        visible: {
-          type: "boolean",
-          description: "If true, subagent output is shown directly to user instead of returned as tool result",
-        },
       },
       required: ["agent_type", "prompt"],
     },
@@ -31,19 +30,23 @@ export function createSpawnSubagentTool(dispatcher: SubagentDispatcher): Tool {
       const agentType = args.agent_type as string
       const prompt = args.prompt as string
       const background = (args.background as boolean) ?? false
-      const visible = (args.visible as boolean) ?? false
 
       try {
-        const result = await dispatcher.spawn(agentType, prompt, { background, visible })
+        const result = await dispatcher.spawn(
+          agentType,
+          prompt,
+          { background },
+          sessionRef.id,
+        )
 
         if (background) {
           return {
-            content: `Subagent spawned with sessionId: ${result.sessionId}`,
+            content: `Subagent spawned in background (sessionId: ${result.sessionId})`,
           }
         }
 
         return {
-          content: `Subagent ${agentType} completed (sessionId: ${result.sessionId})`,
+          content: result.content || `Subagent ${agentType} completed (sessionId: ${result.sessionId})`,
         }
       } catch (error) {
         return {

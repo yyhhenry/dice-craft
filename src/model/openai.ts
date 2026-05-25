@@ -6,7 +6,6 @@ export interface ModelConfig {
   baseUrl: string
   apiKey: string
   model: string
-  maxTokens?: number
 }
 
 export interface ChatResponse {
@@ -35,12 +34,12 @@ export class OpenAIModel {
   async chat(
     messages: ChatCompletionMessageParam[],
     tools?: Tool[],
-    callbacks?: StreamCallbacks
+    _callbacks?: StreamCallbacks
   ): Promise<ChatResponse> {
     const request: OpenAI.ChatCompletionCreateParams = {
       model: this.config.model,
       messages,
-      stream: true,
+      stream: false,
     }
 
     if (tools && tools.length > 0) {
@@ -54,61 +53,27 @@ export class OpenAIModel {
       }))
     }
 
-    const stream = await this.client.chat.completions.create(request)
+    const response = await this.client.chat.completions.create(request)
 
-    let content = ""
-    const toolCalls: Map<number, ToolCall> = new Map()
-    let finishReason: string | null = null
-
-    for await (const chunk of stream) {
-      const delta = chunk.choices[0]?.delta
-      if (!delta) continue
-
-      if (delta.content) {
-        content += delta.content
-        callbacks?.onToken?.(delta.content)
-      }
-
-      if (delta.tool_calls) {
-        for (const tc of delta.tool_calls) {
-          const index = tc.index ?? 0
-          if (!toolCalls.has(index)) {
-            toolCalls.set(index, {
-              id: tc.id ?? "",
-              name: tc.function?.name ?? "",
-              arguments: {},
-            })
-          }
-          const existing = toolCalls.get(index)!
-          if (tc.id) existing.id = tc.id
-          if (tc.function?.name) existing.name = tc.function.name
-          if (tc.function?.arguments) {
-            try {
-              existing.arguments = JSON.parse(tc.function.arguments)
-            } catch {
-              existing.arguments = {}
-            }
-          }
-        }
-      }
-
-      if (chunk.choices[0]?.finish_reason) {
-        finishReason = chunk.choices[0].finish_reason
-      }
+    const choice = response.choices[0]
+    if (!choice) {
+      return { content: null, toolCalls: null, finishReason: null }
     }
 
-    const toolCallsArray = toolCalls.size > 0 ? Array.from(toolCalls.values()) : null
+    const content = choice.message.content || null
+    const finishReason = choice.finish_reason || null
 
-    if (toolCallsArray) {
-      for (const call of toolCallsArray) {
-        callbacks?.onToolCall?.(call)
-      }
+    let toolCallsArray: ToolCall[] | null = null
+    if (choice.message.tool_calls && choice.message.tool_calls.length > 0) {
+      toolCallsArray = choice.message.tool_calls
+        .filter((tc): tc is Extract<typeof tc, { type: "function" }> => tc.type === "function")
+        .map((tc) => ({
+          id: tc.id,
+          name: tc.function.name,
+          arguments: JSON.parse(tc.function.arguments || "{}"),
+        }))
     }
 
-    return {
-      content: content || null,
-      toolCalls: toolCallsArray,
-      finishReason,
-    }
+    return { content, toolCalls: toolCallsArray, finishReason }
   }
 }

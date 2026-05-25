@@ -250,6 +250,14 @@ XML 标签不会被程序解析，只是给模型看的语义标记。模型对 
 
 ---
 
+## 15. 修复 bash test macOS 路径问题
+
+**现状：** `tests/tool/bash.test.ts` 中 "sets cwd to workspace path" 测试在 macOS 上失败，因为 `os.tmpdir()` 返回 `/var/folders/...`，而 shell `pwd` 输出 `/private/var/folders/...`（macOS `/var` 是 `/private/var` 的 symlink）。
+
+**改法：** 用 `fs.realpathSync()` 解析临时目录的真实路径。
+
+---
+
 ## 13. `createApp()` 拆分为可复用组件 — 本阶段不做，WebUI 接入时执行
 
 **现状：** `createApp()` 是 CLI 专用的单体组装函数，WebUI 需要的组件（model、registry、dispatcher、ChatManager）全部耦合在一起。
@@ -305,6 +313,7 @@ export function createServer(options): Server {
 | P1 | #7 删 maxTokens | 一行改动 |
 | P1 | #10 删除 identity 系统 | 死代码，简化架构 |
 | P1 | #11 删重复测试 | 一行改动 |
+| P1 | #15 修复 bash test macOS 路径 | 测试稳定性 |
 | — | ~~#12 XML escape~~ | 不做 |
 | 本阶段不做 | #8 增量 append | 后续必要，当前对话量小影响不大 |
 | 本阶段不做 | #9 session 索引 | 后续必要，当前 session 数量少影响不大 |

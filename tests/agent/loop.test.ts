@@ -8,7 +8,6 @@ function createMockModel(response: ChatResponse): OpenAIModel {
     baseUrl: "https://test.example.com",
     apiKey: "test",
     model: "test",
-    maxTokens: 1024,
   }
   const model = new OpenAIModel(config)
   model.chat = mock(() => Promise.resolve(response))
@@ -130,22 +129,6 @@ describe("AgentLoop", () => {
     const calledMessages = (model.chat as any).mock.calls[0][0] as any[]
     expect(calledMessages[0]).toEqual({ role: "system", content: "You are a test assistant." })
     expect(calledMessages.find((m: any) => m.role === "user" && m.content === "Hello")).toBeTruthy()
-  })
-
-  test("no system message when systemPrompt is omitted", async () => {
-    const model = createMockModel({
-      content: "Hi there",
-      toolCalls: null,
-      finishReason: "stop",
-    })
-    const registry = new ToolRegistry()
-    const agent = new AgentLoop(model, registry)
-
-    await agent.run("Hello")
-
-    const calledMessages = (model.chat as any).mock.calls[0][0] as any[]
-    expect(calledMessages.find((m: any) => m.role === "system")).toBeUndefined()
-    expect(calledMessages[0]).toEqual({ role: "user", content: "Hello" })
   })
 
   test("no system message when systemPrompt is omitted", async () => {

@@ -9,10 +9,3 @@ export interface ChatMessage {
   content: string
   timestamp: string
 }
-
-export interface SenderIdentity {
-  id: string
-  name: string
-  role: SenderRole
-  color?: string
-}

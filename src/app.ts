@@ -72,9 +72,6 @@ export function createApp(options?: {
   const sessionRef = { id: options?.primarySessionId ?? "sess_primary" }
   const onMessage = options?.onMessage
 
-  // Register primary agent identity
-  chatManager.registerIdentity({ id: "agent", name: primary.name ?? "Agent", role: "agent" })
-
   // Create notify function using dispatcher
   const dispatcher = new SubagentDispatcher(
     model,
@@ -84,11 +81,6 @@ export function createApp(options?: {
     workspaceId,
     // setupLoop: create per-NPC registry with message tool
     (ctx) => {
-      chatManager.registerIdentity({
-        id: ctx.sessionId,
-        name: ctx.agentName,
-        role: "npc",
-      })
       const npcRegistry = new ToolRegistry()
       for (const tool of toolRegistry.all()) {
         npcRegistry.register(tool)
@@ -112,7 +104,15 @@ export function createApp(options?: {
   toolRegistry.register(createNotifyTool(notifyFn))
 
   // Register spawn subagent tool
-  toolRegistry.register(createSpawnSubagentTool(dispatcher))
+  toolRegistry.register(createSpawnSubagentTool(dispatcher, sessionRef))
+
+  // Wire up background subagent completion notification to primary agent
+  dispatcher.onSubagentDone = (sessionId, agentName, content) => {
+    primaryAgent.injectEvent(
+      "subagent_done",
+      `<subagent type="${agentName}" session="${sessionId}">\n${content}\n</subagent>`,
+    )
+  }
 
   // Register skill tool if skillsDir is provided
   const skillsDir = options?.skillsDir

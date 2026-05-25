@@ -11,7 +11,7 @@ describe("createBashTool", () => {
   let tool: ReturnType<typeof createBashTool>
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "bash-test-"))
+    tmpDir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "bash-test-")))
     guard = new WorkspaceGuard(tmpDir)
     tool = createBashTool(guard)
   })

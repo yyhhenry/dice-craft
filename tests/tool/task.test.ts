@@ -11,7 +11,6 @@ function createMockModel(response: ChatResponse): OpenAIModel {
     baseUrl: "https://test.example.com",
     apiKey: "test",
     model: "test",
-    maxTokens: 1024,
   }
   const model = new OpenAIModel(config)
   model.chat = mock(() => Promise.resolve(response))
@@ -23,6 +22,7 @@ describe("SpawnSubagentTool", () => {
   let agentRegistry: AgentRegistry
   let toolRegistry: ToolRegistry
   let sessionManager: ReturnType<typeof createTestSessionManager>
+  const sessionRef = { id: "sess_test" }
 
   beforeEach(() => {
     agentRegistry = new AgentRegistry()
@@ -48,19 +48,19 @@ describe("SpawnSubagentTool", () => {
   })
 
   test("tool has correct id and description", () => {
-    const tool = createSpawnSubagentTool(dispatcher)
+    const tool = createSpawnSubagentTool(dispatcher, sessionRef)
     expect(tool.id).toBe("spawn_subagent")
     expect(tool.description).toBeTruthy()
   })
 
   test("tool parameters include required fields", () => {
-    const tool = createSpawnSubagentTool(dispatcher)
+    const tool = createSpawnSubagentTool(dispatcher, sessionRef)
     expect(tool.parameters.required).toContain("agent_type")
     expect(tool.parameters.required).toContain("prompt")
   })
 
   test("execute spawns subagent and returns result", async () => {
-    const tool = createSpawnSubagentTool(dispatcher)
+    const tool = createSpawnSubagentTool(dispatcher, sessionRef)
 
     const result = await tool.execute({
       agent_type: "explore",
@@ -68,12 +68,11 @@ describe("SpawnSubagentTool", () => {
     })
 
     expect(result.isError).toBeFalsy()
-    expect(result.content).toContain("explore")
-    expect(result.content).toContain("sessionId")
+    expect(result.content).toContain("Done")
   })
 
   test("execute returns error for unknown agent type", async () => {
-    const tool = createSpawnSubagentTool(dispatcher)
+    const tool = createSpawnSubagentTool(dispatcher, sessionRef)
 
     const result = await tool.execute({
       agent_type: "nonexistent",
@@ -85,7 +84,7 @@ describe("SpawnSubagentTool", () => {
   })
 
   test("execute with background=true returns sessionId", async () => {
-    const tool = createSpawnSubagentTool(dispatcher)
+    const tool = createSpawnSubagentTool(dispatcher, sessionRef)
 
     const result = await tool.execute({
       agent_type: "explore",
@@ -94,11 +93,11 @@ describe("SpawnSubagentTool", () => {
     })
 
     expect(result.isError).toBeFalsy()
-    expect(result.content).toContain("Subagent spawned with sessionId:")
+    expect(result.content).toContain("Subagent spawned in background")
   })
 
   test("execute uses default values for optional parameters", async () => {
-    const tool = createSpawnSubagentTool(dispatcher)
+    const tool = createSpawnSubagentTool(dispatcher, sessionRef)
 
     const result = await tool.execute({
       agent_type: "explore",
