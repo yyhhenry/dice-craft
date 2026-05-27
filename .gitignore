@@ -24,3 +24,6 @@ bun.lockb
 
 # Runtime data (workspaces, sessions, users)
 data/
+
+# codex
+.codex
