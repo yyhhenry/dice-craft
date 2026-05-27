@@ -2,7 +2,7 @@
 
 DiceCraft 是一个基于多 Agent 的桌游创作与游玩平台。用户用自然语言描述游戏构思，Primary Agent 统筹创建游戏资料、调度 Subagent 审查和扮演重要 NPC，并在游玩阶段作为 GM/DM 主持流程。
 
-当前实现以 CLI 为入口，核心后端能力已就绪；下一阶段重点是细化 DND 桌游方向，并接入可复用 WebUI。
+当前实现以 CLI 为入口，核心后端能力已就绪；下一阶段重点是细化 DND 桌游方向，按 API 契约服务化后端能力，并接入可复用 WebUI。
 
 ## 技术栈
 
@@ -69,6 +69,7 @@ src/
 └── workspace/       # Workspace 管理、路径沙箱、模板注入
 
 templates/
+├── dev_docs/        # 开发文档模板
 └── skills/          # 默认 Skill 模板
 
 data/
@@ -76,7 +77,9 @@ data/
 └── sessions/        # 运行时 session 数据
 
 docs/
+├── api_doc.md       # DND API 契约
 ├── done/            # 已完成设计计划
+├── task/            # 任务拆分文档
 └── PLAN-webui-v0.md # WebUI v0 计划
 
 tests/               # 单元测试
@@ -97,6 +100,7 @@ Primary 通过 `notify` 控制 NPC 收到的信息；NPC 通过独立 session �
 
 下一阶段目标是把 DiceCraft 细化为 DND 式桌游创作与游玩平台：
 
+- API 契约先行，覆盖 Workspace、Session、Chat、游戏创造、游戏游玩、WebSocket 事件和 DND 数据对象；Workspace 资源通过 `workspace_id`、相对资源路径或文件/资产 API 访问，不暴露服务端本地路径。
 - 构建阶段生成世界设定、任务线、关键 NPC、怪物、地图、骰子规则和隐藏线索。
 - Review Agent 检查逻辑、难度、信息泄露和数值平衡。
 - 游玩阶段由 DM Agent 主持冒险。
@@ -104,4 +108,4 @@ Primary 通过 `notify` 控制 NPC 收到的信息；NPC 通过独立 session �
 - 通用 DND Skill 复用掷骰、角色卡、状态、攻击判定和伤害计算。
 - WebUI 复用聊天、角色卡、地图、状态、掷骰和战斗面板。
 
-详细任务拆分见 [task_v3.md](docs/task/task_v3.md)。
+API 契约见 [api_doc.md](docs/api_doc.md)，详细任务拆分见 [task_v3.md](docs/task/task_v3.md)。
