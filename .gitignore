@@ -26,4 +26,4 @@ bun.lockb
 data/
 
 # codex
-.codex
+.codex*
