@@ -10,9 +10,9 @@
 
 ### 1.1 服务说明
 
-DiceCraft DND Service 为 DiceCraft 的 DND 式桌游创作与游玩流程提供 Workspace、Session、Chat、Game Creation、Game Runtime 和 WebSocket 事件契约。
+DiceCraft DND Service 为 DiceCraft 的 DND 式桌游创作与游玩流程提供 Session、Chat、Game Creation、Game Runtime 和 WebSocket 事件契约。
 
-当前项目以 CLI 为入口，本文件定义后续服务化和 WebUI 对接时必须遵循的 API 契约。
+当前项目以 CLI 为入口，本文件定义后续服务化和 WebUI 对接时必须遵循的公开 API 契约。Workspace 是后端内部实现细节，用于隔离文件、skills 和 agent 执行环境；前端产品层应使用 Game、Room 或 Campaign 等概念，不直接依赖 workspace。
 
 ### 1.2 Base URL
 
@@ -80,18 +80,16 @@ DiceCraft DND Service 为 DiceCraft 的 DND 式桌游创作与游玩流程提供
 Authorization: Bearer <access_token>
 ```
 
-本地开发环境可通过服务端配置允许固定 dev token。生产环境必须在访问 Workspace、Session、Chat、Game 和 Runtime 资源前校验 token。
+本地开发环境可通过服务端配置允许固定 dev token。生产环境必须在访问 Session、Chat、Game 和 Runtime 资源前校验 token。
 
 权限范围：
 
 | Scope | 说明 |
 |---|---|
-| `workspace:read` | 读取 workspace 元数据和 API 暴露的文件信息 |
-| `workspace:write` | 创建和更新 workspace |
 | `session:read` | 读取 session 与 chat message |
-| `session:write` | 创建 session 与发送用户消息 |
+| `session:write` | 发送用户消息 |
 | `game:read` | 读取游戏资料与运行时状态 |
-| `game:write` | 创建游戏、启动运行时、更新状态 |
+| `game:write` | 创建游戏、启动运行时 |
 
 ---
 
@@ -118,7 +116,7 @@ Authorization: Bearer <access_token>
 ```json
 {
   "code": 4001001,
-  "message": "workspace_id is required",
+  "message": "session_id is required",
   "data": null
 }
 ```
@@ -144,128 +142,20 @@ Authorization: Bearer <access_token>
 
 ## 4. REST API
 
-### 4.1 Workspace API
+### 4.1 Session API
 
-#### 4.1.1 List Workspaces
+#### 4.1.1 List Sessions
 
 - **方法**：`GET`
-- **路径**：`/workspaces`
-- **说明**：查询当前用户可访问的 workspace 列表。
+- **路径**：`/sessions`
+- **说明**：查询当前用户可进入的 primary/DM session。NPC、explore、review 等 subagent session 由后端内部管理，不直接暴露给前端创建或进入。
 
 请求参数：
 
 | 参数名 | 类型 | 必填 | 说明 | 约束/示例 |
 |---|---|---:|---|---|
-| page_no | integer | 否 | 页码 | `1` |
-| page_size | integer | 否 | 每页数量 | `20` |
-| keyword | string | 否 | 名称关键词 | 最大 50 字符 |
-
-成功响应：
-
-```json
-{
-  "code": 0,
-  "message": "ok",
-  "data": {
-    "items": [
-      {
-        "id": "ws_01jz8dnddemo00000000000001",
-        "name": "Middle Earth Demo",
-        "created_at": "2026-05-27T10:00:00.000Z",
-        "updated_at": "2026-05-27T10:00:00.000Z"
-      }
-    ],
-    "page_no": 1,
-    "page_size": 20,
-    "total": 1,
-    "has_more": false
-  }
-}
-```
-
-失败场景：
-
-| 场景 | HTTP 状态码 | 业务码 | 说明 |
-|---|---:|---:|---|
-| 分页参数非法 | 400 | 4001001 | 分页超出允许范围 |
-| 认证失败 | 401 | 4011001 | token 缺失或无效 |
-
-#### 4.1.2 Create Workspace
-
-- **方法**：`POST`
-- **路径**：`/workspaces`
-- **说明**：创建游戏资料和 session 使用的 workspace。
-
-请求体：
-
-```json
-{
-  "name": "Middle Earth Demo",
-  "template": "dnd"
-}
-```
-
-| 参数名 | 类型 | 必填 | 说明 | 约束/示例 |
-|---|---|---:|---|---|
-| name | string | 是 | Workspace 名称 | 最大 80 字符 |
-| template | string/null | 否 | 初始化模板 | `dnd` |
-
-成功响应：
-
-```json
-{
-  "code": 0,
-  "message": "ok",
-  "data": {
-    "id": "ws_01jz8dnddemo00000000000001",
-    "name": "Middle Earth Demo",
-    "created_at": "2026-05-27T10:00:00.000Z",
-    "updated_at": "2026-05-27T10:00:00.000Z"
-  }
-}
-```
-
-失败场景：
-
-| 场景 | HTTP 状态码 | 业务码 | 说明 |
-|---|---:|---:|---|
-| 名称非法 | 400 | 4001001 | 名称为空或过长 |
-| 无写权限 | 403 | 4031001 | 缺少 `workspace:write` |
-
-#### 4.1.3 Get Workspace
-
-- **方法**：`GET`
-- **路径**：`/workspaces/{workspace_id}`
-- **说明**：获取 workspace 元数据。
-
-请求参数：
-
-| 参数名 | 类型 | 必填 | 说明 | 约束/示例 |
-|---|---|---:|---|---|
-| workspace_id | string | 是 | Workspace ID | `ws_01jz8dnddemo00000000000001` |
-
-成功响应同 Create Workspace 的 `data`。
-
-失败场景：
-
-| 场景 | HTTP 状态码 | 业务码 | 说明 |
-|---|---:|---:|---|
-| Workspace 不存在 | 404 | 4041001 | 查询不到对应 workspace |
-
-### 4.2 Session API
-
-#### 4.2.1 List Sessions
-
-- **方法**：`GET`
-- **路径**：`/workspaces/{workspace_id}/sessions`
-- **说明**：查询 workspace 下的 session。
-
-请求参数：
-
-| 参数名 | 类型 | 必填 | 说明 | 约束/示例 |
-|---|---|---:|---|---|
-| workspace_id | string | 是 | Workspace ID | `ws_...` |
-| agent_type | string | 否 | Agent 类型过滤 | `builder`, `dm`, `npc`, `explore`, `review` |
+| game_id | string | 否 | 关联游戏过滤 | `game_...` |
+| mode | string | 否 | Session 模式过滤 | `creation`, `runtime` |
 | page_no | integer | 否 | 页码 | `1` |
 | page_size | integer | 否 | 每页数量 | `20` |
 
@@ -279,14 +169,11 @@ Authorization: Bearer <access_token>
     "items": [
       {
         "id": "ses_01jz8dnddemo000000000001",
-        "workspace_id": "ws_01jz8dnddemo00000000000001",
         "agent_type": "builder",
         "mode": "creation",
         "title": "Create a Middle Earth adventure",
-        "parent_session_id": null,
         "metadata": {
-          "game_id": null,
-          "npc_id": null
+          "game_id": null
         },
         "created_at": "2026-05-27T10:00:00.000Z",
         "updated_at": "2026-05-27T10:05:00.000Z"
@@ -304,71 +191,13 @@ Authorization: Bearer <access_token>
 
 | 场景 | HTTP 状态码 | 业务码 | 说明 |
 |---|---:|---:|---|
-| Workspace 不存在 | 404 | 4041001 | 查询不到对应 workspace |
-| agent_type 非法 | 400 | 4001001 | Agent 类型不支持 |
+| mode 非法 | 400 | 4001001 | Session 模式不支持 |
 
-#### 4.2.2 Create Session
-
-- **方法**：`POST`
-- **路径**：`/workspaces/{workspace_id}/sessions`
-- **说明**：创建 primary 或 subagent session。
-
-请求体：
-
-```json
-{
-  "agent_type": "builder",
-  "mode": "creation",
-  "title": "Create a Middle Earth adventure",
-  "parent_session_id": null,
-  "metadata": {
-    "game_id": null,
-    "npc_id": null
-  }
-}
-```
-
-| 参数名 | 类型 | 必填 | 说明 | 约束/示例 |
-|---|---|---:|---|---|
-| agent_type | string | 是 | Agent 类型 | `builder`, `dm`, `npc`, `explore`, `review` |
-| mode | string | 是 | Session 模式 | `creation`, `runtime`, `review`, `explore` |
-| title | string | 否 | 标题 | 最大 120 字符 |
-| parent_session_id | string/null | 否 | Subagent 父 session | `ses_...` |
-| metadata | object | 否 | 关联信息 | `game_id`, `runtime_id`, `npc_id` |
-
-成功响应：
-
-```json
-{
-  "code": 0,
-  "message": "ok",
-  "data": {
-    "id": "ses_01jz8dnddemo000000000001",
-    "workspace_id": "ws_01jz8dnddemo00000000000001",
-    "agent_type": "builder",
-    "mode": "creation",
-    "title": "Create a Middle Earth adventure",
-    "parent_session_id": null,
-    "metadata": {},
-    "created_at": "2026-05-27T10:00:00.000Z",
-    "updated_at": "2026-05-27T10:00:00.000Z"
-  }
-}
-```
-
-失败场景：
-
-| 场景 | HTTP 状态码 | 业务码 | 说明 |
-|---|---:|---:|---|
-| Agent 类型非法 | 400 | 4001001 | Agent 未注册 |
-| 父 session 不存在 | 404 | 4041001 | 查询不到父 session |
-| 状态冲突 | 409 | 4091001 | mode 与 session 状态冲突 |
-
-#### 4.2.3 Get Session
+#### 4.1.2 Get Session
 
 - **方法**：`GET`
 - **路径**：`/sessions/{session_id}`
-- **说明**：获取 session 元数据。
+- **说明**：获取用户可进入的 primary/DM session 元数据。
 
 成功响应：
 
@@ -378,11 +207,9 @@ Authorization: Bearer <access_token>
   "message": "ok",
   "data": {
     "id": "ses_01jz8dnddemo000000000001",
-    "workspace_id": "ws_01jz8dnddemo00000000000001",
     "agent_type": "builder",
     "mode": "creation",
     "title": "Create a Middle Earth adventure",
-    "parent_session_id": null,
     "metadata": {
       "game_id": "game_01jz8dnddemo00000000001"
     },
@@ -397,10 +224,11 @@ Authorization: Bearer <access_token>
 | 场景 | HTTP 状态码 | 业务码 | 说明 |
 |---|---:|---:|---|
 | Session 不存在 | 404 | 4041001 | 查询不到对应 session |
+| 无权进入 | 403 | 4031001 | 当前用户不可访问该 session |
 
-### 4.3 Chat API
+### 4.2 Chat API
 
-#### 4.3.1 List Messages
+#### 4.2.1 List Messages
 
 - **方法**：`GET`
 - **路径**：`/sessions/{session_id}/messages`
@@ -451,7 +279,7 @@ Authorization: Bearer <access_token>
 | Session 不存在 | 404 | 4041001 | 查询不到对应 session |
 | 私有记录无权限 | 403 | 4031001 | 缺少读取私有记录权限 |
 
-#### 4.3.2 Send Message
+#### 4.2.2 Send Message
 
 - **方法**：`POST`
 - **路径**：`/sessions/{session_id}/messages`
@@ -516,13 +344,13 @@ Authorization: Bearer <access_token>
 | 消息为空 | 400 | 4001003 | content 为空 |
 | Agent 正在运行 | 409 | 4091002 | 当前 session 已有 active run |
 
-### 4.4 Game Creation API
+### 4.3 Game Creation API
 
-#### 4.4.1 Create Game
+#### 4.3.1 Create Game
 
 - **方法**：`POST`
-- **路径**：`/workspaces/{workspace_id}/games`
-- **说明**：提交自然语言需求，启动 Builder Agent 生成 DND 冒险资料。
+- **路径**：`/games`
+- **说明**：提交自然语言需求，启动 Builder Agent 生成 DND 冒险资料。服务端负责创建或复用后端 workspace 与 primary/builder session。
 
 请求体：
 
@@ -542,7 +370,7 @@ Authorization: Bearer <access_token>
 | 参数名 | 类型 | 必填 | 说明 | 约束/示例 |
 |---|---|---:|---|---|
 | prompt | string | 是 | 游戏创作需求 | 1 到 12000 字符 |
-| session_id | string | 否 | 复用的 builder session | `ses_...` |
+| session_id | string | 否 | 复用的用户可进入 builder session | `ses_...` |
 | options.language | string | 否 | 输出语言 | `zh-CN` |
 | options.tone | string | 否 | 叙事风格 | `heroic fantasy` |
 | options.player_count | integer | 否 | 玩家数量 | `1` 到 `8` |
@@ -571,11 +399,11 @@ Authorization: Bearer <access_token>
 | Session 不存在 | 404 | 4041001 | 指定 builder session 不存在 |
 | Agent 正在运行 | 409 | 4091002 | builder session 已有 active run |
 
-#### 4.4.2 Get Game
+#### 4.3.2 Get Game
 
 - **方法**：`GET`
 - **路径**：`/games/{game_id}`
-- **说明**：读取生成的游戏资料与校验结果。
+- **说明**：读取生成的游戏资料。
 
 成功响应：
 
@@ -585,7 +413,6 @@ Authorization: Bearer <access_token>
   "message": "ok",
   "data": {
     "id": "game_01jz8dnddemo00000000001",
-    "workspace_id": "ws_01jz8dnddemo00000000000001",
     "api_version": "v1",
     "status": "ready",
     "title": "Shadows over the White Road",
@@ -610,10 +437,6 @@ Authorization: Bearer <access_token>
       "combat_model": "turn_based"
     },
     "items": [],
-    "validation": {
-      "status": "passed",
-      "issues": []
-    },
     "created_at": "2026-05-27T10:00:00.000Z",
     "updated_at": "2026-05-27T10:08:00.000Z"
   }
@@ -627,55 +450,13 @@ Authorization: Bearer <access_token>
 | Game 不存在 | 404 | 4041001 | 查询不到对应 game |
 | DM 私有字段无权限 | 403 | 4031001 | 缺少读取私有资料权限 |
 
-#### 4.4.3 Validate Game
+### 4.4 Game Runtime API
 
-- **方法**：`POST`
-- **路径**：`/games/{game_id}/validate`
-- **说明**：执行逻辑、难度、隐藏信息泄露和素材完整性检查。
-
-请求体：
-
-```json
-{
-  "checks": ["logic", "balance", "hidden_information", "material_completeness"]
-}
-```
-
-成功响应：
-
-```json
-{
-  "code": 0,
-  "message": "ok",
-  "data": {
-    "status": "warning",
-    "issues": [
-      {
-        "severity": "warning",
-        "category": "balance",
-        "path": "monsters[2].challenge_rating",
-        "message": "The troll encounter may be too hard for level 1 characters.",
-        "suggestion": "Lower hp or add an escape route."
-      }
-    ]
-  }
-}
-```
-
-失败场景：
-
-| 场景 | HTTP 状态码 | 业务码 | 说明 |
-|---|---:|---:|---|
-| Game 不存在 | 404 | 4041001 | 查询不到对应 game |
-| 阻塞性校验失败 | 422 | 4221001 | 游戏资料存在 schema 或规则问题 |
-
-### 4.5 Game Runtime API
-
-#### 4.5.1 Start Runtime
+#### 4.4.1 Start Runtime
 
 - **方法**：`POST`
 - **路径**：`/games/{game_id}/runtime`
-- **说明**：基于已生成游戏启动 DM runtime session。
+- **说明**：基于已生成游戏启动 DM runtime session。服务端负责创建 DM session 和必要的 NPC subagent session。
 
 请求体：
 
@@ -722,7 +503,7 @@ Authorization: Bearer <access_token>
 | Game 未 ready | 409 | 4091001 | game 必须先完成生成和校验 |
 | 角色不存在 | 404 | 4041001 | 至少一个角色 ID 不存在 |
 
-#### 4.5.2 Get Runtime State
+#### 4.4.2 Get Runtime State
 
 - **方法**：`GET`
 - **路径**：`/runtime/{runtime_id}/state`
@@ -762,197 +543,6 @@ Authorization: Bearer <access_token>
 | Runtime 不存在 | 404 | 4041001 | 查询不到 runtime |
 | DM 私有状态无权限 | 403 | 4031001 | 缺少读取私有状态权限 |
 
-#### 4.5.3 Submit Player Action
-
-- **方法**：`POST`
-- **路径**：`/runtime/{runtime_id}/actions`
-- **说明**：提交玩家行动，由 DM Agent 处理并推进游戏。
-
-请求体：
-
-```json
-{
-  "session_id": "ses_01jz8dnddemo000000000010",
-  "character_id": "char_01jz8dnddemo0000000001",
-  "action_type": "investigate",
-  "content": "I inspect the mud near the stable door.",
-  "declared_target_id": null
-}
-```
-
-| 参数名 | 类型 | 必填 | 说明 | 约束/示例 |
-|---|---|---:|---|---|
-| session_id | string | 是 | DM session ID | `ses_...` |
-| character_id | string | 是 | 行动角色 | `char_...` |
-| action_type | string | 是 | 行动类型 | `speak`, `move`, `investigate`, `attack`, `use_item`, `cast_spell` |
-| content | string | 是 | 自然语言行动 | 1 到 12000 字符 |
-| declared_target_id | string/null | 否 | 声明目标 | `npc_...` |
-
-成功响应：
-
-```json
-{
-  "code": 0,
-  "message": "ok",
-  "data": {
-    "action_id": "act_01jz8dnddemo000000000001",
-    "status": "queued",
-    "agent_run": {
-      "id": "run_01jz8dnddemo000000000010",
-      "status": "queued"
-    }
-  }
-}
-```
-
-失败场景：
-
-| 场景 | HTTP 状态码 | 业务码 | 说明 |
-|---|---:|---:|---|
-| 行动非法 | 400 | 4001001 | 类型或正文不合法 |
-| Runtime 非 active | 409 | 4091001 | 当前运行时不可提交行动 |
-| DM Agent 正在运行 | 409 | 4091002 | DM session 已有 active run |
-
-#### 4.5.4 Roll Dice
-
-- **方法**：`POST`
-- **路径**：`/runtime/{runtime_id}/dice-rolls`
-- **说明**：执行能力检定、攻击、豁免或自由掷骰。
-
-请求体：
-
-```json
-{
-  "expression": "1d20+3",
-  "reason": "Investigate the stable tracks",
-  "roller": {
-    "type": "character",
-    "id": "char_01jz8dnddemo0000000001",
-    "name": "Arin"
-  },
-  "visibility": "public"
-}
-```
-
-成功响应：
-
-```json
-{
-  "code": 0,
-  "message": "ok",
-  "data": {
-    "id": "roll_01jz8dnddemo0000000001",
-    "expression": "1d20+3",
-    "rolls": [14],
-    "modifier": 3,
-    "total": 17,
-    "reason": "Investigate the stable tracks",
-    "roller": {
-      "type": "character",
-      "id": "char_01jz8dnddemo0000000001",
-      "name": "Arin"
-    },
-    "visibility": "public",
-    "created_at": "2026-05-27T10:12:30.000Z"
-  }
-}
-```
-
-失败场景：
-
-| 场景 | HTTP 状态码 | 业务码 | 说明 |
-|---|---:|---:|---|
-| 掷骰表达式非法 | 400 | 4001001 | expression 无法解析 |
-| Runtime 不存在 | 404 | 4041001 | 查询不到 runtime |
-
-#### 4.5.5 Update Runtime State
-
-- **方法**：`PATCH`
-- **路径**：`/runtime/{runtime_id}/state`
-- **说明**：由 DM、工具或授权后端逻辑更新运行时状态。
-
-请求体：
-
-```json
-{
-  "expected_version": 3,
-  "patch": {
-    "characters": [
-      {
-        "id": "char_01jz8dnddemo0000000001",
-        "hp": {
-          "current": 9,
-          "max": 12,
-          "temporary": 0
-        },
-        "conditions": ["prone"]
-      }
-    ]
-  },
-  "reason": "Damage from goblin ambush"
-}
-```
-
-成功响应：
-
-```json
-{
-  "code": 0,
-  "message": "ok",
-  "data": {
-    "runtime_id": "rt_01jz8dnddemo000000000001",
-    "version": 4,
-    "updated_at": "2026-05-27T10:13:00.000Z"
-  }
-}
-```
-
-失败场景：
-
-| 场景 | HTTP 状态码 | 业务码 | 说明 |
-|---|---:|---:|---|
-| 版本冲突 | 409 | 4091001 | `expected_version` 已过期 |
-| patch 非法 | 400 | 4001002 | patch 不符合 RuntimeState schema |
-
-#### 4.5.6 Notify NPC
-
-- **方法**：`POST`
-- **路径**：`/runtime/{runtime_id}/npcs/{npc_id}/notify`
-- **说明**：DM 向重要 NPC subagent 发送私有信息，并控制 NPC 是否回复。
-
-请求体：
-
-```json
-{
-  "dm_session_id": "ses_01jz8dnddemo000000000010",
-  "content": "The player asked about the missing caravan. You know the black rider came at dusk, but you fear saying it aloud.",
-  "allow_reply": true,
-  "visibility": "npc_private"
-}
-```
-
-成功响应：
-
-```json
-{
-  "code": 0,
-  "message": "ok",
-  "data": {
-    "npc_session_id": "ses_01jz8dnddemo000000000020",
-    "notification_id": "ntf_01jz8dnddemo000000000001",
-    "status": "delivered"
-  }
-}
-```
-
-失败场景：
-
-| 场景 | HTTP 状态码 | 业务码 | 说明 |
-|---|---:|---:|---|
-| NPC 不存在 | 404 | 4041001 | 当前 runtime 无对应 NPC |
-| 私有信息无权限 | 403 | 4031001 | 调用方不可发送 NPC 私有上下文 |
-| NPC Agent 正在运行 | 409 | 4091002 | NPC session 已有 active run |
-
 ---
 
 ## 5. WebSocket Event 协议
@@ -970,7 +560,7 @@ Authorization: Bearer <access_token>
   "type": "subscribe",
   "request_id": "req_ws_001",
   "payload": {
-    "workspace_id": "ws_01jz8dnddemo00000000000001",
+    "game_ids": ["game_01jz8dnddemo00000000001"],
     "session_ids": ["ses_01jz8dnddemo000000000010"],
     "runtime_ids": ["rt_01jz8dnddemo000000000001"]
   }
@@ -1002,29 +592,23 @@ Authorization: Bearer <access_token>
 | Event type | 说明 | Payload |
 |---|---|---|
 | `message.created` | 新聊天消息已写入 | `ChatMessage` |
-| `agent.thinking` | Agent 正在处理 | `{ "session_id": "ses_...", "run_id": "run_...", "summary": "..." }` |
-| `agent.tool_call.started` | 工具调用开始 | `ToolCallEvent` |
-| `agent.tool_call.completed` | 工具调用完成 | `ToolCallEvent` |
-| `dice.result` | 掷骰完成 | `DiceRollResult` |
+| `agent.status_changed` | Agent 运行状态变化 | `{ "session_id": "ses_...", "run_id": "run_...", "status": "queued|running|idle|failed" }` |
 | `runtime.state_updated` | 运行时状态更新 | `RuntimeState` 或增量 patch |
 | `runtime.scene_updated` | 当前场景更新 | `SceneState` |
-| `npc.notified` | NPC 已收到私有通知 | `{ "npc_id": "npc_...", "notification_id": "ntf_..." }` |
 | `error` | WebSocket 错误 | 通用错误对象 |
 
-工具调用事件示例：
+Agent 状态事件示例：
 
 ```json
 {
-  "type": "agent.tool_call.completed",
+  "type": "agent.status_changed",
   "event_id": "evt_01jz8dnddemo000000000002",
   "request_id": "req_ws_001",
   "occurred_at": "2026-05-27T10:12:05.000Z",
   "payload": {
     "session_id": "ses_01jz8dnddemo000000000010",
     "run_id": "run_01jz8dnddemo000000000010",
-    "tool_name": "dice_roll",
-    "status": "completed",
-    "result_summary": "1d20+3 = 17"
+    "status": "running"
   }
 }
 ```
@@ -1048,32 +632,19 @@ Authorization: Bearer <access_token>
 
 ## 6. DND 游戏数据对象说明
 
-### 6.1 Workspace
-
-| 字段名 | 类型 | 说明 |
-|---|---|---|
-| id | string | Workspace ID |
-| name | string | 展示名称 |
-| created_at | string | 创建时间 |
-| updated_at | string | 更新时间 |
-
-客户端只能通过 `workspace_id`、对象 ID、相对资源路径或专门的文件/资产 API 访问 workspace 资源，不应依赖服务端本地文件系统路径。
-
-### 6.2 Session
+### 6.1 Session
 
 | 字段名 | 类型 | 说明 |
 |---|---|---|
 | id | string | Session ID |
-| workspace_id | string | Workspace ID |
-| agent_type | string | `builder`, `dm`, `npc`, `explore`, `review` |
-| mode | string | `creation`, `runtime`, `review`, `explore` |
+| agent_type | string | `builder`, `dm` |
+| mode | string | `creation`, `runtime` |
 | title | string/null | 标题 |
-| parent_session_id | string/null | subagent 的父 session |
-| metadata | object | game、runtime 或 NPC 关联信息 |
+| metadata | object | game 或 runtime 关联信息 |
 | created_at | string | 创建时间 |
 | updated_at | string | 更新时间 |
 
-### 6.3 ChatMessage
+### 6.2 ChatMessage
 
 | 字段名 | 类型 | 说明 |
 |---|---|---|
@@ -1086,7 +657,7 @@ Authorization: Bearer <access_token>
 | metadata | object | 结构化元数据 |
 | created_at | string | 创建时间 |
 
-### 6.4 SenderIdentity
+### 6.3 SenderIdentity
 
 | 字段名 | 类型 | 说明 |
 |---|---|---|
@@ -1095,12 +666,11 @@ Authorization: Bearer <access_token>
 | agent_type | string/null | Agent 类型 |
 | npc_id | string/null | NPC ID |
 
-### 6.5 Game
+### 6.4 Game
 
 | 字段名 | 类型 | 说明 |
 |---|---|---|
 | id | string | Game ID |
-| workspace_id | string | Workspace ID |
 | api_version | string | 当前为 `v1` |
 | status | string | `creating`, `validating`, `ready`, `failed`, `archived` |
 | title | string | 游戏标题 |
@@ -1110,7 +680,6 @@ Authorization: Bearer <access_token>
 | monsters | Monster[] | 怪物图鉴 |
 | rules | Rules | 骰子、战斗、状态和互动规则 |
 | items | Item[] | 物品列表 |
-| validation | ValidationResult | 审查结果 |
 | created_at | string | 创建时间 |
 | updated_at | string | 更新时间 |
 
@@ -1119,7 +688,6 @@ Authorization: Bearer <access_token>
 ```json
 {
   "id": "game_01jz8dnddemo000000000001",
-  "workspace_id": "ws_01jz8dnddemo00000000000001",
   "api_version": "v1",
   "status": "ready",
   "title": "Shadows Over Bree",
@@ -1149,42 +717,12 @@ Authorization: Bearer <access_token>
     "damage_types": ["slashing", "fire", "psychic"]
   },
   "items": [],
-  "validation": {
-    "status": "passed",
-    "issues": [],
-    "reviewed_at": "2026-05-27T10:15:00.000Z"
-  },
   "created_at": "2026-05-27T10:00:00.000Z",
   "updated_at": "2026-05-27T10:15:00.000Z"
 }
 ```
 
-### 6.6 ValidationResult
-
-| 字段名 | 类型 | 说明 |
-|---|---|---|
-| status | string | `passed`, `warning`, `failed` |
-| issues | object[] | 审查问题列表，每项包含 `path`、`severity`、`message` 和可选 `suggestion` |
-| reviewed_at | string/null | 最近一次审查完成时间 |
-
-示例：
-
-```json
-{
-  "status": "warning",
-  "issues": [
-    {
-      "path": "adventure.quests[0].success_conditions",
-      "severity": "medium",
-      "message": "Quest has no non-combat resolution.",
-      "suggestion": "Add a negotiation or stealth success condition."
-    }
-  ],
-  "reviewed_at": "2026-05-27T10:15:00.000Z"
-}
-```
-
-### 6.7 WorldSetting
+### 6.5 WorldSetting
 
 | 字段名 | 类型 | 说明 |
 |---|---|---|
@@ -1194,7 +732,7 @@ Authorization: Bearer <access_token>
 | factions | object[] | 阵营及公开动机 |
 | dm_private_lore | object[] | DM 私有背景知识 |
 
-### 6.8 AdventureOutline
+### 6.6 AdventureOutline
 
 | 字段名 | 类型 | 说明 |
 |---|---|---|
@@ -1205,7 +743,7 @@ Authorization: Bearer <access_token>
 | hidden_clues | HiddenClue[] | 隐藏线索与揭示条件 |
 | opening_scene_id | string | 初始场景 ID |
 
-### 6.9 MapInfo
+### 6.7 MapInfo
 
 | 字段名 | 类型 | 说明 |
 |---|---|---|
@@ -1237,7 +775,7 @@ Authorization: Bearer <access_token>
 }
 ```
 
-### 6.10 HiddenClue
+### 6.8 HiddenClue
 
 | 字段名 | 类型 | 说明 |
 |---|---|---|
@@ -1261,7 +799,7 @@ Authorization: Bearer <access_token>
 }
 ```
 
-### 6.11 Quest
+### 6.9 Quest
 
 | 字段名 | 类型 | 说明 |
 |---|---|---|
@@ -1273,7 +811,7 @@ Authorization: Bearer <access_token>
 | failure_conditions | string[] | 失败条件 |
 | rewards | Item[] | 奖励 |
 
-### 6.12 CharacterInfo
+### 6.10 CharacterInfo
 
 | 字段名 | 类型 | 说明 |
 |---|---|---|
@@ -1289,7 +827,7 @@ Authorization: Bearer <access_token>
 | public_background | string | 玩家可见背景 |
 | private_notes | string/null | DM 私有说明 |
 
-### 6.13 CharacterStats
+### 6.11 CharacterStats
 
 | 字段名 | 类型 | 说明 |
 |---|---|---|
@@ -1302,7 +840,7 @@ Authorization: Bearer <access_token>
 | armor_class | integer | 护甲等级 |
 | proficiency_bonus | integer | 熟练加值 |
 
-### 6.14 HitPoints
+### 6.12 HitPoints
 
 | 字段名 | 类型 | 说明 |
 |---|---|---|
@@ -1325,7 +863,7 @@ Authorization: Bearer <access_token>
 }
 ```
 
-### 6.15 Item
+### 6.13 Item
 
 | 字段名 | 类型 | 说明 |
 |---|---|---|
@@ -1357,7 +895,7 @@ Authorization: Bearer <access_token>
 }
 ```
 
-### 6.16 NPCInfo
+### 6.14 NPCInfo
 
 | 字段名 | 类型 | 说明 |
 |---|---|---|
@@ -1372,7 +910,7 @@ Authorization: Bearer <access_token>
 | memory_session_id | string/null | 保存记忆的 subagent session |
 | can_reply_publicly | boolean | 是否允许写入主 chat |
 
-### 6.17 Monster
+### 6.15 Monster
 
 | 字段名 | 类型 | 说明 |
 |---|---|---|
@@ -1385,7 +923,7 @@ Authorization: Bearer <access_token>
 | loot | Item[] | 掉落或奖励 |
 | tactics | string | DM 使用策略 |
 
-### 6.18 CombatAction
+### 6.16 CombatAction
 
 | 字段名 | 类型 | 说明 |
 |---|---|---|
@@ -1419,7 +957,7 @@ Authorization: Bearer <access_token>
 }
 ```
 
-### 6.19 StatusEffect
+### 6.17 StatusEffect
 
 | 字段名 | 类型 | 说明 |
 |---|---|---|
@@ -1448,7 +986,7 @@ Authorization: Bearer <access_token>
 }
 ```
 
-### 6.20 Rules
+### 6.18 Rules
 
 | 字段名 | 类型 | 说明 |
 |---|---|---|
@@ -1459,7 +997,7 @@ Authorization: Bearer <access_token>
 | status_effects | StatusEffect[] | 支持的状态效果 |
 | damage_types | string[] | 伤害类型 |
 
-### 6.21 DiceRollResult
+### 6.19 DiceRollResult
 
 | 字段名 | 类型 | 说明 |
 |---|---|---|
@@ -1473,7 +1011,7 @@ Authorization: Bearer <access_token>
 | visibility | string | `public`, `dm_only`, `private_to_player` |
 | created_at | string | 创建时间 |
 
-### 6.22 RuntimeState
+### 6.20 RuntimeState
 
 | 字段名 | 类型 | 说明 |
 |---|---|---|
@@ -1487,7 +1025,7 @@ Authorization: Bearer <access_token>
 | dice_results | DiceRollResult[] | 最近掷骰结果 |
 | updated_at | string | 更新时间 |
 
-### 6.23 SceneState
+### 6.21 SceneState
 
 | 字段名 | 类型 | 说明 |
 |---|---|---|
@@ -1500,7 +1038,7 @@ Authorization: Bearer <access_token>
 | turn_order | string[] | 角色和 NPC 行动顺序 |
 | objects | object[] | 可交互场景对象 |
 
-### 6.24 版本兼容策略
+### 6.22 版本兼容策略
 
 - 小版本可新增可选字段，不改变 `api_version`。
 - 破坏性变更必须使用新版本路径，例如 `/api/v2`。
@@ -1513,5 +1051,6 @@ Authorization: Bearer <access_token>
 
 | 版本 | 日期 | 变更内容 |
 |---|---|---|
+| v1.0.2 | 2026-05-27 | 收敛公开 API：删除 Workspace API、Create Session、Validate Game、Submit Player Action、Roll Dice、Update Runtime State 和 Notify NPC，明确 workspace 为后端内部实现细节。 |
 | v1.0.1 | 2026-05-27 | 移除 Workspace API 的服务端路径暴露，统一 Session 过滤参数为 `agent_type`，补充核心 DND 对象字段和示例。 |
 | v1.0.0 | 2026-05-27 | 初始版本，覆盖 Workspace、Session、Chat、Game Creation、Game Runtime、WebSocket、鉴权、状态码、错误码和 DND 数据对象。 |
