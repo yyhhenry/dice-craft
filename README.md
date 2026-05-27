@@ -104,4 +104,4 @@ Primary 通过 `notify` 控制 NPC 收到的信息；NPC 通过独立 session �
 - 通用 DND Skill 复用掷骰、角色卡、状态、攻击判定和伤害计算。
 - WebUI 复用聊天、角色卡、地图、状态、掷骰和战斗面板。
 
-详细任务拆分见 [task.md](task.md)。
+详细任务拆分见 [task_v3.md](docs/task/task_v3.md)。
