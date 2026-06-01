@@ -3,6 +3,13 @@ import { createApp, type App } from "./app"
 import { WorkspaceManager } from "./workspace/manager"
 import type { WorkspaceID } from "./workspace/types"
 
+if (process.argv.includes("--serve")) {
+  const { startServer } = await import("./server/start")
+  await startServer()
+} else {
+  main().catch(console.error)
+}
+
 function wrapChatXml(sender: string, senderName: string, content: string): string {
   return `<chat sender="${sender}" sender_name="${senderName}">${content}</chat>`
 }
@@ -145,5 +152,3 @@ async function main() {
     }
   }
 }
-
-main().catch(console.error)

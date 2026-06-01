@@ -1,6 +1,7 @@
 import fs from "fs"
 import path from "path"
 import { type WorkspaceID, type UserID, type WorkspaceInfo } from "./types"
+import { type WorkspaceConfig } from "../shared/schemas"
 import { loadTemplates } from "./templates.macro" with { type: "macro" }
 
 // At bundle time, this becomes a literal { "skills/dice/SKILL.md": "...", ... }
@@ -85,5 +86,17 @@ export class WorkspaceManager {
     if (fs.existsSync(metaPath)) {
       fs.unlinkSync(metaPath)
     }
+  }
+
+  getConfig(id: WorkspaceID): WorkspaceConfig | undefined {
+    const configPath = path.join(this.baseDir, id, "config.json")
+    if (!fs.existsSync(configPath)) return undefined
+    return JSON.parse(fs.readFileSync(configPath, "utf-8"))
+  }
+
+  setConfig(id: WorkspaceID, config: WorkspaceConfig): void {
+    const wsPath = path.join(this.baseDir, id)
+    fs.mkdirSync(wsPath, { recursive: true })
+    fs.writeFileSync(path.join(wsPath, "config.json"), JSON.stringify(config, null, 2))
   }
 }
