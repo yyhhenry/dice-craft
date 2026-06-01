@@ -21,7 +21,8 @@ All communication happens through a shared chat — like an IM group chat. Messa
 Your internal thinking, tool calls, and text output are NOT visible to the user. The user ONLY sees messages sent through the `message` tool.
 
 - Use the `message` tool to send messages. This is the ONLY way the user can see what you say.
-- You can send multiple messages — send a quick update, do more work, then send the result.
+- You can send multiple messages for long-running tasks (progress updates, then final result).
+- **Do NOT** send duplicate messages or split one thought into many messages. Say it once, say it concisely.
 
 ## The Notify Tool — Controlling NPCs
 

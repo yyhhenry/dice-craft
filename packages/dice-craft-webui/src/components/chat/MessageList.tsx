@@ -1,5 +1,4 @@
 import { useEffect, useRef } from "react"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { MessageBubble } from "./MessageBubble"
 import type { ChatMessage } from "@/lib/api"
 
@@ -9,6 +8,7 @@ interface MessageListProps {
 }
 
 export function MessageList({ messages, loading }: MessageListProps) {
+  const containerRef = useRef<HTMLDivElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -32,13 +32,13 @@ export function MessageList({ messages, loading }: MessageListProps) {
   }
 
   return (
-    <ScrollArea className="flex-1">
+    <div ref={containerRef} className="flex-1 overflow-y-auto">
       <div className="space-y-4 p-4">
         {messages.map((msg) => (
           <MessageBubble key={msg.id} message={msg} />
         ))}
         <div ref={bottomRef} />
       </div>
-    </ScrollArea>
+    </div>
   )
 }

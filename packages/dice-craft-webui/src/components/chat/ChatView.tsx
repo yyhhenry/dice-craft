@@ -25,7 +25,7 @@ export function ChatView({ sessionId, workspaceId, sessionTitle, onBack }: ChatV
   }, [historyMessages, wsMessages])
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full min-h-0 flex-col">
       <ChatHeader title={sessionTitle} onBack={onBack}>
         <ChatStatus status={status} connected={connected} />
       </ChatHeader>

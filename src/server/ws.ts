@@ -78,6 +78,12 @@ export class WsManager {
 
     const { app } = instance
 
+    // Update session title from first user message
+    const session = this.sessionManager.get(sessionId)
+    if (session && session.title === "New conversation") {
+      this.sessionManager.update(sessionId, { title: content.slice(0, 50) })
+    }
+
     // Write user message to chat (triggers onMessage → broadcast)
     app.chatManager.sendMessage(sessionId, {
       content,

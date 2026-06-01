@@ -28,8 +28,8 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
   }
 
   return (
-    <div className="border-t p-4">
-      <div className="flex gap-2">
+    <div className="shrink-0 border-t p-4">
+      <div className="flex items-end gap-2">
         <Textarea
           ref={textareaRef}
           value={value}
