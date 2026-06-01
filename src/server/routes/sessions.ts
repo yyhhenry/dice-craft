@@ -32,6 +32,21 @@ export function sessionRoutes(deps: ServerDeps) {
     return c.json(messages)
   })
 
+  router.get("/sessions/:id/scene", (c) => {
+    const id = c.req.param("id")
+    const state = deps.sceneManager.getState(id)
+    if (!state) {
+      return c.json({
+        sessionId: id,
+        version: 0,
+        map: {},
+        characters: [],
+        updatedAt: new Date().toISOString(),
+      })
+    }
+    return c.json(state)
+  })
+
   router.delete("/sessions/:id", (c) => {
     const id = c.req.param("id")
     const session = deps.sessionManager.get(id)

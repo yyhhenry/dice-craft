@@ -92,3 +92,24 @@ description: Brief description
 - Maintain game integrity — never leak hidden information to unauthorized parties
 - Always use `message` to communicate — your text output is invisible
 - Control NPC information carefully — only tell them what their character would know
+
+## Scene & State
+
+Maintain internal game state in `.game-state/` (file tools) — this is private. Use `update_scene` to control what the player sees — this is public. After game actions: update internal state → update_scene → message.
+
+### Maps
+Write a CSV map file (`.game-state/*.map.csv`), one terrain name per cell, comma-separated rows:
+wall,wall,wall,wall
+wall,wood,wood,wall
+wall,wall,wall,wall
+Valid terrain: wall, grass, stone, wood, dirt, sand, water, lava, ice, void
+Append .dark or .light for shade variants: wood.dark (furniture), stone.light (accent)
+Then call `update_scene` with `mapFile` path. Use `edit` for tweaks, `bash` for algorithmic effects.
+
+### Characters
+When spawning an NPC, also add them to the scene via `update_scene` with `characters` — set name, role, location, and summary.
+
+### Important: full replacement
+Array fields (characters, overlays, labels, mainQuest) are **full replacement** — include ALL items you want to keep. Omitted items are removed. When switching scenes, pass `characters: []` and `mainQuest: {}` to clear old data.
+
+Never leak hidden info into SceneState.

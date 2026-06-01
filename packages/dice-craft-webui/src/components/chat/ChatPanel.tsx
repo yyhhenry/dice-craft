@@ -4,17 +4,20 @@ import { MessageList } from "./MessageList"
 import { ChatInput } from "./ChatInput"
 import { ChatStatus } from "./ChatStatus"
 import { useMessages } from "@/hooks/useMessages"
-import { useWebSocket } from "@/hooks/useWebSocket"
+import type { ChatMessage } from "@/lib/api"
+import type { AgentStatus } from "@/hooks/useWebSocket"
 
 interface ChatPanelProps {
   sessionId: string
-  workspaceId: string
+  wsMessages: ChatMessage[]
+  status: AgentStatus
+  connected: boolean
+  send: (content: string) => void
   active?: boolean
 }
 
-export function ChatPanel({ sessionId, workspaceId, active }: ChatPanelProps) {
+export function ChatPanel({ sessionId, wsMessages, status, connected, send, active }: ChatPanelProps) {
   const { messages: historyMessages, loading } = useMessages(sessionId)
-  const { messages: wsMessages, status, connected, send } = useWebSocket(sessionId, workspaceId)
 
   const allMessages = useMemo(() => {
     const seen = new Set(historyMessages.map((m) => m.id))

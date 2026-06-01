@@ -4,6 +4,7 @@ import type { SessionManager } from "../session/manager"
 import type { WorkspaceID } from "../workspace/types"
 import type { ModelConfig } from "../model/openai"
 import type { ChatMessage } from "../chat/types"
+import type { SceneState } from "../shared/schemas"
 import type { ChatCompletionMessageParam } from "openai/resources/chat/completions"
 
 export interface AppPoolDeps {
@@ -31,6 +32,7 @@ export class AppPool {
     callbacks: {
       onMessage?: (sessionId: string, msg: ChatMessage) => void
       onStatusChange?: (sessionId: string, primaryActive: boolean, subagentCount: number) => void
+      onSceneUpdate?: (sessionId: string, state: SceneState) => void
     },
   ): AppInstance {
     const existing = this.instances.get(sessionId)
@@ -87,6 +89,10 @@ export class AppPool {
     app.chatManager.onMessage((msg) => {
       callbacks.onMessage?.(sessionId, msg)
     })
+
+    app.onSceneUpdate = (state) => {
+      callbacks.onSceneUpdate?.(sessionId, state)
+    }
 
     const instance: AppInstance = { app, sessionId, workspaceId }
     this.instances.set(sessionId, instance)

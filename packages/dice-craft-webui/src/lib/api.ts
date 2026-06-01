@@ -1,4 +1,5 @@
 import type { WorkspaceConfig } from "@shared/schemas"
+import type { SceneState } from "@shared/schemas"
 
 export interface WorkspaceInfo {
   id: string
@@ -74,6 +75,9 @@ export const api = {
 
   getMessages: (sessionId: string) =>
     request<ChatMessage[]>(`/api/sessions/${sessionId}/messages`),
+
+  getScene: (sessionId: string) =>
+    request<SceneState>(`/api/sessions/${sessionId}/scene`),
 
   deleteSession: (sessionId: string) =>
     request<{ ok: boolean }>(`/api/sessions/${sessionId}`, { method: "DELETE" }),

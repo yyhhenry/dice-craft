@@ -3,6 +3,7 @@ import type { AppPool } from "./app-pool"
 import type { SessionManager } from "../session/manager"
 import type { ChatMessage } from "../chat/types"
 import type { WorkspaceID } from "../workspace/types"
+import type { SceneState } from "../shared/schemas"
 
 export interface WsData {
   sessionId: string
@@ -70,6 +71,7 @@ export class WsManager {
       instance = this.appPool.getOrCreate(sessionId, workspaceId, {
         onMessage: (sid, msg) => this.broadcastMessage(sid, msg),
         onStatusChange: (sid, primaryActive, npcCount) => this.sendStatus(sid, primaryActive, npcCount),
+        onSceneUpdate: (sid, state) => this.broadcastScene(sid, state),
       })
     } catch (err) {
       this.broadcast(sessionId, JSON.stringify({ type: "error", payload: { message: err instanceof Error ? err.message : "Failed to initialize" } }))
@@ -108,6 +110,10 @@ export class WsManager {
 
   private broadcastMessage(sessionId: string, msg: ChatMessage): void {
     this.broadcast(sessionId, JSON.stringify({ type: "message", payload: msg }))
+  }
+
+  broadcastScene(sessionId: string, state: SceneState): void {
+    this.broadcast(sessionId, JSON.stringify({ type: "scene.updated", payload: state }))
   }
 
   private sendStatus(sessionId: string, primaryActive: boolean, npcCount: number): void {

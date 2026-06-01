@@ -7,6 +7,7 @@ import { createDismissNpcTool } from "./tool/dismiss-npc"
 import { createSkillTool, discoverSkills, fmtSkills } from "./tool/skill"
 import { createMessageTool } from "./tool/message"
 import { createNotifyTool } from "./tool/notify"
+import { createUpdateSceneTool } from "./tool/scene"
 import { AgentRegistry, loadAgents } from "./agent"
 import { SubagentDispatcher } from "./agent/subagent"
 import { AgentLoop } from "./agent/loop"
@@ -14,7 +15,9 @@ import { SessionStore } from "./session/store"
 import { SessionManager } from "./session/manager"
 import { WorkspaceGuard } from "./workspace/guard"
 import { ChatManager } from "./chat/manager"
+import { SceneManager } from "./scene/manager"
 import type { WorkspaceID } from "./workspace/types"
+import type { SceneState } from "./shared/schemas"
 
 export interface App {
   model: OpenAIModel
@@ -22,10 +25,12 @@ export interface App {
   toolRegistry: ToolRegistry
   sessionManager: SessionManager
   chatManager: ChatManager
+  sceneManager: SceneManager
   dispatcher: SubagentDispatcher
   primaryAgent: AgentLoop
   workspacePath: string
   sessionRef: { id: string }
+  onSceneUpdate?: (state: SceneState) => void
 }
 
 export function createApp(options: {
@@ -57,6 +62,7 @@ export function createApp(options: {
   const sessionStore = new SessionStore(dataDir)
   const sessionManager = new SessionManager(sessionStore)
   const chatManager = new ChatManager(dataDir)
+  const sceneManager = new SceneManager(dataDir)
 
   const sessionRef = { id: options.primarySessionId ?? "sess_primary" }
   const onMessage = options.onMessage
@@ -110,6 +116,13 @@ export function createApp(options: {
     }),
   )
 
+  const sceneUpdateRef: { fn?: (state: SceneState) => void } = {}
+  toolRegistry.register(
+    createUpdateSceneTool(sceneManager, sessionRef, workspacePath, (state) => {
+      sceneUpdateRef.fn?.(state)
+    }),
+  )
+
   const skills = discoverSkills(skillsDir ?? path.join(workspacePath, "skills"))
   const skillsSection = fmtSkills(skills, false)
   const systemPrompt = [primary.systemPrompt, "", skillsSection].join("\n")
@@ -118,15 +131,27 @@ export function createApp(options: {
     systemPrompt,
   })
 
-  return {
+  const app: App = {
     model,
     agentRegistry,
     toolRegistry,
     sessionManager,
     chatManager,
+    sceneManager,
     dispatcher,
     primaryAgent,
     workspacePath,
     sessionRef,
   }
+
+  Object.defineProperty(app, "onSceneUpdate", {
+    get: () => sceneUpdateRef.fn,
+    set: (fn: ((state: SceneState) => void) | undefined) => {
+      sceneUpdateRef.fn = fn
+    },
+    enumerable: true,
+    configurable: true,
+  })
+
+  return app
 }

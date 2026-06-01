@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react"
 import type { ChatMessage } from "@/lib/api"
+import type { SceneState } from "@shared/schemas"
 
 export interface AgentStatus {
   primaryActive: boolean
@@ -9,6 +10,7 @@ export interface AgentStatus {
 export function useWebSocket(sessionId: string | null, workspaceId: string | null) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [status, setStatus] = useState<AgentStatus>({ primaryActive: false, npcCount: 0 })
+  const [scene, setScene] = useState<SceneState | null>(null)
   const [connected, setConnected] = useState(false)
   const wsRef = useRef<WebSocket | null>(null)
   const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -23,6 +25,7 @@ export function useWebSocket(sessionId: string | null, workspaceId: string | nul
 
     setMessages([])
     setStatus({ primaryActive: false, npcCount: 0 })
+    setScene(null)
     setConnected(false)
 
     let cancelled = false
@@ -49,6 +52,8 @@ export function useWebSocket(sessionId: string | null, workspaceId: string | nul
             setMessages((prev) => [...prev, data.payload as ChatMessage])
           } else if (data.type === "status") {
             setStatus(data.payload as AgentStatus)
+          } else if (data.type === "scene.updated") {
+            setScene(data.payload as SceneState)
           }
         } catch {
           // ignore parse errors
@@ -88,5 +93,5 @@ export function useWebSocket(sessionId: string | null, workspaceId: string | nul
     }
   }, [])
 
-  return { messages, status, connected, send }
+  return { messages, status, scene, connected, send }
 }
