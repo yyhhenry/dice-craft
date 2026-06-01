@@ -6,7 +6,6 @@ function createEmptyState(sessionId: string): SceneState {
   return {
     sessionId,
     version: 0,
-    dm: { id: "agent", name: "DM", status: "idle" },
     map: {},
     characters: [],
     updatedAt: new Date().toISOString(),
@@ -38,14 +37,12 @@ function mergeById<T extends HasId>(existing: T[], incoming: HasId[]): T[] {
 
 export interface UpdateScenePatch {
   title?: string
-  dm?: Record<string, unknown>
   map?: {
     title?: string
     mapFile?: string
     overlays?: HasId[]
     labels?: HasId[]
   }
-  texts?: HasId[]
   characters?: HasId[]
   mainQuest?: {
     title?: string
@@ -76,7 +73,6 @@ export class SceneManager {
     const current = this.getState(sessionId) ?? createEmptyState(sessionId)
 
     if (patch.title !== undefined) current.title = patch.title
-    if (patch.dm) current.dm = { ...current.dm, ...patch.dm } as SceneState["dm"]
 
     if (patch.map) {
       if (patch.map.title !== undefined) {
@@ -100,9 +96,6 @@ export class SceneManager {
       }
     }
 
-    if (patch.texts) {
-      current.texts = mergeById(current.texts ?? [], patch.texts)
-    }
     if (patch.characters) {
       current.characters = mergeById(current.characters, patch.characters)
     }

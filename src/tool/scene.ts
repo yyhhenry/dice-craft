@@ -12,7 +12,7 @@ export function createUpdateSceneTool(
     id: "update_scene",
     description:
       "Update the game scene displayed to the player. Pass only the fields you want to change. " +
-      "Array fields (characters, texts, map.overlays, map.labels, objectives) merge by id — " +
+      "Array fields (characters, map.overlays, map.labels, objectives) merge by id — " +
       "pass {id, _remove: true} to delete an element.\n\n" +
       "Map grid: write a CSV file first (.map.csv), one terrain name per cell, comma-separated. " +
       "Valid terrain: wall, grass, stone, wood, dirt, sand, water, lava, ice, void (or empty). " +
@@ -24,15 +24,6 @@ export function createUpdateSceneTool(
       type: "object",
       properties: {
         title: { type: "string", description: "Scene title" },
-        dm: {
-          type: "object",
-          description: "DM display state (partial update)",
-          properties: {
-            name: { type: "string" },
-            status: { type: "string", enum: ["idle", "thinking", "speaking", "offline"] },
-            latestSummary: { type: "string" },
-          },
-        },
         map: {
           type: "object",
           description: "Map configuration",
@@ -74,20 +65,6 @@ export function createUpdateSceneTool(
                 required: ["id"],
               },
             },
-          },
-        },
-        texts: {
-          type: "array",
-          description: "Text blocks displayed outside the map area. Merge by id.",
-          items: {
-            type: "object",
-            properties: {
-              id: { type: "string" },
-              content: { type: "string" },
-              style: { type: "string", enum: ["narrative", "status", "alert", "info"] },
-              _remove: { type: "boolean" },
-            },
-            required: ["id"],
           },
         },
         characters: {

@@ -39,7 +39,6 @@ export function sessionRoutes(deps: ServerDeps) {
       return c.json({
         sessionId: id,
         version: 0,
-        dm: { id: "agent", name: "DM", status: "idle" },
         map: {},
         characters: [],
         updatedAt: new Date().toISOString(),

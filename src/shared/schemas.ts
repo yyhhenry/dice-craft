@@ -47,19 +47,6 @@ export const SceneMapSchema = z.object({
   labels: z.array(MapLabelSchema).optional(),
 })
 
-export const SceneTextSchema = z.object({
-  id: z.string(),
-  content: z.string(),
-  style: z.enum(["narrative", "status", "alert", "info"]).optional(),
-})
-
-export const SceneDMSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  status: z.enum(["idle", "thinking", "speaking", "offline"]),
-  latestSummary: z.string().optional(),
-})
-
 export const CharacterRoleSchema = z.enum(["npc", "player", "enemy", "ally", "neutral"])
 
 export const SceneCharacterSchema = z.object({
@@ -104,9 +91,7 @@ export const SceneStateSchema = z.object({
   sessionId: z.string(),
   version: z.number().int(),
   title: z.string().optional(),
-  dm: SceneDMSchema,
   map: SceneMapSchema,
-  texts: z.array(SceneTextSchema).optional(),
   characters: z.array(SceneCharacterSchema),
   mainQuest: SceneQuestSchema.optional(),
   playerCard: ScenePlayerCardSchema.optional(),
@@ -117,8 +102,6 @@ export type SceneMapCell = z.infer<typeof SceneMapCellSchema>
 export type SceneOverlay = z.infer<typeof SceneOverlaySchema>
 export type MapLabel = z.infer<typeof MapLabelSchema>
 export type SceneMap = z.infer<typeof SceneMapSchema>
-export type SceneText = z.infer<typeof SceneTextSchema>
-export type SceneDM = z.infer<typeof SceneDMSchema>
 export type SceneCharacter = z.infer<typeof SceneCharacterSchema>
 export type SceneObjective = z.infer<typeof SceneObjectiveSchema>
 export type SceneQuest = z.infer<typeof SceneQuestSchema>
