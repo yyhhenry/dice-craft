@@ -6,10 +6,11 @@ import { Button } from "@/components/ui/button"
 interface ChatInputProps {
   onSend: (content: string) => void
   disabled?: boolean
+  active?: boolean
   children?: ReactNode
 }
 
-export function ChatInput({ onSend, disabled, children }: ChatInputProps) {
+export function ChatInput({ onSend, disabled, active, children }: ChatInputProps) {
   const [value, setValue] = useState("")
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -40,7 +41,7 @@ export function ChatInput({ onSend, disabled, children }: ChatInputProps) {
 
   return (
     <div className="shrink-0 px-3 pb-3">
-      <div className="overflow-hidden rounded-xl border bg-background shadow-sm">
+      <div className={`overflow-hidden rounded-xl border bg-background shadow-sm transition-colors ${active ? "border-foreground/50 ring-1 ring-foreground/20" : ""}`}>
         <textarea
           ref={textareaRef}
           value={value}
