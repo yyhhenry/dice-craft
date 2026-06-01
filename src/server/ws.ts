@@ -1,7 +1,7 @@
 import type { ServerWebSocket } from "bun"
 import type { AppPool } from "./app-pool"
 import type { SessionManager } from "../session/manager"
-import type { ChatManager } from "../chat/manager"
+import type { ChatMessage } from "../chat/types"
 import type { WorkspaceID } from "../workspace/types"
 
 export interface WsData {
@@ -13,12 +13,10 @@ export class WsManager {
   private connections = new Map<string, Set<ServerWebSocket<WsData>>>()
   private appPool: AppPool
   private sessionManager: SessionManager
-  private chatManager: ChatManager
 
-  constructor(appPool: AppPool, sessionManager: SessionManager, chatManager: ChatManager) {
+  constructor(appPool: AppPool, sessionManager: SessionManager) {
     this.appPool = appPool
     this.sessionManager = sessionManager
-    this.chatManager = chatManager
   }
 
   open(ws: ServerWebSocket<WsData>): void {
@@ -28,10 +26,8 @@ export class WsManager {
     }
     this.connections.get(sessionId)!.add(ws)
 
-    // Ensure App exists for this session
     const instance = this.appPool.get(sessionId)
     if (instance) {
-      // Send current status
       this.sendStatus(sessionId, instance.app.primaryAgent.isRunning(), instance.app.dispatcher.getActiveCount())
     }
   }
@@ -68,15 +64,14 @@ export class WsManager {
   }
 
   private handleSendMessage(sessionId: string, workspaceId: WorkspaceID, content: string): void {
-    // Get or create app
     const instance = this.appPool.getOrCreate(sessionId, workspaceId, {
-      onMessage: (sid) => this.broadcastLatestMessage(sid),
+      onMessage: (sid, msg) => this.broadcastMessage(sid, msg),
       onStatusChange: (sid, primaryActive, subagentCount) => this.sendStatus(sid, primaryActive, subagentCount),
     })
 
     const { app } = instance
 
-    // Write user message to chat
+    // Write user message to chat (triggers onMessage → broadcast)
     app.chatManager.sendMessage(sessionId, {
       content,
       senderId: "user",
@@ -98,10 +93,7 @@ export class WsManager {
     }).catch(() => {})
   }
 
-  private broadcastLatestMessage(sessionId: string): void {
-    const messages = this.chatManager.getRecentMessages(sessionId, 1)
-    const msg = messages[0]
-    if (!msg) return
+  private broadcastMessage(sessionId: string, msg: ChatMessage): void {
     this.broadcast(sessionId, JSON.stringify({ type: "message", payload: msg }))
   }
 

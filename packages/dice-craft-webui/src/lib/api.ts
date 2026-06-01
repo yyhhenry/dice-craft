@@ -74,4 +74,7 @@ export const api = {
 
   getMessages: (sessionId: string) =>
     request<ChatMessage[]>(`/api/sessions/${sessionId}/messages`),
+
+  deleteSession: (sessionId: string) =>
+    request<{ ok: boolean }>(`/api/sessions/${sessionId}`, { method: "DELETE" }),
 }

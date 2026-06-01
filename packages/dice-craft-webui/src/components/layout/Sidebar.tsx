@@ -10,6 +10,7 @@ interface SidebarProps {
   onSelectWorkspace: (id: string) => void
   selectedSessionId: string | null
   onSelectSession: (id: string, title: string) => void
+  onSessionDeleted?: () => void
 }
 
 export function Sidebar({
@@ -20,6 +21,7 @@ export function Sidebar({
   onSelectWorkspace,
   selectedSessionId,
   onSelectSession,
+  onSessionDeleted,
 }: SidebarProps) {
   return (
     <aside className="flex h-full w-64 flex-col border-r bg-sidebar">
@@ -37,6 +39,7 @@ export function Sidebar({
           workspaceId={selectedWorkspaceId}
           selectedSessionId={selectedSessionId}
           onSelect={onSelectSession}
+          onDeleted={onSessionDeleted}
         />
       </div>
     </aside>

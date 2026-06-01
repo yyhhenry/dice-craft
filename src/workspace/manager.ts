@@ -89,14 +89,13 @@ export class WorkspaceManager {
   }
 
   getConfig(id: WorkspaceID): WorkspaceConfig | undefined {
-    const configPath = path.join(this.baseDir, id, "config.json")
+    const configPath = path.join(this.metaDir, `${id}-config.json`)
     if (!fs.existsSync(configPath)) return undefined
     return JSON.parse(fs.readFileSync(configPath, "utf-8"))
   }
 
   setConfig(id: WorkspaceID, config: WorkspaceConfig): void {
-    const wsPath = path.join(this.baseDir, id)
-    fs.mkdirSync(wsPath, { recursive: true })
-    fs.writeFileSync(path.join(wsPath, "config.json"), JSON.stringify(config, null, 2))
+    fs.mkdirSync(this.metaDir, { recursive: true })
+    fs.writeFileSync(path.join(this.metaDir, `${id}-config.json`), JSON.stringify(config, null, 2))
   }
 }

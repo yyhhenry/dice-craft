@@ -1,15 +1,14 @@
 import { createApp, type App } from "../app"
 import type { WorkspaceManager } from "../workspace/manager"
 import type { SessionManager } from "../session/manager"
-import type { ChatManager } from "../chat/manager"
 import type { WorkspaceID } from "../workspace/types"
 import type { ModelConfig } from "../model/openai"
+import type { ChatMessage } from "../chat/types"
 import type { ChatCompletionMessageParam } from "openai/resources/chat/completions"
 
 export interface AppPoolDeps {
   workspaceManager: WorkspaceManager
   sessionManager: SessionManager
-  chatManager: ChatManager
 }
 
 export interface AppInstance {
@@ -30,7 +29,7 @@ export class AppPool {
     sessionId: string,
     workspaceId: WorkspaceID,
     callbacks: {
-      onMessage?: (sessionId: string) => void
+      onMessage?: (sessionId: string, msg: ChatMessage) => void
       onStatusChange?: (sessionId: string, primaryActive: boolean, subagentCount: number) => void
     },
   ): AppInstance {
@@ -83,9 +82,9 @@ export class AppPool {
       callbacks.onStatusChange?.(sessionId, app.primaryAgent.isRunning(), count)
     }
 
-    // Wire message callback
-    app.chatManager.onMessage(() => {
-      callbacks.onMessage?.(sessionId)
+    // Wire message callback — pass message directly to avoid re-reading from disk
+    app.chatManager.onMessage((msg) => {
+      callbacks.onMessage?.(sessionId, msg)
     })
 
     const instance: AppInstance = { app, sessionId, workspaceId }

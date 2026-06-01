@@ -32,6 +32,14 @@ export function sessionRoutes(deps: ServerDeps) {
     return c.json(messages)
   })
 
+  router.delete("/sessions/:id", (c) => {
+    const id = c.req.param("id")
+    const session = deps.sessionManager.get(id)
+    if (!session) return c.json({ error: "Session not found" }, 404)
+    deps.sessionManager.delete(id)
+    return c.json({ ok: true })
+  })
+
   router.post("/sessions/:id/messages", (c) => {
     return c.json({ error: "Not implemented" }, 501)
   })

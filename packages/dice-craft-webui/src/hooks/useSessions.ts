@@ -34,5 +34,13 @@ export function useSessions(workspaceId: string | null) {
     [workspaceId]
   )
 
-  return { sessions, loading, error, refresh, create }
+  const remove = useCallback(
+    async (sessionId: string) => {
+      await api.deleteSession(sessionId)
+      setSessions((prev) => prev.filter((s) => s.id !== sessionId))
+    },
+    []
+  )
+
+  return { sessions, loading, error, refresh, create, remove }
 }

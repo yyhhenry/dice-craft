@@ -32,6 +32,7 @@ export function App() {
           setSelectedSessionId(id)
           setSelectedSessionTitle(title)
         }}
+        onSessionDeleted={() => setSelectedSessionId(null)}
       />
       <main className="flex-1 overflow-hidden">
         {selectedSessionId && selectedWorkspaceId ? (

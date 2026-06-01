@@ -8,7 +8,6 @@
   "workspaces": ["packages/*"],
   "scripts": {
     "dev": "bun run src/index.ts",
-    "dev:serve": "bun run src/index.ts --serve",
     "build:webui": "cd packages/dice-craft-webui && bun run build",
     "test": "bun test tests/",
     "lint": "eslint src/ tests/",

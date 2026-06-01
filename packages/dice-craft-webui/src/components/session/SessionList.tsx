@@ -1,4 +1,4 @@
-import { Plus, MessageSquare } from "lucide-react"
+import { Plus, MessageSquare, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useSessions } from "@/hooks/useSessions"
 
@@ -6,19 +6,29 @@ interface SessionListProps {
   workspaceId: string | null
   selectedSessionId: string | null
   onSelect: (id: string, title: string) => void
+  onDeleted?: (id: string) => void
 }
 
 export function SessionList({
   workspaceId,
   selectedSessionId,
   onSelect,
+  onDeleted,
 }: SessionListProps) {
-  const { sessions, loading, create } = useSessions(workspaceId)
+  const { sessions, loading, create, remove } = useSessions(workspaceId)
 
   const handleCreate = async () => {
     const session = await create()
     if (session) {
       onSelect(session.id, session.title)
+    }
+  }
+
+  const handleDelete = async (e: React.MouseEvent, sessionId: string) => {
+    e.stopPropagation()
+    await remove(sessionId)
+    if (selectedSessionId === sessionId) {
+      onDeleted?.(sessionId)
     }
   }
 
@@ -55,21 +65,26 @@ export function SessionList({
         </div>
       )}
       {sessions.map((session) => (
-        <button
+        <div
           key={session.id}
-          className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm transition-colors ${
+          className={`group flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm transition-colors ${
             selectedSessionId === session.id
               ? "bg-accent text-accent-foreground"
               : "hover:bg-accent/50"
           }`}
+          role="button"
           onClick={() => onSelect(session.id, session.title)}
         >
           <MessageSquare className="h-4 w-4 shrink-0" />
-          <span className="truncate">{session.title}</span>
-          <span className="ml-auto text-xs text-muted-foreground">
-            {session.messageCount}
-          </span>
-        </button>
+          <span className="truncate flex-1">{session.title}</span>
+          <button
+            className="hidden shrink-0 rounded p-0.5 hover:bg-destructive/20 group-hover:block"
+            onClick={(e) => handleDelete(e, session.id)}
+            title="Delete session"
+          >
+            <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+          </button>
+        </div>
       ))}
     </div>
   )

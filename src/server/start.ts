@@ -22,8 +22,8 @@ export async function startServer(port = 3001) {
   const sessionManager = new SessionManager(sessionStore)
   const chatManager = new ChatManager("data")
 
-  const appPool = new AppPool({ workspaceManager, sessionManager, chatManager })
-  const wsManager = new WsManager(appPool, sessionManager, chatManager)
+  const appPool = new AppPool({ workspaceManager, sessionManager })
+  const wsManager = new WsManager(appPool, sessionManager)
 
   const honoApp = createServer({ workspaceManager, sessionManager, chatManager })
 
