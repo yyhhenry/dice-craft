@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { Sidebar } from "@/components/layout/Sidebar"
-import { ChatView } from "@/components/chat/ChatView"
+import { ChatPanel } from "@/components/chat/ChatPanel"
 import { ScenePlaceholder } from "@/components/scene/ScenePlaceholder"
 import { useWorkspaces } from "@/hooks/useWorkspaces"
 
@@ -8,7 +8,6 @@ export function App() {
   const { workspaces, loading, create } = useWorkspaces()
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string | null>(null)
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null)
-  const [selectedSessionTitle, setSelectedSessionTitle] = useState<string>("")
 
   useEffect(() => {
     if (!selectedWorkspaceId && workspaces.length > 0) {
@@ -28,24 +27,18 @@ export function App() {
           setSelectedSessionId(null)
         }}
         selectedSessionId={selectedSessionId}
-        onSelectSession={(id, title) => {
-          setSelectedSessionId(id)
-          setSelectedSessionTitle(title)
-        }}
+        onSelectSession={(id) => setSelectedSessionId(id)}
         onSessionDeleted={() => setSelectedSessionId(null)}
       />
       <main className="flex-1 overflow-hidden">
-        {selectedSessionId && selectedWorkspaceId ? (
-          <ChatView
-            sessionId={selectedSessionId}
-            workspaceId={selectedWorkspaceId}
-            sessionTitle={selectedSessionTitle}
-            onBack={() => setSelectedSessionId(null)}
-          />
-        ) : (
-          <ScenePlaceholder />
-        )}
+        <ScenePlaceholder />
       </main>
+      {selectedSessionId && selectedWorkspaceId && (
+        <ChatPanel
+          sessionId={selectedSessionId}
+          workspaceId={selectedWorkspaceId}
+        />
+      )}
     </div>
   )
 }

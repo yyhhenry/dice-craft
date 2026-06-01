@@ -5,7 +5,7 @@ import { useSessions } from "@/hooks/useSessions"
 interface SessionListProps {
   workspaceId: string | null
   selectedSessionId: string | null
-  onSelect: (id: string, title: string) => void
+  onSelect: (id: string) => void
   onDeleted?: (id: string) => void
 }
 
@@ -20,7 +20,7 @@ export function SessionList({
   const handleCreate = async () => {
     const session = await create()
     if (session) {
-      onSelect(session.id, session.title)
+      onSelect(session.id)
     }
   }
 
@@ -73,7 +73,7 @@ export function SessionList({
               : "hover:bg-accent/50"
           }`}
           role="button"
-          onClick={() => onSelect(session.id, session.title)}
+          onClick={() => onSelect(session.id)}
         >
           <MessageSquare className="h-4 w-4 shrink-0" />
           <span className="truncate flex-1">{session.title}</span>

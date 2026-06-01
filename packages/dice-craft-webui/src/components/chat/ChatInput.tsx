@@ -1,13 +1,15 @@
 import { useState, useRef } from "react"
+import type { ReactNode } from "react"
 import { ArrowUp } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface ChatInputProps {
   onSend: (content: string) => void
   disabled?: boolean
+  children?: ReactNode
 }
 
-export function ChatInput({ onSend, disabled }: ChatInputProps) {
+export function ChatInput({ onSend, disabled, children }: ChatInputProps) {
   const [value, setValue] = useState("")
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -37,7 +39,7 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
   }
 
   return (
-    <div className="shrink-0 px-4 pb-4">
+    <div className="shrink-0 px-3 pb-3">
       <div className="overflow-hidden rounded-xl border bg-background shadow-sm">
         <textarea
           ref={textareaRef}
@@ -49,7 +51,10 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
           rows={2}
           className="w-full resize-none bg-transparent px-4 pt-3 pb-2 text-sm outline-none placeholder:text-muted-foreground disabled:opacity-50"
         />
-        <div className="flex items-center justify-end border-t px-3 py-1.5">
+        <div className="flex items-center justify-between border-t px-3 py-1.5">
+          <div className="flex items-center">
+            {children}
+          </div>
           <Button
             size="icon"
             className="h-7 w-7 rounded-lg"

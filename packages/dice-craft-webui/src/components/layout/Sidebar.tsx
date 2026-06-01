@@ -9,7 +9,7 @@ interface SidebarProps {
   selectedWorkspaceId: string | null
   onSelectWorkspace: (id: string) => void
   selectedSessionId: string | null
-  onSelectSession: (id: string, title: string) => void
+  onSelectSession: (id: string) => void
   onSessionDeleted?: () => void
 }
 
@@ -24,7 +24,7 @@ export function Sidebar({
   onSessionDeleted,
 }: SidebarProps) {
   return (
-    <aside className="flex h-full w-64 flex-col border-r bg-sidebar">
+    <aside className="flex h-full w-56 flex-col border-r bg-sidebar">
       <div className="border-b p-3">
         <WorkspaceSelect
           workspaces={workspaces}
