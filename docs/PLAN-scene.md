@@ -6,8 +6,8 @@ WebUI v1 的中央场景区目前为空占位。本文档在 [PLAN-webui-v1.md](
 
 ### 核心思路
 
-- **瓦片拼接**：提供一套内置地形瓦片（grass、stone、water 等），GM 通过文本艺术文件编辑地图，前端用 SVG 逐格渲染。
-- **像素风方块**：瓦片纹理为 16×16 像素程序化生成，SVG `<pattern>` 填充 + `shape-rendering: crispEdges` 实现方块像素感。
+- **瓦片拼接**：提供一套内置地形瓦片（grass、stone、water 等），GM 通过 CSV 地图文件编辑地图，前端用 SVG 逐格渲染。
+- **像素风方块**：瓦片纹理为 8×8 像素 SVG `<pattern>` 程序化生成，`shape-rendering: crispEdges` 实现方块像素感。
 - **角色 Token**：角色以带首字母标签的彩色圆形绘制在网格上，颜色按阵营区分。
 - **缩放/平移**：SVG `viewBox` 天然支持滚轮缩放和拖拽平移。
 
@@ -226,22 +226,22 @@ interface SceneState {
 
 ### 地形瓦片
 
-所有瓦片在前端程序化生成，16×16 像素，无需外部图片资源。渲染方式见前端渲染架构。
+所有瓦片在前端通过 SVG `<pattern>` 程序化生成（8×8 像素 pattern tile），无需外部图片资源。
 
-| 字符 | terrain ID | 名称 | 基色 | 描述 |
-|------|------------|------|------|------|
-| `.` | `void` | 虚空 | `#1a1a2e` | 地图边界/暗区（默认） |
-| `g` | `grass` | 草地 | `#4a8c3f` | 散布深色草点 |
-| `s` | `stone` | 石板 | `#808080` | 砖缝纹理 |
-| `f` | `wood` | 木板 | `#8b6914` | 木纹条纹（floor） |
-| `d` | `dirt` | 泥地 | `#7a6040` | 颗粒感变化 |
-| `a` | `sand` | 沙地 | `#d4b896` | 细粒点缀 |
-| `w` | `water` | 水面 | `#3070b0` | 波纹高光 |
-| `W` | `wall` | 墙壁 | `#5a4a3a` | 砖块+灰缝 |
-| `l` | `lava` | 岩浆 | `#c03010` | 流动纹理 |
-| `i` | `ice` | 冰面 | `#a0d0e8` | 反光高光 |
+| terrain ID | 名称 | 基色 | 纹理描述 |
+|------------|------|------|----------|
+| `void` | 虚空 | `#1a1a2e` | 纯色暗区（默认） |
+| `grass` | 草地 | `#4a8c3f` | 散布深色草点 |
+| `stone` | 石板 | `#808080` | 砖缝纹理 |
+| `wood` | 木板 | `#8b6914` | 木纹条纹 |
+| `dirt` | 泥地 | `#7a6040` | 颗粒感变化 |
+| `sand` | 沙地 | `#d4b896` | 细粒点缀 |
+| `water` | 水面 | `#3070b0` | 波纹高光 |
+| `wall` | 墙壁 | `#5a4a3a` | 砖块+灰缝 |
+| `lava` | 岩浆 | `#c03010` | 流动纹理 |
+| `ice` | 冰面 | `#a0d0e8` | 反光高光 |
 
-前端遇到未知字符/terrain ID 时 fallback 到 `void`。
+前端遇到未知 terrain ID 时 fallback 到 `void`。
 
 ### 叠加物（Overlay）
 
@@ -271,49 +271,46 @@ Token 内显示角色名首字母（中文取第一个字），外圈描边。
 
 ## 地图文件格式
 
-Agent 不直接在 `update_scene` 中编写 cells 数组。地图网格通过 **文本艺术文件** 表达——每个字符对应一格地形，agent 用 `write`/`edit` 工具维护该文件，`update_scene` 读取并解析。
+Agent 不直接在 `update_scene` 中编写 cells 数组。地图网格通过 **CSV 文件** 表达——每个逗号分隔的词对应一格地形，agent 用 `write`/`edit` 工具维护该文件，`update_scene` 读取并解析。
 
 ### 基本格式
 
-文件存放在 workspace 的 `.game-state/` 下，如 `.game-state/tavern.map`：
+文件存放在 workspace 的 `.game-state/` 下，如 `.game-state/tavern.map.csv`：
 
-```
-WWWWWWWW
-WffffffW
-WffffffW
-WffffffW
-WffffffW
-WWWfWWWW
+```csv
+wall,wall,wall,wall,wall,wall,wall,wall
+wall,wood,wood,wood,wood,wood,wood,wall
+wall,wood,wood,wood,wood,wood,wood,wall
+wall,wood,wood,wood,wood,wood,wood,wall
+wall,wood,wood,wood,wood,wood,wood,wall
+wall,wall,wall,wood,wall,wall,wall,wall
 ```
 
-- 每行 = 一行格子，每字符 = 一列
-- 宽度 = 最长行的字符数，高度 = 行数
-- 字符映射见上方素材表（`W`=wall, `f`=wood, `g`=grass, ...）
+- 每行 = 一行格子，逗号分隔
+- 宽度 = 每行 token 数的最大值，高度 = 行数
+- 有效地形名：wall, grass, stone, wood, dirt, sand, water, lava, ice, void
+- 空字符串等同于 void
 - `#` 开头的行为注释，解析时跳过
+
+### 为什么用 CSV 而非单字符
+
+LLM 以 token 为单位而非字符。常见英文单词（wall、grass）通常是 1 个 token，逗号也是 1 个 token。CSV 格式：
+- 不需要记忆字符图例（`W`=wall?  `w`=water?）
+- 自文档化——读文件就知道每格是什么
+- `edit` 工具替换语义化词比替换单字符更不容易出错
 
 ### Agent 编辑地图的方式
 
-**创建**：用 `write` 工具一次写整个 map 文件。Agent 像画 ASCII art 一样画地图。
+**创建**：用 `write` 工具一次写整个 CSV 文件。
 
-**小范围修改**：用 `edit` 工具替换文件中的特定行或字符。例如把酒馆入口打开：
+**小范围修改**：用 `edit` 工具替换特定行中的词。例如把木板换成岩浆：
 ```
-edit: old="WWWfWWWW" new="WWWdWWWW"  → 把木板换成泥地
-```
-
-**算法生成/批量操作**：用 `bash` 工具调用脚本。workspace 的 skill 可以提供地图操作脚本。例如：
-```bash
-# 爆炸效果：以 (3,3) 为中心、半径 2 的区域变成 lava
-python skills/map-utils/blast.py .game-state/tavern.map 3 3 2 l
+edit: old="wall,wood,wood,wall" new="wall,lava,lava,wall"
 ```
 
-**应用到场景**：修改文件后，调用 `update_scene` 并指定 `mapFile` 路径，工具读取文件并刷新前端。
+**算法生成/批量操作**：用 `bash` 工具调用脚本。
 
-### 为什么不直接在 update_scene 中传 cells
-
-- 一个 8×6 的地图有 48 格，逐格 JSON 是 ~1.5KB 纯重复结构——浪费 token
-- Agent 不擅长精确编辑大型 JSON 数组（容易坐标错位）
-- 文本文件的编辑直观得多，`edit` 工具替换一行字符串就能改一整行地形
-- 文件持久化在 workspace 中，刷新/重连后 `update_scene` 重读即可恢复
+**应用到场景**：修改文件后，调用 `update_scene` 并指定 `mapFile` 路径。
 
 ## 前端渲染架构
 
@@ -408,13 +405,12 @@ onMouseUp → 结束拖拽
 
 #### 典型调用模式
 
-**搭建初始场景**（write 地图 + update_scene 一次性设置）：
+**搭建初始场景**（write CSV 地图 + update_scene 一次性设置）：
 ```
-write(".game-state/tavern.map", "WWWWWWWW\nWffffffW\n...")
+write(".game-state/tavern.map.csv", "wall,wall,wall,wall,wall,wall\nwall,wood,wood,wood,wood,wall\n...")
 update_scene({
   title: "破晓酒馆",
-  map: { mapFile: ".game-state/tavern.map", overlays: [{id:"door1",x:3,y:5,type:"door"}] },
-  texts: [{id:"desc",content:"昏黄灯光洒满大厅",style:"narrative"}],
+  map: { mapFile: ".game-state/tavern.map.csv", overlays: [{id:"door1",x:3,y:5,type:"door"}] },
   characters: [{id:"bartender",name:"老酒保",role:"npc",location:"4,2",visible:true}]
 })
 ```
@@ -446,8 +442,8 @@ update_scene({
 
 **局部改地图 + 刷新**：
 ```
-edit(".game-state/tavern.map", old="WffffffW", new="WfflfffW")
-update_scene({ map: { mapFile: ".game-state/tavern.map" } })
+edit(".game-state/tavern.map.csv", old="wall,wood,wood,wall", new="wall,lava,lava,wall")
+update_scene({ map: { mapFile: ".game-state/tavern.map.csv" } })
 ```
 
 ### Builder Prompt 更新
@@ -460,8 +456,11 @@ update_scene({ map: { mapFile: ".game-state/tavern.map" } })
 Maintain internal game state in `.game-state/` (file tools) — private. Use `update_scene` to control what the player sees — public. After game actions: update internal → update_scene → message.
 
 ### Maps
-Write a text-art map file (`.game-state/*.map`), one char per cell:
-W=wall g=grass s=stone f=wood d=dirt a=sand w=water l=lava i=ice .=void
+Write a CSV map file (`.game-state/*.map.csv`), one terrain name per cell, comma-separated rows:
+wall,wall,wall,wall
+wall,wood,wood,wall
+wall,wall,wall,wall
+Valid terrain: wall, grass, stone, wood, dirt, sand, water, lava, ice, void
 Then call `update_scene` with `mapFile` path. Use `edit` for tweaks, `bash` for algorithmic effects.
 
 Never leak hidden info into SceneState.

@@ -2,18 +2,9 @@ import fs from "fs"
 import path from "path"
 import type { SceneState, SceneMapCell } from "../shared/schemas"
 
-const TERRAIN_LEGEND: Record<string, string> = {
-  ".": "void",
-  g: "grass",
-  s: "stone",
-  f: "wood",
-  d: "dirt",
-  a: "sand",
-  w: "water",
-  W: "wall",
-  l: "lava",
-  i: "ice",
-}
+const VALID_TERRAINS = new Set([
+  "void", "grass", "stone", "wood", "dirt", "sand", "water", "wall", "lava", "ice",
+])
 
 function createEmptyState(sessionId: string): SceneState {
   return {
@@ -157,14 +148,12 @@ export class SceneManager {
     let maxWidth = 0
 
     for (let y = 0; y < lines.length; y++) {
-      const line = lines[y]!
-      if (line.length > maxWidth) maxWidth = line.length
-      for (let x = 0; x < line.length; x++) {
-        const ch = line[x]!
-        const terrain = TERRAIN_LEGEND[ch] ?? "void"
-        if (terrain !== "void") {
-          cells.push({ x, y, terrain })
-        }
+      const tokens = lines[y]!.split(",").map((t) => t.trim().toLowerCase())
+      if (tokens.length > maxWidth) maxWidth = tokens.length
+      for (let x = 0; x < tokens.length; x++) {
+        const terrain = tokens[x]!
+        if (!terrain || terrain === "void") continue
+        cells.push({ x, y, terrain: VALID_TERRAINS.has(terrain) ? terrain : "void" })
       }
     }
 

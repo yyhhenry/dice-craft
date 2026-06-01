@@ -98,8 +98,11 @@ description: Brief description
 Maintain internal game state in `.game-state/` (file tools) — this is private. Use `update_scene` to control what the player sees — this is public. After game actions: update internal state → update_scene → message.
 
 ### Maps
-Write a text-art map file (`.game-state/*.map`), one char per cell:
-W=wall g=grass s=stone f=wood d=dirt a=sand w=water l=lava i=ice .=void
+Write a CSV map file (`.game-state/*.map.csv`), one terrain name per cell, comma-separated rows:
+wall,wall,wall,wall
+wall,wood,wood,wall
+wall,wall,wall,wall
+Valid terrain: wall, grass, stone, wood, dirt, sand, water, lava, ice, void
 Then call `update_scene` with `mapFile` path. Use `edit` for tweaks, `bash` for algorithmic effects.
 
 Never leak hidden info into SceneState.

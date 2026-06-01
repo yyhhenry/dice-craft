@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useMemo } from "react"
 import type { SceneMap, SceneCharacter } from "@shared/schemas"
-import { CELL_SIZE, getTerrainColor, ROLE_COLORS, OVERLAY_SYMBOLS } from "./terrain"
+import { CELL_SIZE, TERRAIN_DEFS, PATTERN_SIZE, ROLE_COLORS, OVERLAY_SYMBOLS } from "./terrain"
 
 interface TileMapSvgProps {
   map: SceneMap
@@ -116,8 +116,44 @@ export function TileMapSvg({ map, characters }: TileMapSvgProps) {
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
     >
+      {/* Pattern definitions */}
+      <defs>
+        {TERRAIN_DEFS.map((t) => (
+          <pattern
+            key={t.id}
+            id={`terrain-${t.id}`}
+            width={PATTERN_SIZE}
+            height={PATTERN_SIZE}
+            patternUnits="userSpaceOnUse"
+          >
+            {t.pattern.map((el, i) =>
+              el.type === "circle" ? (
+                <circle
+                  key={i}
+                  cx={el.x}
+                  cy={el.y}
+                  r={el.r}
+                  fill={el.fill}
+                  opacity={el.opacity ?? 1}
+                />
+              ) : (
+                <rect
+                  key={i}
+                  x={el.x}
+                  y={el.y}
+                  width={el.w}
+                  height={el.h}
+                  fill={el.fill}
+                  opacity={el.opacity ?? 1}
+                />
+              ),
+            )}
+          </pattern>
+        ))}
+      </defs>
+
       {/* Grid background */}
-      <rect x={0} y={0} width={svgW} height={svgH} fill={getTerrainColor("void")} />
+      <rect x={0} y={0} width={svgW} height={svgH} fill="url(#terrain-void)" />
 
       {/* Terrain cells */}
       {cells.map((cell) => (
@@ -127,7 +163,7 @@ export function TileMapSvg({ map, characters }: TileMapSvgProps) {
           y={cell.y * C}
           width={C}
           height={C}
-          fill={getTerrainColor(cell.terrain)}
+          fill={`url(#terrain-${cell.terrain})`}
           shapeRendering="crispEdges"
         />
       ))}

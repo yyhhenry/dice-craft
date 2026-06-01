@@ -14,8 +14,9 @@ export function createUpdateSceneTool(
       "Update the game scene displayed to the player. Pass only the fields you want to change. " +
       "Array fields (characters, texts, map.overlays, map.labels, objectives) merge by id — " +
       "pass {id, _remove: true} to delete an element.\n\n" +
-      "Map grid: write a text-art file first (one char per cell), then pass its path as map.mapFile. " +
-      "Terrain legend: W=wall g=grass s=stone f=wood d=dirt a=sand w=water l=lava i=ice .=void\n\n" +
+      "Map grid: write a CSV file first (.map.csv), one terrain name per cell, comma-separated. " +
+      "Valid terrain: wall, grass, stone, wood, dirt, sand, water, lava, ice, void (or empty). " +
+      "Then pass its path as map.mapFile.\n\n" +
       "Characters: set location to \"x,y\" to place on grid. " +
       "Set visible: false to hide from the player.",
     parameters: {
@@ -38,7 +39,7 @@ export function createUpdateSceneTool(
             title: { type: "string" },
             mapFile: {
               type: "string",
-              description: "Path to text-art map file in workspace (e.g. .game-state/tavern.map)",
+              description: "Path to CSV map file in workspace (e.g. .game-state/tavern.map.csv)",
             },
             overlays: {
               type: "array",
