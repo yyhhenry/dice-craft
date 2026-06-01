@@ -1,6 +1,5 @@
 import { useMemo } from "react"
 import type { SceneState } from "@shared/schemas"
-import { DMPanel } from "./DMPanel"
 import { MapPanel } from "./MapPanel"
 import { CharacterBadge } from "./CharacterBadge"
 import { QuestPanel } from "./QuestPanel"
@@ -23,14 +22,26 @@ export function PlaySurface({ scene }: PlaySurfaceProps) {
     [scene.characters],
   )
 
-  return (
-    <div className="flex h-full flex-col">
-      <DMPanel dm={scene.dm} />
+  const title = scene.title ?? scene.map.title
 
-      <div className="flex min-h-0 flex-1">
-        {/* Characters sidebar */}
+  return (
+    <div className="flex h-full flex-col px-4 pt-10 pb-3">
+      {/* Title */}
+      {title && (
+        <div className="mb-3 flex justify-center">
+          <div className="rounded-xl bg-card px-5 py-2 text-base font-semibold shadow-sm">
+            {title}
+            {scene.map.title && scene.map.title !== scene.title && (
+              <span className="ml-2 font-normal text-muted-foreground">— {scene.map.title}</span>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Map + characters */}
+      <div className="flex min-h-0 flex-1 gap-3">
         {otherCharacters.length > 0 && (
-          <ScrollArea className="w-44 shrink-0 border-r p-2">
+          <ScrollArea className="w-40 shrink-0 rounded-xl bg-card/50 p-2">
             <div className="flex flex-col gap-1.5">
               {otherCharacters.map((ch) => (
                 <CharacterBadge key={ch.id} character={ch} />
@@ -39,22 +50,21 @@ export function PlaySurface({ scene }: PlaySurfaceProps) {
           </ScrollArea>
         )}
 
-        {/* Map area */}
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 overflow-hidden rounded-xl">
           <MapPanel scene={scene} />
         </div>
       </div>
 
       {/* Bottom panels */}
       {(scene.mainQuest || scene.playerCard) && (
-        <div className="flex shrink-0">
+        <div className="mt-3 flex gap-3">
           {scene.mainQuest && (
-            <div className="flex-1">
+            <div className="flex-1 rounded-xl bg-card/50">
               <QuestPanel quest={scene.mainQuest} />
             </div>
           )}
           {scene.playerCard && (
-            <div className="flex-1 border-l">
+            <div className="flex-1 rounded-xl bg-card/50">
               <PlayerCardPanel card={scene.playerCard} />
             </div>
           )}

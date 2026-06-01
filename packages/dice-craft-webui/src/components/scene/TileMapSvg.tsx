@@ -27,17 +27,18 @@ export function TileMapSvg({ map, characters }: TileMapSvgProps) {
 
   const svgW = width * C
   const svgH = height * C
+  const PAD = C * 1.5
 
-  const [viewBox, setViewBox] = useState({ x: 0, y: 0, w: svgW, h: svgH })
+  const defaultVB = { x: -PAD, y: -PAD, w: svgW + PAD * 2, h: svgH + PAD * 2 }
+  const [viewBox, setViewBox] = useState(defaultVB)
   const [dragging, setDragging] = useState(false)
   const dragStart = useRef({ x: 0, y: 0, vx: 0, vy: 0 })
   const svgRef = useRef<SVGSVGElement>(null)
 
-  // Reset viewBox when map dimensions change
   const prevDims = useRef({ w: svgW, h: svgH })
   if (prevDims.current.w !== svgW || prevDims.current.h !== svgH) {
     prevDims.current = { w: svgW, h: svgH }
-    setViewBox({ x: 0, y: 0, w: svgW, h: svgH })
+    setViewBox({ x: -PAD, y: -PAD, w: svgW + PAD * 2, h: svgH + PAD * 2 })
   }
 
   const cellMap = useMemo(() => {
@@ -63,8 +64,8 @@ export function TileMapSvg({ map, characters }: TileMapSvgProps) {
     const my = ((e.clientY - rect.top) / rect.height) * viewBox.h + viewBox.y
 
     const factor = e.deltaY > 0 ? 1.1 : 0.9
-    const minW = svgW * 0.33
-    const maxW = svgW * 3
+    const minW = svgW * 0.25
+    const maxW = defaultVB.w * 2
     const nw = Math.max(minW, Math.min(maxW, viewBox.w * factor))
     const nh = (nw / svgW) * svgH
 

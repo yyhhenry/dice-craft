@@ -6,7 +6,7 @@ interface PlayerCardPanelProps {
 
 export function PlayerCardPanel({ card }: PlayerCardPanelProps) {
   return (
-    <div className="border-t px-3 py-2">
+    <div className="px-3 py-2">
       <div className="flex items-center gap-2">
         <div className="text-xs font-medium text-muted-foreground">Player</div>
         <span className="text-sm font-medium">{card.name}</span>
