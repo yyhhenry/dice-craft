@@ -32,7 +32,7 @@ export function MessageList({ messages, loading }: MessageListProps) {
   }
 
   return (
-    <div ref={containerRef} className="flex-1 overflow-y-auto">
+    <div ref={containerRef} className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto">
       <div className="space-y-4 p-4">
         {messages.map((msg) => (
           <MessageBubble key={msg.id} message={msg} />
