@@ -12,7 +12,9 @@ interface PlaySurfaceProps {
 }
 
 export function PlaySurface({ scene }: PlaySurfaceProps) {
-  if (!scene) {
+  const hasContent = scene && scene.version > 0
+
+  if (!hasContent) {
     return <MapPanel scene={null} />
   }
 
