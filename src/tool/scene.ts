@@ -19,7 +19,7 @@ export function createUpdateSceneTool(
       "Append .dark or .light for shade variants (e.g. wood.dark for furniture vs wood floor). " +
       "Then pass its path as map.mapFile.\n\n" +
       "Characters: set location to \"x,y\" to place on grid. " +
-      "Set visible: false to hide from the player.",
+      "Set hidden: true to hide from the player.",
     parameters: {
       type: "object",
       properties: {
@@ -80,7 +80,7 @@ export function createUpdateSceneTool(
               summary: { type: "string" },
               status: { type: "string" },
               location: { type: "string", description: "Grid position as \"x,y\"" },
-              visible: { type: "boolean" },
+              hidden: { type: "boolean", description: "Set true to hide from the player" },
               _remove: { type: "boolean" },
             },
             required: ["id"],

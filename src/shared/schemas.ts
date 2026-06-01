@@ -57,7 +57,7 @@ export const SceneCharacterSchema = z.object({
   summary: z.string().optional(),
   status: z.string().optional(),
   location: z.string().optional(),
-  visible: z.boolean(),
+  hidden: z.boolean().optional(),
 })
 
 export const SceneObjectiveSchema = z.object({

@@ -55,7 +55,7 @@ export function TileMapSvg({ map, characters }: TileMapSvgProps) {
   }, [cells])
 
   const visibleChars = useMemo(
-    () => characters.filter((c) => c.visible),
+    () => characters.filter((c) => !c.hidden),
     [characters],
   )
 

@@ -16,7 +16,7 @@ export function QuestPanel({ quest }: QuestPanelProps) {
   const visibleObjectives = quest.objectives.filter((o) => o.status !== "hidden")
 
   return (
-    <div className="px-3 py-2">
+    <div className="px-4 py-3">
       <div className="text-xs font-medium text-muted-foreground">Quest</div>
       <div className="text-sm font-medium">{quest.title}</div>
       {quest.summary && <div className="text-xs text-muted-foreground">{quest.summary}</div>}

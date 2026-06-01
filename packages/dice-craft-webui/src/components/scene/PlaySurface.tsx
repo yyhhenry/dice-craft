@@ -18,7 +18,7 @@ export function PlaySurface({ scene }: PlaySurfaceProps) {
   }
 
   const otherCharacters = useMemo(
-    () => scene.characters.filter((c) => c.visible && c.role !== "player"),
+    () => scene.characters.filter((c) => !c.hidden && c.role !== "player"),
     [scene.characters],
   )
 
@@ -41,8 +41,8 @@ export function PlaySurface({ scene }: PlaySurfaceProps) {
       {/* Map + characters */}
       <div className="flex min-h-0 flex-1 gap-3">
         {otherCharacters.length > 0 && (
-          <ScrollArea className="w-40 shrink-0 rounded-xl bg-card/50 p-2">
-            <div className="flex flex-col gap-1.5">
+          <ScrollArea className="w-44 shrink-0 rounded-2xl bg-card/40 p-2.5">
+            <div className="flex flex-col gap-2">
               {otherCharacters.map((ch) => (
                 <CharacterBadge key={ch.id} character={ch} />
               ))}
@@ -50,7 +50,7 @@ export function PlaySurface({ scene }: PlaySurfaceProps) {
           </ScrollArea>
         )}
 
-        <div className="min-w-0 flex-1 overflow-hidden rounded-xl">
+        <div className="min-w-0 flex-1 overflow-hidden rounded-2xl">
           <MapPanel scene={scene} />
         </div>
       </div>
@@ -59,12 +59,12 @@ export function PlaySurface({ scene }: PlaySurfaceProps) {
       {(scene.mainQuest || scene.playerCard) && (
         <div className="mt-3 flex gap-3">
           {scene.mainQuest && (
-            <div className="flex-1 rounded-xl bg-card/50">
+            <div className="flex-1 rounded-2xl bg-card/40">
               <QuestPanel quest={scene.mainQuest} />
             </div>
           )}
           {scene.playerCard && (
-            <div className="flex-1 rounded-xl bg-card/50">
+            <div className="flex-1 rounded-2xl bg-card/40">
               <PlayerCardPanel card={scene.playerCard} />
             </div>
           )}

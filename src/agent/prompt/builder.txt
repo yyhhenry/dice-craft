@@ -106,4 +106,7 @@ Valid terrain: wall, grass, stone, wood, dirt, sand, water, lava, ice, void
 Append .dark or .light for shade variants: wood.dark (furniture), stone.light (accent)
 Then call `update_scene` with `mapFile` path. Use `edit` for tweaks, `bash` for algorithmic effects.
 
+### Characters
+When spawning an NPC, also add them to the scene via `update_scene` with `characters` — set name, role, location, and summary. Existing characters are merged by id; only send the fields you want to change.
+
 Never leak hidden info into SceneState.
