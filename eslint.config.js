@@ -21,6 +21,6 @@ export default defineConfig([
     },
   },
   {
-    ignores: ["references/**", "data/**", "dist/**", "build/**", "node_modules/**"],
+    ignores: ["references/**", "data/**", "dist/**", "build/**", "node_modules/**", "packages/**"],
   },
 ]);

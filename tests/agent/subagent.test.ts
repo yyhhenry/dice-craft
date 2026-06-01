@@ -107,8 +107,8 @@ describe("SubagentDispatcher", () => {
       sessionManager.sessionManager, sessionManager.workspaceId
     )
 
-    const first = await dispatcher.spawn("explore", "First message")
-    // send with expectReply=true waits for completion
+    const first = await dispatcher.spawn("explore", "First message", { background: true })
+    await new Promise((r) => setTimeout(r, 10))
     await dispatcher.send(first.sessionId, "Second message", true)
 
     expect(callCount).toBe(2)
@@ -128,7 +128,7 @@ describe("SubagentDispatcher", () => {
     expect(() => dispatcher.send("nonexistent-session", "test", false)).toThrow("Session not found: nonexistent-session")
   })
 
-  test("hasSession returns true for existing session", async () => {
+  test("hasSession returns false for foreground session after completion", async () => {
     const model = createMockModel({
       content: "Done",
       toolCalls: null,
@@ -141,7 +141,7 @@ describe("SubagentDispatcher", () => {
 
     const result = await dispatcher.spawn("explore", "test")
 
-    expect(dispatcher.hasSession(result.sessionId)).toBe(true)
+    expect(dispatcher.hasSession(result.sessionId)).toBe(false)
     expect(dispatcher.hasSession("nonexistent")).toBe(false)
   })
 
@@ -211,8 +211,9 @@ describe("SubagentDispatcher", () => {
       sessionManager.sessionManager, sessionManager.workspaceId
     )
 
-    const r1 = await dispatcher.spawn("explore", "task 1")
-    const r2 = await dispatcher.spawn("explore", "task 2")
+    const r1 = await dispatcher.spawn("explore", "task 1", { background: true })
+    const r2 = await dispatcher.spawn("explore", "task 2", { background: true })
+    await new Promise((r) => setTimeout(r, 10))
 
     await dispatcher.notifyMultiple([
       { session_id: r1.sessionId },

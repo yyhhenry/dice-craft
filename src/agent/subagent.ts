@@ -23,16 +23,22 @@ export interface LoopSetupContext {
 
 export type LoopSetupFn = (ctx: LoopSetupContext) => ToolRegistry | undefined
 
+interface ActiveEntry {
+  loop: AgentLoop
+  agentType: string
+}
+
 export class SubagentDispatcher {
   private model: OpenAIModel
   private toolRegistry: ToolRegistry
   private agentRegistry: AgentRegistry
   private sessionManager: SessionManager
   private workspaceId: WorkspaceID
-  private activeLoops = new Map<string, AgentLoop>()
+  private activeLoops = new Map<string, ActiveEntry>()
   private setupLoop: LoopSetupFn | undefined
 
   onSubagentDone?: (sessionId: string, agentName: string, content: string) => void
+  onNpcCountChange?: (count: number) => void
 
   constructor(
     model: OpenAIModel,
@@ -76,9 +82,10 @@ export class SubagentDispatcher {
     const loop = new AgentLoop(this.model, registry, {
       systemPrompt: agentInfo.systemPrompt,
     })
-    this.activeLoops.set(session.id, loop)
+    this.activeLoops.set(session.id, { loop, agentType: agentName })
 
     if (options.background) {
+      this.emitNpcCount()
       loop.receiveMessage(prompt)
       loop.waitForIdle().then(() => {
         this.persistLoopHistory(session.id, loop)
@@ -92,40 +99,43 @@ export class SubagentDispatcher {
     await loop.waitForIdle()
     const history = loop.getHistory()
     this.persistHistory(session.id, history)
+    this.activeLoops.delete(session.id)
 
     const content = this.extractLastAssistantContent(history)
     return { content, sessionId: session.id }
   }
 
-  /** Send a message to a subagent via receiveMessage. */
   send(sessionId: string, content: string, expectReply: boolean): Promise<void> {
-    const loop = this.activeLoops.get(sessionId)
-    if (!loop) {
+    const entry = this.activeLoops.get(sessionId)
+    if (!entry) {
       throw new Error(`Session not found: ${sessionId}`)
     }
 
-    loop.receiveMessage(content)
+    entry.loop.receiveMessage(content)
 
     if (expectReply) {
-      return loop.waitForIdle().then(() => {
-        this.persistLoopHistory(sessionId, loop)
+      return entry.loop.waitForIdle().then(() => {
+        this.persistLoopHistory(sessionId, entry.loop)
       })
     }
-    // Fire and forget, persist when done
-    loop.waitForIdle().then(() => {
-      this.persistLoopHistory(sessionId, loop)
+    entry.loop.waitForIdle().then(() => {
+      this.persistLoopHistory(sessionId, entry.loop)
     }).catch(() => {})
     return Promise.resolve()
   }
 
-  /** Notify multiple NPCs in parallel. */
   async notifyMultiple(targets: NotifyTarget[], content: string): Promise<void> {
     await Promise.all(
       targets.map((t) => this.send(t.session_id, content, t.expect_reply ?? false)),
     )
   }
 
-  /** Restore an existing session from persisted data into memory */
+  dismiss(sessionId: string): void {
+    this.activeLoops.delete(sessionId)
+    this.sessionManager.update(sessionId, { dismissed: true })
+    this.emitNpcCount()
+  }
+
   restore(sessionId: string): void {
     const session = this.sessionManager.get(sessionId)
     if (!session) return
@@ -144,11 +154,20 @@ export class SubagentDispatcher {
       systemPrompt: session.systemPrompt,
     })
     loop.setHistory(history.slice(1))
-    this.activeLoops.set(sessionId, loop)
+    this.activeLoops.set(sessionId, { loop, agentType: session.agentType })
+    this.emitNpcCount()
   }
 
   hasSession(sessionId: string): boolean {
     return this.activeLoops.has(sessionId)
+  }
+
+  getNpcCount(): number {
+    let count = 0
+    for (const entry of this.activeLoops.values()) {
+      if (entry.agentType === "npc") count++
+    }
+    return count
   }
 
   listSubagents(parentSessionId: string) {
@@ -156,7 +175,11 @@ export class SubagentDispatcher {
   }
 
   getLoop(sessionId: string): AgentLoop | undefined {
-    return this.activeLoops.get(sessionId)
+    return this.activeLoops.get(sessionId)?.loop
+  }
+
+  private emitNpcCount(): void {
+    this.onNpcCountChange?.(this.getNpcCount())
   }
 
   private persistLoopHistory(sessionId: string, loop: AgentLoop): void {

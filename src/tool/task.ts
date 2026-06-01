@@ -7,21 +7,17 @@ export function createSpawnSubagentTool(
 ): Tool {
   return {
     id: "spawn_subagent",
-    description: "Spawn a subagent to handle a specific task.",
+    description: "Spawn a subagent. NPC agents run in background (persistent, use notify to talk to them). Other types (explore, general, review) run in foreground and return their result.",
     parameters: {
       type: "object",
       properties: {
         agent_type: {
           type: "string",
-          description: "The type of agent to use: explore, general, review, npc",
+          description: "Agent type: npc (persistent background), explore, general, review (foreground, returns result)",
         },
         prompt: {
           type: "string",
-          description: "Detailed task description for the subagent",
-        },
-        background: {
-          type: "boolean",
-          description: "If true, return sessionId immediately without waiting for result",
+          description: "Detailed task description or character setup for the subagent",
         },
       },
       required: ["agent_type", "prompt"],
@@ -29,7 +25,7 @@ export function createSpawnSubagentTool(
     async execute(args: Record<string, unknown>): Promise<ToolResult> {
       const agentType = args.agent_type as string
       const prompt = args.prompt as string
-      const background = (args.background as boolean) ?? false
+      const background = agentType === "npc"
 
       try {
         const result = await dispatcher.spawn(
@@ -41,7 +37,7 @@ export function createSpawnSubagentTool(
 
         if (background) {
           return {
-            content: `Subagent spawned in background (sessionId: ${result.sessionId})`,
+            content: `NPC spawned (sessionId: ${result.sessionId}). Use notify to communicate with it.`,
           }
         }
 
