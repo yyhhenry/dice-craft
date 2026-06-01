@@ -24,39 +24,26 @@ export interface App {
   dispatcher: SubagentDispatcher
   primaryAgent: AgentLoop
   workspacePath: string
-  /** Mutable session ID reference — message tool closures capture this object */
   sessionRef: { id: string }
 }
 
-function loadConfig(): ModelConfig {
-  const baseUrl = process.env.OPENAI_BASE_URL
-  const apiKey = process.env.OPENAI_API_KEY
-  const model = process.env.OPENAI_MODEL_NAME ?? "mimo-v2.5-pro"
-
-  if (!baseUrl) throw new Error("Missing OPENAI_BASE_URL environment variable")
-  if (!apiKey) throw new Error("Missing OPENAI_API_KEY environment variable")
-
-  return { baseUrl, apiKey, model }
-}
-
-export function createApp(options?: {
+export function createApp(options: {
   dataDir?: string
   workspaceId?: WorkspaceID
   workspacePath?: string
   skillsDir?: string
   primarySessionId?: string
-  modelConfig?: ModelConfig
+  modelConfig: ModelConfig
   onMessage?: (senderName: string, content: string) => void
 }): App {
-  const config = options?.modelConfig ?? loadConfig()
-  const model = new OpenAIModel(config)
+  const model = new OpenAIModel(options.modelConfig)
 
   const agentRegistry = loadAgents()
 
   const primary = agentRegistry.getPrimary()
   if (!primary) throw new Error("No primary agent found")
 
-  const workspacePath = options?.workspacePath ?? process.cwd()
+  const workspacePath = options.workspacePath ?? process.cwd()
   const guard = new WorkspaceGuard(workspacePath)
 
   const toolRegistry = new ToolRegistry()
@@ -64,23 +51,21 @@ export function createApp(options?: {
     toolRegistry.register(tool)
   }
 
-  const dataDir = options?.dataDir ?? "data"
-  const workspaceId = (options?.workspaceId ?? "ws_cli") as WorkspaceID
+  const dataDir = options.dataDir ?? "data"
+  const workspaceId = (options.workspaceId ?? "ws_default") as WorkspaceID
   const sessionStore = new SessionStore(dataDir)
   const sessionManager = new SessionManager(sessionStore)
   const chatManager = new ChatManager(dataDir)
 
-  const sessionRef = { id: options?.primarySessionId ?? "sess_primary" }
-  const onMessage = options?.onMessage
+  const sessionRef = { id: options.primarySessionId ?? "sess_primary" }
+  const onMessage = options.onMessage
 
-  // Create notify function using dispatcher
   const dispatcher = new SubagentDispatcher(
     model,
     toolRegistry,
     agentRegistry,
     sessionManager,
     workspaceId,
-    // setupLoop: create per-NPC registry with message tool
     (ctx) => {
       const npcRegistry = new ToolRegistry()
       for (const tool of toolRegistry.all()) {
@@ -95,7 +80,6 @@ export function createApp(options?: {
     },
   )
 
-  // Register notify tool (depends on dispatcher)
   const notifyFn = async (
     content: string,
     targets: import("./tool/notify").NotifyTarget[],
@@ -104,10 +88,8 @@ export function createApp(options?: {
   }
   toolRegistry.register(createNotifyTool(notifyFn))
 
-  // Register spawn subagent tool
   toolRegistry.register(createSpawnSubagentTool(dispatcher, sessionRef))
 
-  // Wire up background subagent completion notification to primary agent
   dispatcher.onSubagentDone = (sessionId, agentName, content) => {
     primaryAgent.injectEvent(
       "subagent_done",
@@ -115,20 +97,17 @@ export function createApp(options?: {
     )
   }
 
-  // Register skill tool if skillsDir is provided
-  const skillsDir = options?.skillsDir
+  const skillsDir = options.skillsDir
   if (skillsDir) {
     toolRegistry.register(createSkillTool(skillsDir))
   }
 
-  // Register message tool for primary agent
   toolRegistry.register(
     createMessageTool(chatManager, sessionRef, "agent", "agent", (name, _content) => {
       if (onMessage) onMessage(name, _content)
     }),
   )
 
-  // Inject discovered skills into system prompt
   const skills = discoverSkills(skillsDir ?? path.join(workspacePath, "skills"))
   const skillsSection = fmtSkills(skills, false)
   const systemPrompt = [primary.systemPrompt, "", skillsSection].join("\n")

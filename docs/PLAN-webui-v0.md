@@ -367,7 +367,7 @@ bun add hono
 
 ## v0 的主要局限
 
-**右侧画布为空**。当前版本的交互完全在聊天流中进行，缺少可视化的游戏场景。这是后续版本需要优先解决的问题。
+**中央画布为空**。当前版本的交互完全在聊天流中进行，缺少可视化的游戏场景。这是后续版本需要优先解决的问题。
 
 ## 不在 v0 范围内
 
@@ -375,3 +375,19 @@ bun add hono
 - 场景渲染（地图、角色状态面板）—— v1 优先，WebSocket 协议已预留
 - 高级设置：文件阅览/编辑界面，用于直接管理 workspace 内容（Skill 文件、游戏状态等）
 - 移动端适配
+
+---
+
+## 实施状态（已完成）
+
+v0 已全部实现并合入 `feat-webui` 分支：
+
+- [x] 项目初始化：monorepo、shadcn、Hono、Zod
+- [x] 后端 REST API：workspaces CRUD、sessions CRUD、messages 查询
+- [x] WebSocket 实时通信：消息广播、agent 状态推送
+- [x] 前端布局：可折叠左侧 sidebar + 可 resize 的 canvas/chat 双栏
+- [x] 聊天界面：按 senderRole 渲染消息样式、floating 输入框
+- [x] Workspace 设置：模型配置（存储在 .meta/ 目录）
+- [x] Session 管理：创建、删除、标题自动设置
+- [x] Agent 状态显示：Thinking indicator + subagent 数量
+- [x] CLI 入口移除，`bun run dev` 直接启动 server
