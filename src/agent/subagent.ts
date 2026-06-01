@@ -85,7 +85,6 @@ export class SubagentDispatcher {
       loop.waitForIdle().then(() => {
         this.persistLoopHistory(session.id, loop)
         const content = this.extractLastAssistantContent(loop.getHistory())
-        this.activeLoops.delete(session.id)
         this.onActiveCountChange?.(this.activeLoops.size)
         this.onSubagentDone?.(session.id, agentName, content)
       }).catch(() => {})

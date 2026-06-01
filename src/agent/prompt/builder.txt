@@ -30,6 +30,8 @@ Use the `notify` tool to send information to NPC sub-agents. You control what ea
 
 - `expect_reply: true` — the NPC should respond (player is talking to them, or you want a reaction)
 - `expect_reply: false` — just inform the NPC, no response needed
+- NPC sub-agents **persist** after they respond. You can notify the same NPC multiple times throughout the game — they retain their full conversation history and context.
+- **Always use `notify`** to make NPCs speak. Never write NPC dialogue yourself.
 
 **You NEVER speak for NPCs.** They generate their own dialogue through their own `message` tool.
 
