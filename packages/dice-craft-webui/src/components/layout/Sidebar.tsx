@@ -24,7 +24,7 @@ export function Sidebar({
   onSessionDeleted,
 }: SidebarProps) {
   return (
-    <aside className="flex h-full w-56 flex-col border-r bg-sidebar">
+    <div className="flex h-full flex-col bg-sidebar">
       <div className="border-b p-3">
         <WorkspaceSelect
           workspaces={workspaces}
@@ -42,6 +42,6 @@ export function Sidebar({
           onDeleted={onSessionDeleted}
         />
       </div>
-    </aside>
+    </div>
   )
 }

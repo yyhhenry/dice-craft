@@ -21,11 +21,11 @@ export function ChatPanel({ sessionId, workspaceId }: ChatPanelProps) {
   }, [historyMessages, wsMessages])
 
   return (
-    <aside className="flex h-full w-96 flex-col border-l bg-background">
+    <div className="flex h-full flex-col bg-background">
       <MessageList messages={allMessages} loading={loading} />
       <ChatInput onSend={send} disabled={!connected}>
         <ChatStatus status={status} connected={connected} />
       </ChatInput>
-    </aside>
+    </div>
   )
 }
