@@ -4,6 +4,8 @@
 
 WebUI v1 的中央场景区目前为空占位。本文档在 [PLAN-webui-v1.md](PLAN-webui-v1.md) 的 `SceneState` 数据模型基础上，设计 **2D 像素风格瓦片地图渲染系统**，让 GM agent 能够使用预定义素材搭建可变场景，并为未来的 NPC 空间感知预留接口。
 
+> @yyhhenry 批注: 计划添加一个template skill里面放一些示例场景文件指导模型生成更合理的地图。
+
 ### 核心思路
 
 - **瓦片拼接**：提供一套内置地形瓦片（grass、stone、water 等），GM 通过 CSV 地图文件编辑地图，前端用 SVG 逐格渲染。

@@ -5,7 +5,7 @@ import {
   ResizableHandle,
 } from "@/components/ui/resizable"
 import { Button } from "@/components/ui/button"
-import { PanelLeftClose, PanelLeftOpen, Dice5 } from "lucide-react"
+import { PanelLeftClose, PanelLeftOpen, Dice5, MapIcon } from "lucide-react"
 import { Sidebar } from "@/components/layout/Sidebar"
 import { ChatPanel } from "@/components/chat/ChatPanel"
 import { PlaySurface } from "@/components/scene/PlaySurface"
@@ -18,15 +18,22 @@ type ActivePanel = "scene" | "chat"
 
 export function App() {
   const { workspaces, loading, create } = useWorkspaces()
-  const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string | null>(null)
-  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null)
+  const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string | null>(
+    null
+  )
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
+    null
+  )
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [activePanel, setActivePanel] = useState<ActivePanel>("scene")
 
-  const { messages: wsMessages, status, scene: wsScene, connected, send } = useWebSocket(
-    selectedSessionId,
-    selectedWorkspaceId,
-  )
+  const {
+    messages: wsMessages,
+    status,
+    scene: wsScene,
+    connected,
+    send,
+  } = useWebSocket(selectedSessionId, selectedWorkspaceId)
   const scene = useScene(selectedSessionId, wsScene)
 
   useEffect(() => {
@@ -66,7 +73,7 @@ export function App() {
           <Button
             variant="ghost"
             size="icon"
-            className="absolute left-2 top-2 z-10 h-8 w-8"
+            className="absolute top-2 left-2 z-10 h-8 w-8"
             onClick={() => setSidebarOpen(!sidebarOpen)}
           >
             {sidebarOpen ? (
@@ -83,9 +90,11 @@ export function App() {
                 onClick={() => setActivePanel("scene")}
               >
                 {activePanel === "scene" && (
-                  <div className="absolute right-4 top-4 flex items-center gap-2">
-                    <Dice5 className="h-7 w-7 text-foreground" />
-                    <span className="text-xs font-medium text-foreground">Active</span>
+                  <div className="absolute top-4 right-4 flex items-center gap-2">
+                    <MapIcon className="h-7 w-7 text-foreground" />
+                    <span className="text-xs font-medium text-foreground">
+                      Scene
+                    </span>
                   </div>
                 )}
                 <PlaySurface scene={scene} />
@@ -93,10 +102,7 @@ export function App() {
             </ResizablePanel>
             <ResizableHandle />
             <ResizablePanel defaultSize={40} minSize={20}>
-              <div
-                className="h-full"
-                onClick={() => setActivePanel("chat")}
-              >
+              <div className="h-full" onClick={() => setActivePanel("chat")}>
                 {selectedSessionId ? (
                   <ChatPanel
                     sessionId={selectedSessionId}
