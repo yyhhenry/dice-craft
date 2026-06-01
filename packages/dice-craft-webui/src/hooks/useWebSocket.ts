@@ -3,12 +3,12 @@ import type { ChatMessage } from "@/lib/api"
 
 export interface AgentStatus {
   primaryActive: boolean
-  subagentCount: number
+  npcCount: number
 }
 
 export function useWebSocket(sessionId: string | null, workspaceId: string | null) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
-  const [status, setStatus] = useState<AgentStatus>({ primaryActive: false, subagentCount: 0 })
+  const [status, setStatus] = useState<AgentStatus>({ primaryActive: false, npcCount: 0 })
   const [connected, setConnected] = useState(false)
   const wsRef = useRef<WebSocket | null>(null)
   const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -22,7 +22,7 @@ export function useWebSocket(sessionId: string | null, workspaceId: string | nul
     if (!sessionId || !workspaceId) return
 
     setMessages([])
-    setStatus({ primaryActive: false, subagentCount: 0 })
+    setStatus({ primaryActive: false, npcCount: 0 })
     setConnected(false)
 
     let cancelled = false

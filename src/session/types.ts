@@ -15,6 +15,7 @@ export interface SessionInfo {
   title: string
   agentType: string
   systemPrompt?: string
+  dismissed?: boolean
   createdAt: string
   updatedAt: string
   messageCount: number

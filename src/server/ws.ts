@@ -29,7 +29,7 @@ export class WsManager {
     // If App already exists, send current status
     const instance = this.appPool.get(sessionId)
     if (instance) {
-      this.sendStatus(sessionId, instance.app.primaryAgent.isRunning(), instance.app.dispatcher.getActiveCount())
+      this.sendStatus(sessionId, instance.app.primaryAgent.isRunning(), instance.app.dispatcher.getNpcCount())
     }
   }
 
@@ -69,7 +69,7 @@ export class WsManager {
     try {
       instance = this.appPool.getOrCreate(sessionId, workspaceId, {
         onMessage: (sid, msg) => this.broadcastMessage(sid, msg),
-        onStatusChange: (sid, primaryActive, subagentCount) => this.sendStatus(sid, primaryActive, subagentCount),
+        onStatusChange: (sid, primaryActive, npcCount) => this.sendStatus(sid, primaryActive, npcCount),
       })
     } catch (err) {
       this.broadcast(sessionId, JSON.stringify({ type: "error", payload: { message: err instanceof Error ? err.message : "Failed to initialize" } }))
@@ -110,10 +110,10 @@ export class WsManager {
     this.broadcast(sessionId, JSON.stringify({ type: "message", payload: msg }))
   }
 
-  private sendStatus(sessionId: string, primaryActive: boolean, subagentCount: number): void {
+  private sendStatus(sessionId: string, primaryActive: boolean, npcCount: number): void {
     this.broadcast(sessionId, JSON.stringify({
       type: "status",
-      payload: { primaryActive, subagentCount },
+      payload: { primaryActive, npcCount },
     }))
   }
 

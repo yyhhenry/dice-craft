@@ -97,7 +97,7 @@ export class SessionManager {
     }
   }
 
-  update(id: string, updates: Partial<Pick<SessionInfo, "title">>): void {
+  update(id: string, updates: Partial<Pick<SessionInfo, "title" | "dismissed">>): void {
     const info = this.get(id)
     if (!info) return
     Object.assign(info, updates, { updatedAt: new Date().toISOString() })

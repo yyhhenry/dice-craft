@@ -3,6 +3,7 @@ import { OpenAIModel, type ModelConfig } from "./model/openai"
 import { ToolRegistry } from "./tool/base"
 import { loadBuiltinTools } from "./tool/builtin"
 import { createSpawnSubagentTool } from "./tool/task"
+import { createDismissNpcTool } from "./tool/dismiss-npc"
 import { createSkillTool, discoverSkills, fmtSkills } from "./tool/skill"
 import { createMessageTool } from "./tool/message"
 import { createNotifyTool } from "./tool/notify"
@@ -89,6 +90,7 @@ export function createApp(options: {
   toolRegistry.register(createNotifyTool(notifyFn))
 
   toolRegistry.register(createSpawnSubagentTool(dispatcher, sessionRef))
+  toolRegistry.register(createDismissNpcTool(dispatcher))
 
   dispatcher.onSubagentDone = (sessionId, agentName, content) => {
     primaryAgent.injectEvent(

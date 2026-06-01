@@ -66,19 +66,20 @@ export class AppPool {
       })
       app.primaryAgent.setHistory(history)
 
-      // Restore subagent sessions
+      // Restore active (non-dismissed) subagent sessions
       const subagents = this.deps.sessionManager.listSubagents(sessionId)
       for (const sub of subagents) {
+        if (sub.dismissed) continue
         app.dispatcher.restore(sub.id)
       }
     }
 
     // Wire status callbacks
     app.primaryAgent.onStatusChange = (running) => {
-      callbacks.onStatusChange?.(sessionId, running, app.dispatcher.getActiveCount())
+      callbacks.onStatusChange?.(sessionId, running, app.dispatcher.getNpcCount())
     }
 
-    app.dispatcher.onActiveCountChange = (count) => {
+    app.dispatcher.onNpcCountChange = (count) => {
       callbacks.onStatusChange?.(sessionId, app.primaryAgent.isRunning(), count)
     }
 

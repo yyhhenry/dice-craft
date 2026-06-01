@@ -32,6 +32,12 @@ describe("SpawnSubagentTool", () => {
       mode: "subagent",
       systemPrompt: "You are an explorer.",
     })
+    agentRegistry.register({
+      name: "npc",
+      description: "Game character",
+      mode: "subagent",
+      systemPrompt: "You are an NPC.",
+    })
     toolRegistry = new ToolRegistry()
     sessionManager = createTestSessionManager()
     dispatcher = new SubagentDispatcher(
@@ -83,17 +89,17 @@ describe("SpawnSubagentTool", () => {
     expect(result.content).toContain("Unknown agent type")
   })
 
-  test("execute with background=true returns sessionId", async () => {
+  test("execute with npc agent_type runs in background", async () => {
     const tool = createSpawnSubagentTool(dispatcher, sessionRef)
 
     const result = await tool.execute({
-      agent_type: "explore",
-      prompt: "Background task",
-      background: true,
+      agent_type: "npc",
+      prompt: "NPC character setup",
     })
 
     expect(result.isError).toBeFalsy()
-    expect(result.content).toContain("Subagent spawned in background")
+    expect(result.content).toContain("NPC spawned")
+    expect(result.content).toContain("notify")
   })
 
   test("execute uses default values for optional parameters", async () => {

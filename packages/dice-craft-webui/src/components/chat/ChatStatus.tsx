@@ -1,4 +1,5 @@
 import { Loader2, Bot } from "lucide-react"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import type { AgentStatus } from "@/hooks/useWebSocket"
 
 interface ChatStatusProps {
@@ -23,22 +24,36 @@ export function ChatStatus({ status, connected }: ChatStatusProps) {
           <Loader2 className="h-3 w-3 animate-spin" />
           Thinking
         </span>
-        {status.subagentCount > 0 && (
-          <span className="flex items-center gap-1">
-            <Bot className="h-3 w-3" />
-            {status.subagentCount}
-          </span>
+        {status.npcCount > 0 && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="flex items-center gap-1">
+                <Bot className="h-3 w-3" />
+                {status.npcCount}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>
+              {status.npcCount} NPC{status.npcCount > 1 ? "s" : ""} active
+            </TooltipContent>
+          </Tooltip>
         )}
       </div>
     )
   }
 
-  if (status.subagentCount > 0) {
+  if (status.npcCount > 0) {
     return (
-      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-        <Bot className="h-3 w-3" />
-        {status.subagentCount} agent{status.subagentCount > 1 ? "s" : ""}
-      </div>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Bot className="h-3 w-3" />
+            {status.npcCount}
+          </div>
+        </TooltipTrigger>
+        <TooltipContent>
+          {status.npcCount} NPC{status.npcCount > 1 ? "s" : ""} active
+        </TooltipContent>
+      </Tooltip>
     )
   }
 
