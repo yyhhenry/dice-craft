@@ -31,7 +31,8 @@ export function useWebSocket(sessionId: string | null, workspaceId: string | nul
       if (cancelled) return
 
       const protocol = location.protocol === "https:" ? "wss:" : "ws:"
-      const url = `${protocol}//${location.host}/api/ws/sessions/${sessionId}?workspaceId=${workspaceId}`
+      const host = import.meta.env.DEV ? `${location.hostname}:3001` : location.host
+      const url = `${protocol}//${host}/api/ws/sessions/${sessionId}?workspaceId=${workspaceId}`
       const ws = new WebSocket(url)
       wsRef.current = ws
 
