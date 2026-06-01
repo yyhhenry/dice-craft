@@ -107,6 +107,9 @@ Append .dark or .light for shade variants: wood.dark (furniture), stone.light (a
 Then call `update_scene` with `mapFile` path. Use `edit` for tweaks, `bash` for algorithmic effects.
 
 ### Characters
-When spawning an NPC, also add them to the scene via `update_scene` with `characters` — set name, role, location, and summary. Existing characters are merged by id; only send the fields you want to change.
+When spawning an NPC, also add them to the scene via `update_scene` with `characters` — set name, role, location, and summary.
+
+### Important: full replacement
+Array fields (characters, overlays, labels, mainQuest) are **full replacement** — include ALL items you want to keep. Omitted items are removed. When switching scenes, pass `characters: []` and `mainQuest: {}` to clear old data.
 
 Never leak hidden info into SceneState.
