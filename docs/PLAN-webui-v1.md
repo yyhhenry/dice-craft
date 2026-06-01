@@ -40,12 +40,7 @@ v1 仍然保持 DiceCraft 的通用桌游定位：API 不绑定 DND、猜数字�
 | Main Quest | 当前主线任务、目标、阶段、完成状态 |
 | Player Card | 当前玩家的角色卡，显示姓名、身份、生命/资源、关键属性、状态效果 |
 
-v1 不要求实现复杂地图编辑器。地图槽位先支持以下最小能力：
-
-- `kind: "empty"`：无地图，仅显示占位。
-- `kind: "text"`：文本地图或场景描述。
-- `kind: "image"`：图片地图，`src` 必须位于 workspace 沙箱内或为服务端允许的静态 URL。
-- `kind: "grid"`：轻量网格，cells 内只放通用 token，不绑定具体规则。
+v1 不要求实现复杂地图编辑器。地图始终为网格结构——无数据时为空，有网格时渲染 2D 像素瓦片，可附带叙事文本。GM 通过文本艺术文件（`.game-state/*.map`）编辑地图，`update_scene` 工具读取文件并刷新前端。详见 [PLAN-scene.md](PLAN-scene.md)。
 
 ### 3. 右侧历史消息区
 
@@ -196,14 +191,17 @@ packages/dice-craft-webui/src/components/
 
 ### Step 3: 场景状态投影
 
-- 实现 `GET /sessions/:session_id/scene` 返回 v1 `SceneState`。
-- 初期可由后端基于 chat 和 `.game-state/` 生成基础投影。
-- 后续允许 skill 显式写入 `.scene-state.json` 或等价文件。
+- 实现 `SceneManager`：读写 `data/sessions/<sessionId>/scene-state.json`。
+- 实现 `update_scene` 工具：GM agent 通过此工具管理场景状态。
+- 实现 `GET /sessions/:session_id/scene` 返回 `SceneState`。
+- 实现 `scene.updated` WebSocket 事件广播。
+- 更新 builder prompt，增加场景控制说明。
+- 详见 [PLAN-scene.md](PLAN-scene.md)。
 
 ### Step 4: 前端布局
 
 - 将 v0 聊天主视图替换为三栏 session shell。
-- 中央实现 DM、地图、角色、任务、角色卡区域。
+- 中央实现 DM、地图（SVG 瓦片渲染）、角色、任务、角色卡区域。
 - 右侧实现历史消息分页和输入区。
 
 ### Step 5: 刷新和重进恢复
@@ -214,6 +212,9 @@ packages/dice-craft-webui/src/components/
 
 ## 不在 v1 范围内
 
+- NPC 场景感知工具（observe_scene、request_action）— 设计已预留，见 [PLAN-scene.md](PLAN-scene.md)。
+- 自定义瓦片素材上传。
+- 地图动画、战争迷雾、多层地图。
 - 复杂地图编辑器。
 - 多用户账号和权限系统。
 - 语音、图片上传、文件拖拽。
