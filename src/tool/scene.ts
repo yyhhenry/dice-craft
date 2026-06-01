@@ -16,6 +16,7 @@ export function createUpdateSceneTool(
       "pass {id, _remove: true} to delete an element.\n\n" +
       "Map grid: write a CSV file first (.map.csv), one terrain name per cell, comma-separated. " +
       "Valid terrain: wall, grass, stone, wood, dirt, sand, water, lava, ice, void (or empty). " +
+      "Append .dark or .light for shade variants (e.g. wood.dark for furniture vs wood floor). " +
       "Then pass its path as map.mapFile.\n\n" +
       "Characters: set location to \"x,y\" to place on grid. " +
       "Set visible: false to hide from the player.",

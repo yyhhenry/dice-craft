@@ -35,7 +35,14 @@ export const TERRAIN_DEFS: TerrainDef[] = [
   },
   {
     id: "grass",
-    palette: { a: "#3a7a35", b: "#4a9a42", c: "#2d6628", d: "#5ab050", e: "#8ac050", f: "#306020" },
+    palette: {
+      a: "#3a7a35",
+      b: "#4a9a42",
+      c: "#2d6628",
+      d: "#5ab050",
+      e: "#8ac050",
+      f: "#306020",
+    },
     pixels: [
       "aabaabaabcabaaba",
       "baababaababaabba",
@@ -57,7 +64,13 @@ export const TERRAIN_DEFS: TerrainDef[] = [
   },
   {
     id: "stone",
-    palette: { a: "#909090", b: "#787878", c: "#686868", d: "#a0a0a0", e: "#585858" },
+    palette: {
+      a: "#909090",
+      b: "#787878",
+      c: "#686868",
+      d: "#a0a0a0",
+      e: "#585858",
+    },
     pixels: [
       "aabbaaadddaabbcc",
       "abbaaddddddabbce",
@@ -79,7 +92,14 @@ export const TERRAIN_DEFS: TerrainDef[] = [
   },
   {
     id: "wood",
-    palette: { a: "#8a6520", b: "#7a5518", c: "#6a4510", d: "#9a7530", e: "#4a3008", f: "#aa8540" },
+    palette: {
+      a: "#8a6520",
+      b: "#7a5518",
+      c: "#6a4510",
+      d: "#9a7530",
+      e: "#4a3008",
+      f: "#aa8540",
+    },
     pixels: [
       "aabadaabadaabada",
       "aabadaabadaabada",
@@ -101,7 +121,14 @@ export const TERRAIN_DEFS: TerrainDef[] = [
   },
   {
     id: "dirt",
-    palette: { a: "#7a6040", b: "#6a5030", c: "#8a7050", d: "#5a4028", e: "#9a8060", f: "#a09070" },
+    palette: {
+      a: "#7a6040",
+      b: "#6a5030",
+      c: "#8a7050",
+      d: "#5a4028",
+      e: "#9a8060",
+      f: "#a09070",
+    },
     pixels: [
       "aabcabaabcababab",
       "bcaababaababcabb",
@@ -123,7 +150,13 @@ export const TERRAIN_DEFS: TerrainDef[] = [
   },
   {
     id: "sand",
-    palette: { a: "#d4b896", b: "#c8a882", c: "#dcc8a6", d: "#bfa078", e: "#e8d8b8" },
+    palette: {
+      a: "#d4b896",
+      b: "#c8a882",
+      c: "#dcc8a6",
+      d: "#bfa078",
+      e: "#e8d8b8",
+    },
     pixels: [
       "aabcaabaabcaabaa",
       "baaababaababaabb",
@@ -145,7 +178,14 @@ export const TERRAIN_DEFS: TerrainDef[] = [
   },
   {
     id: "water",
-    palette: { a: "#2868a8", b: "#3078b8", c: "#2060a0", d: "#4090d0", e: "#50a0e0", f: "#185088" },
+    palette: {
+      a: "#2868a8",
+      b: "#3078b8",
+      c: "#2060a0",
+      d: "#4090d0",
+      e: "#50a0e0",
+      f: "#185088",
+    },
     pixels: [
       "aabaabaacaabaaba",
       "baabaabaabaabbaa",
@@ -167,7 +207,13 @@ export const TERRAIN_DEFS: TerrainDef[] = [
   },
   {
     id: "wall",
-    palette: { a: "#5a4a3a", b: "#6a5a48", c: "#4a3a2a", d: "#3a2a1a", e: "#7a6a58" },
+    palette: {
+      a: "#5a4a3a",
+      b: "#6a5a48",
+      c: "#4a3a2a",
+      d: "#3a2a1a",
+      e: "#7a6a58",
+    },
     pixels: [
       "dddddddddddddddd",
       "dabbbbbbdcccccced",
@@ -189,7 +235,14 @@ export const TERRAIN_DEFS: TerrainDef[] = [
   },
   {
     id: "lava",
-    palette: { a: "#b02808", b: "#d04010", c: "#e06820", d: "#f0a040", e: "#ffc060", f: "#901808" },
+    palette: {
+      a: "#b02808",
+      b: "#d04010",
+      c: "#e06820",
+      d: "#f0a040",
+      e: "#ffc060",
+      f: "#901808",
+    },
     pixels: [
       "aabbaabaafaabaab",
       "baaababaababaabb",
@@ -211,7 +264,13 @@ export const TERRAIN_DEFS: TerrainDef[] = [
   },
   {
     id: "ice",
-    palette: { a: "#a0d0e8", b: "#b8e0f0", c: "#90c0d8", d: "#d0f0ff", e: "#80b0c8" },
+    palette: {
+      a: "#a0d0e8",
+      b: "#b8e0f0",
+      c: "#90c0d8",
+      d: "#d0f0ff",
+      e: "#80b0c8",
+    },
     pixels: [
       "aabaabaabaabaaba",
       "baababaababaabba",
@@ -233,12 +292,60 @@ export const TERRAIN_DEFS: TerrainDef[] = [
   },
 ]
 
-const TERRAIN_COLOR_MAP = new Map(
-  TERRAIN_DEFS.map((t) => [t.id, Object.values(t.palette)[0]!]),
-)
+const TERRAIN_DEF_MAP = new Map(TERRAIN_DEFS.map((t) => [t.id, t]))
 
-export function getTerrainColor(terrainId: string): string {
-  return TERRAIN_COLOR_MAP.get(terrainId) ?? TERRAIN_COLOR_MAP.get("void")!
+function clamp(v: number): number {
+  return Math.max(0, Math.min(255, Math.round(v)))
+}
+
+function adjustColor(hex: string, amount: number): string {
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+  const nr = clamp(r + amount)
+  const ng = clamp(g + amount)
+  const nb = clamp(b + amount)
+  return `#${nr.toString(16).padStart(2, "0")}${ng.toString(16).padStart(2, "0")}${nb.toString(16).padStart(2, "0")}`
+}
+
+function adjustPalette(palette: Record<string, string>, amount: number): Record<string, string> {
+  const result: Record<string, string> = {}
+  for (const [k, v] of Object.entries(palette)) {
+    result[k] = adjustColor(v, amount)
+  }
+  return result
+}
+
+const MODIFIER_SHIFTS: Record<string, number> = {
+  dark: -35,
+  light: 30,
+}
+
+export interface ResolvedPattern {
+  pixels: string[]
+  palette: Record<string, string>
+}
+
+export function resolveTerrainPattern(id: string): ResolvedPattern {
+  const existing = TERRAIN_DEF_MAP.get(id)
+  if (existing) return { pixels: existing.pixels, palette: existing.palette }
+
+  const dotIdx = id.indexOf(".")
+  if (dotIdx > 0) {
+    const base = id.slice(0, dotIdx)
+    const modifier = id.slice(dotIdx + 1)
+    const baseDef = TERRAIN_DEF_MAP.get(base)
+    if (baseDef) {
+      const shift = MODIFIER_SHIFTS[modifier]
+      if (shift !== undefined) {
+        return { pixels: baseDef.pixels, palette: adjustPalette(baseDef.palette, shift) }
+      }
+      return { pixels: baseDef.pixels, palette: baseDef.palette }
+    }
+  }
+
+  const voidDef = TERRAIN_DEF_MAP.get("void")!
+  return { pixels: voidDef.pixels, palette: voidDef.palette }
 }
 
 export const ROLE_COLORS: Record<string, string> = {

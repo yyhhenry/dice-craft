@@ -2,10 +2,6 @@ import fs from "fs"
 import path from "path"
 import type { SceneState, SceneMapCell } from "../shared/schemas"
 
-const VALID_TERRAINS = new Set([
-  "void", "grass", "stone", "wood", "dirt", "sand", "water", "wall", "lava", "ice",
-])
-
 function createEmptyState(sessionId: string): SceneState {
   return {
     sessionId,
@@ -153,7 +149,7 @@ export class SceneManager {
       for (let x = 0; x < tokens.length; x++) {
         const terrain = tokens[x]!
         if (!terrain || terrain === "void") continue
-        cells.push({ x, y, terrain: VALID_TERRAINS.has(terrain) ? terrain : "void" })
+        cells.push({ x, y, terrain })
       }
     }
 

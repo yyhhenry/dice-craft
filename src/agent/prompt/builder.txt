@@ -103,6 +103,7 @@ wall,wall,wall,wall
 wall,wood,wood,wall
 wall,wall,wall,wall
 Valid terrain: wall, grass, stone, wood, dirt, sand, water, lava, ice, void
+Append .dark or .light for shade variants: wood.dark (furniture), stone.light (accent)
 Then call `update_scene` with `mapFile` path. Use `edit` for tweaks, `bash` for algorithmic effects.
 
 Never leak hidden info into SceneState.

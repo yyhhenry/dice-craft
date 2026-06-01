@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useMemo } from "react"
 import type { SceneMap, SceneCharacter } from "@shared/schemas"
-import { CELL_SIZE, TERRAIN_DEFS, PATTERN_SIZE, ROLE_COLORS, OVERLAY_SYMBOLS } from "./terrain"
+import { CELL_SIZE, PATTERN_SIZE, ROLE_COLORS, OVERLAY_SYMBOLS, resolveTerrainPattern } from "./terrain"
 
 interface TileMapSvgProps {
   map: SceneMap
@@ -47,6 +47,11 @@ export function TileMapSvg({ map, characters }: TileMapSvgProps) {
       m.set(`${cell.x},${cell.y}`, cell.terrain)
     }
     return m
+  }, [cells])
+
+  const terrainPatterns = useMemo(() => {
+    const ids = new Set(["void", ...cells.map((c) => c.terrain)])
+    return Array.from(ids).map((id) => ({ id, ...resolveTerrainPattern(id) }))
   }, [cells])
 
   const visibleChars = useMemo(
@@ -118,7 +123,7 @@ export function TileMapSvg({ map, characters }: TileMapSvgProps) {
     >
       {/* Pattern definitions — pixel art tiles */}
       <defs>
-        {TERRAIN_DEFS.map((t) => (
+        {terrainPatterns.map((t) => (
           <pattern
             key={t.id}
             id={`terrain-${t.id}`}
