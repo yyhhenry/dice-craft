@@ -33,6 +33,7 @@ export class SubagentDispatcher {
   private setupLoop: LoopSetupFn | undefined
 
   onSubagentDone?: (sessionId: string, agentName: string, content: string) => void
+  onActiveCountChange?: (count: number) => void
 
   constructor(
     model: OpenAIModel,
@@ -79,15 +80,19 @@ export class SubagentDispatcher {
     this.activeLoops.set(session.id, loop)
 
     if (options.background) {
+      this.onActiveCountChange?.(this.activeLoops.size)
       loop.receiveMessage(prompt)
       loop.waitForIdle().then(() => {
         this.persistLoopHistory(session.id, loop)
         const content = this.extractLastAssistantContent(loop.getHistory())
+        this.activeLoops.delete(session.id)
+        this.onActiveCountChange?.(this.activeLoops.size)
         this.onSubagentDone?.(session.id, agentName, content)
       }).catch(() => {})
       return { content: "", sessionId: session.id }
     }
 
+    this.onActiveCountChange?.(this.activeLoops.size)
     loop.receiveMessage(prompt)
     await loop.waitForIdle()
     const history = loop.getHistory()
@@ -149,6 +154,10 @@ export class SubagentDispatcher {
 
   hasSession(sessionId: string): boolean {
     return this.activeLoops.has(sessionId)
+  }
+
+  getActiveCount(): number {
+    return this.activeLoops.size
   }
 
   listSubagents(parentSessionId: string) {

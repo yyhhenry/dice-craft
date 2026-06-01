@@ -34,9 +34,10 @@ export function App() {
         }}
       />
       <main className="flex-1 overflow-hidden">
-        {selectedSessionId ? (
+        {selectedSessionId && selectedWorkspaceId ? (
           <ChatView
             sessionId={selectedSessionId}
+            workspaceId={selectedWorkspaceId}
             sessionTitle={selectedSessionTitle}
             onBack={() => setSelectedSessionId(null)}
           />

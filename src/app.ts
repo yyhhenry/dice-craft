@@ -45,9 +45,10 @@ export function createApp(options?: {
   workspacePath?: string
   skillsDir?: string
   primarySessionId?: string
+  modelConfig?: ModelConfig
   onMessage?: (senderName: string, content: string) => void
 }): App {
-  const config = loadConfig()
+  const config = options?.modelConfig ?? loadConfig()
   const model = new OpenAIModel(config)
 
   const agentRegistry = loadAgents()

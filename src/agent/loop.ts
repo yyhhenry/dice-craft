@@ -12,6 +12,8 @@ export interface AgentConfig {
   systemPrompt?: string
   /** Called when model produces text without using any tool. Fallback output. */
   onResponse?: (response: string) => void
+  /** Called when running state changes (true = started, false = idle). */
+  onStatusChange?: (running: boolean) => void
 }
 
 export class AgentLoop {
@@ -24,6 +26,7 @@ export class AgentLoop {
   private running = false
   private pendingMessage: string | null = null
   private onResponse: ((response: string) => void) | undefined
+  onStatusChange: ((running: boolean) => void) | undefined
   private idleResolvers: Array<() => void> = []
 
   constructor(model: OpenAIModel, registry: ToolRegistry, config: AgentConfig = {}) {
@@ -32,6 +35,7 @@ export class AgentLoop {
     this.maxIterations = config.maxIterations ?? 20
     this.systemPrompt = config.systemPrompt
     this.onResponse = config.onResponse
+    this.onStatusChange = config.onStatusChange
   }
 
   setHistory(history: ChatCompletionMessageParam[]): void {
@@ -70,16 +74,17 @@ export class AgentLoop {
 
   private async runLoop(): Promise<void> {
     this.running = true
+    this.onStatusChange?.(true)
     while (this.pendingMessage) {
       const msg = this.pendingMessage
       this.pendingMessage = null
       const { response } = await this.run(msg)
-      // If model produced text without using tools, forward via callback
       if (response && this.onResponse) {
         this.onResponse(response)
       }
     }
     this.running = false
+    this.onStatusChange?.(false)
     for (const resolve of this.idleResolvers) {
       resolve()
     }
