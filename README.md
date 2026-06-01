@@ -20,7 +20,7 @@ bun run dev                                        # 启动后端 (port 3001)
 cd packages/dice-craft-webui && bun run dev        # 启动前端 (port 5173)
 ```
 
-打开 http://localhost:5173，在 Workspace Settings（齿轮图标）中配置模型：
+打开 <http://localhost:5173>，在 Workspace Settings（齿轮图标）中配置模型：
 
 - **API Base URL**：`https://api.xiaomimimo.com/v1`
 - **API Key**：你的 API key
@@ -63,14 +63,3 @@ data/
 ├── workspaces/      # 运行时 workspace 数据
 └── sessions/        # 运行时 session 数据
 ```
-
-## Agent 类型
-
-| 类型 | 角色 | 模式 | 工具范围 |
-|------|------|------|----------|
-| `builder` | 主 Agent / GM / 构建者 | primary | 全部工具 |
-| `npc` | 游戏角色 | subagent | message |
-| `explore` | 代码和资料探索 | subagent | 只读工具 |
-| `review` | 规则和逻辑审查 | subagent | 只读工具 |
-
-Primary 通过 `notify` 控制 NPC 收到的信息；NPC 通过独立 session 实现上下文隔离。
