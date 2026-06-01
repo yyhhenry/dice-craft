@@ -116,7 +116,7 @@ export function TileMapSvg({ map, characters }: TileMapSvgProps) {
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
     >
-      {/* Pattern definitions */}
+      {/* Pattern definitions — pixel art tiles */}
       <defs>
         {TERRAIN_DEFS.map((t) => (
           <pattern
@@ -126,27 +126,17 @@ export function TileMapSvg({ map, characters }: TileMapSvgProps) {
             height={PATTERN_SIZE}
             patternUnits="userSpaceOnUse"
           >
-            {t.pattern.map((el, i) =>
-              el.type === "circle" ? (
-                <circle
-                  key={i}
-                  cx={el.x}
-                  cy={el.y}
-                  r={el.r}
-                  fill={el.fill}
-                  opacity={el.opacity ?? 1}
-                />
-              ) : (
+            {t.pixels.map((row, y) =>
+              Array.from(row).map((ch, x) => (
                 <rect
-                  key={i}
-                  x={el.x}
-                  y={el.y}
-                  width={el.w}
-                  height={el.h}
-                  fill={el.fill}
-                  opacity={el.opacity ?? 1}
+                  key={y * PATTERN_SIZE + x}
+                  x={x}
+                  y={y}
+                  width={1}
+                  height={1}
+                  fill={t.palette[ch] ?? "#ff00ff"}
                 />
-              ),
+              )),
             )}
           </pattern>
         ))}

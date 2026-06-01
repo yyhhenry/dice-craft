@@ -1,121 +1,241 @@
 export const CELL_SIZE = 40
+export const PATTERN_SIZE = 16
 
 export interface TerrainDef {
   id: string
-  color: string
-  pattern: PatternElement[]
+  pixels: string[]
+  palette: Record<string, string>
 }
 
-export interface PatternElement {
-  type: "rect" | "circle"
-  x: number
-  y: number
-  w?: number
-  h?: number
-  r?: number
-  fill: string
-  opacity?: number
-}
-
-const P = 8
-
-function dots(base: string, dotColor: string, positions: [number, number][]): PatternElement[] {
-  return [
-    { type: "rect", x: 0, y: 0, w: P, h: P, fill: base },
-    ...positions.map(([x, y]): PatternElement => ({
-      type: "rect", x, y, w: 1, h: 1, fill: dotColor, opacity: 0.5,
-    })),
-  ]
-}
-
-function bricks(base: string, lineColor: string): PatternElement[] {
-  return [
-    { type: "rect", x: 0, y: 0, w: P, h: P, fill: base },
-    { type: "rect", x: 0, y: 3, w: P, h: 1, fill: lineColor, opacity: 0.3 },
-    { type: "rect", x: 0, y: 7, w: P, h: 1, fill: lineColor, opacity: 0.3 },
-    { type: "rect", x: 3, y: 0, w: 1, h: 3, fill: lineColor, opacity: 0.3 },
-    { type: "rect", x: 7, y: 4, w: 1, h: 3, fill: lineColor, opacity: 0.3 },
-  ]
-}
-
-function stripes(base: string, lineColor: string, positions: number[]): PatternElement[] {
-  return [
-    { type: "rect", x: 0, y: 0, w: P, h: P, fill: base },
-    ...positions.map((y): PatternElement => ({
-      type: "rect", x: 0, y, w: P, h: 1, fill: lineColor, opacity: 0.25,
-    })),
-  ]
-}
+// Each terrain is a 16x16 pixel art tile.
+// Characters in the pixel grid map to hex colors via the palette.
 
 export const TERRAIN_DEFS: TerrainDef[] = [
   {
     id: "void",
-    color: "#1a1a2e",
-    pattern: [{ type: "rect", x: 0, y: 0, w: P, h: P, fill: "#1a1a2e" }],
+    palette: { a: "#15152a", b: "#1a1a30", c: "#121228" },
+    pixels: [
+      "aabaabaabaabaaba",
+      "abaabaabaabaabaa",
+      "baabaacaabaabacb",
+      "aabaabaabaabaaba",
+      "abaabaabaabaabaa",
+      "baabaabaabaabacb",
+      "aabaabaacaabaaba",
+      "abaabaabaabaabaa",
+      "aabaabaabaabaaba",
+      "abaabaabaabaabaa",
+      "baabaabaabaabacb",
+      "aabaabaabaabaaba",
+      "abaabaacaabaabaa",
+      "baabaabaabaabacb",
+      "aabaabaabaabaaba",
+      "abaabaabaabaabaa",
+    ],
   },
   {
     id: "grass",
-    color: "#4a8c3f",
-    pattern: dots("#4a8c3f", "#3a7030", [[1, 2], [5, 1], [3, 5], [6, 6], [0, 7], [7, 3]]),
+    palette: { a: "#3a7a35", b: "#4a9a42", c: "#2d6628", d: "#5ab050", e: "#8ac050", f: "#306020" },
+    pixels: [
+      "aabaabaabcabaaba",
+      "baababaababaabba",
+      "abcaababaababaab",
+      "baababeababdabba",
+      "aababaababaabcab",
+      "babcababdababaab",
+      "aababaababaababf",
+      "baababaababeabba",
+      "aabdabaababaabab",
+      "baababaababaabca",
+      "abcaababaababaab",
+      "baababaababaabba",
+      "aababeababaabcab",
+      "baababaababdabba",
+      "abfaababaababaab",
+      "baababaababaabba",
+    ],
   },
   {
     id: "stone",
-    color: "#808080",
-    pattern: bricks("#808080", "#606060"),
+    palette: { a: "#909090", b: "#787878", c: "#686868", d: "#a0a0a0", e: "#585858" },
+    pixels: [
+      "aabbaaadddaabbcc",
+      "abbaaddddddabbce",
+      "bbaaadddddaabbce",
+      "baaaddddddaabbce",
+      "aaadddddddaabbce",
+      "eeeeeeeeeeeeeeee",
+      "ddaabbccaaabbbdd",
+      "daabbcccaaabbbdd",
+      "aabbccccaaabbbdd",
+      "abbcccccaaabbbdd",
+      "bbccccccaaabbbdd",
+      "eeeeeeeeeeeeeeee",
+      "aabbaaadddaabbcc",
+      "abbaaddddddabbce",
+      "bbaaadddddaabbce",
+      "baaaddddddaabbce",
+    ],
   },
   {
     id: "wood",
-    color: "#8b6914",
-    pattern: stripes("#8b6914", "#6b5010", [2, 5, 7]),
+    palette: { a: "#8a6520", b: "#7a5518", c: "#6a4510", d: "#9a7530", e: "#4a3008", f: "#aa8540" },
+    pixels: [
+      "aabadaabadaabada",
+      "aabadaabadaabada",
+      "aabadaabadaabada",
+      "dabadaabadaabada",
+      "aabadaabadaabada",
+      "aabadaabadaabfda",
+      "aabadaabadaabada",
+      "ffffffffffffffff",
+      "bcbadbbcbdbbcbad",
+      "bcbadbbcbdbbcbad",
+      "bcbadbbcbdbbcbad",
+      "bcbadbbcbdbbcbad",
+      "bcbadbbcbdbbcbad",
+      "bcfadbbcbdbbcbad",
+      "bcbadbbcbdbbcbad",
+      "ffffffffffffffff",
+    ],
   },
   {
     id: "dirt",
-    color: "#7a6040",
-    pattern: dots("#7a6040", "#604830", [[2, 1], [5, 3], [1, 6], [7, 5], [4, 7]]),
+    palette: { a: "#7a6040", b: "#6a5030", c: "#8a7050", d: "#5a4028", e: "#9a8060", f: "#a09070" },
+    pixels: [
+      "aabcabaabcababab",
+      "bcaababaababcabb",
+      "aababdababaababc",
+      "babcababdabcabab",
+      "aababaababeababd",
+      "bcababaababaabcb",
+      "aababdababcababf",
+      "baabababababcaba",
+      "abcaababdababaab",
+      "baababaababeabba",
+      "aababfababaabcab",
+      "bcababaababaabab",
+      "ababdababcababcb",
+      "baababaababaabba",
+      "aababaababdababf",
+      "bcababeababaabab",
+    ],
   },
   {
     id: "sand",
-    color: "#d4b896",
-    pattern: dots("#d4b896", "#c0a080", [[1, 3], [4, 1], [6, 5], [3, 7], [7, 2]]),
+    palette: { a: "#d4b896", b: "#c8a882", c: "#dcc8a6", d: "#bfa078", e: "#e8d8b8" },
+    pixels: [
+      "aabcaabaabcaabaa",
+      "baaababaababaabb",
+      "aababaababaababc",
+      "baaababeababaabb",
+      "aabcaabaabaaabac",
+      "baaababaababaabb",
+      "aababdababaababc",
+      "baaababaababeabb",
+      "aabcaabaabcaabaa",
+      "baaababaababaabb",
+      "aababaababaababd",
+      "baaababeababaabb",
+      "aabcaabaabaaabac",
+      "baaababaababaabb",
+      "aababdababaababc",
+      "baaababaababeabb",
+    ],
   },
   {
     id: "water",
-    color: "#3070b0",
-    pattern: [
-      { type: "rect", x: 0, y: 0, w: P, h: P, fill: "#3070b0" },
-      { type: "rect", x: 1, y: 2, w: 3, h: 1, fill: "#4090d0", opacity: 0.4 },
-      { type: "rect", x: 5, y: 5, w: 2, h: 1, fill: "#4090d0", opacity: 0.4 },
+    palette: { a: "#2868a8", b: "#3078b8", c: "#2060a0", d: "#4090d0", e: "#50a0e0", f: "#185088" },
+    pixels: [
+      "aabaabaacaabaaba",
+      "baabaabaabaabbaa",
+      "aabddeaabaabaabc",
+      "baabaabaabaabaab",
+      "aabaabaabaabaaba",
+      "baabaabaabaabbaa",
+      "aabaabaacaabaaba",
+      "baabaabaabaabaab",
+      "aabaabaabaddeaba",
+      "baabaabaabaabbaa",
+      "aabaabaacaabaaba",
+      "baabaabaabaabaab",
+      "ddbaabaabaabddba",
+      "aabaabaabaabaaba",
+      "baabaabaabaabbaa",
+      "aabaabaacaabaaba",
     ],
   },
   {
     id: "wall",
-    color: "#5a4a3a",
-    pattern: bricks("#5a4a3a", "#3a3028"),
+    palette: { a: "#5a4a3a", b: "#6a5a48", c: "#4a3a2a", d: "#3a2a1a", e: "#7a6a58" },
+    pixels: [
+      "dddddddddddddddd",
+      "dabbbbbbdcccccced",
+      "dabbbbbbdcccccced",
+      "dabbbbbbdcccccced",
+      "dabbbbebdccccccad",
+      "dabbbbbbdcccccced",
+      "dabbbbbbdcccccced",
+      "dddddddddddddddd",
+      "dddddddddddddddd",
+      "dcccccaddabbbbbbd",
+      "dccccceddabbabbbd",
+      "dcccccaddabbbbbbd",
+      "dccccceddabbbbbbd",
+      "dcccccaddabbbebbd",
+      "dccccceddabbbbbbd",
+      "dddddddddddddddd",
+    ],
   },
   {
     id: "lava",
-    color: "#c03010",
-    pattern: [
-      { type: "rect", x: 0, y: 0, w: P, h: P, fill: "#c03010" },
-      { type: "rect", x: 2, y: 1, w: 2, h: 2, fill: "#e06020", opacity: 0.5 },
-      { type: "rect", x: 5, y: 5, w: 2, h: 2, fill: "#e06020", opacity: 0.5 },
-      { type: "rect", x: 1, y: 6, w: 1, h: 1, fill: "#ff8040", opacity: 0.4 },
+    palette: { a: "#b02808", b: "#d04010", c: "#e06820", d: "#f0a040", e: "#ffc060", f: "#901808" },
+    pixels: [
+      "aabbaabaafaabaab",
+      "baaababaababaabb",
+      "aababcababaababf",
+      "baacddbababaabba",
+      "aabcddcaababaabf",
+      "baabccbaababaabb",
+      "aababaababfababf",
+      "baaababaababaabb",
+      "aabfaabaababaabf",
+      "baaababaababaabb",
+      "aababaababcababf",
+      "baaababaacddabba",
+      "aabfababcdddaabf",
+      "baaababaacddabbb",
+      "aababfababcababf",
+      "baaababaababaabb",
     ],
   },
   {
     id: "ice",
-    color: "#a0d0e8",
-    pattern: [
-      { type: "rect", x: 0, y: 0, w: P, h: P, fill: "#a0d0e8" },
-      { type: "rect", x: 1, y: 1, w: 3, h: 1, fill: "#c0e8ff", opacity: 0.5 },
-      { type: "rect", x: 4, y: 5, w: 2, h: 1, fill: "#c0e8ff", opacity: 0.5 },
+    palette: { a: "#a0d0e8", b: "#b8e0f0", c: "#90c0d8", d: "#d0f0ff", e: "#80b0c8" },
+    pixels: [
+      "aabaabaabaabaaba",
+      "baababaababaabba",
+      "aababdababaababc",
+      "baababaababaabba",
+      "aabaabaababdabab",
+      "baababaababaabba",
+      "aababaababaababc",
+      "dddbaababaababba",
+      "aabddbaababaabab",
+      "baababddbaababba",
+      "aababaabddababbc",
+      "baababaababaabba",
+      "aababaababaababd",
+      "baababdababaabba",
+      "aababaababdababc",
+      "baababaababaabba",
     ],
   },
 ]
 
-export const PATTERN_SIZE = P
-
-const TERRAIN_COLOR_MAP = new Map(TERRAIN_DEFS.map((t) => [t.id, t.color]))
+const TERRAIN_COLOR_MAP = new Map(
+  TERRAIN_DEFS.map((t) => [t.id, Object.values(t.palette)[0]!]),
+)
 
 export function getTerrainColor(terrainId: string): string {
   return TERRAIN_COLOR_MAP.get(terrainId) ?? TERRAIN_COLOR_MAP.get("void")!
