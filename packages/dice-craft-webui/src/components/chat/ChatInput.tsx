@@ -1,7 +1,6 @@
 import { useState, useRef } from "react"
-import { Send } from "lucide-react"
+import { ArrowUp } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
 
 interface ChatInputProps {
   onSend: (content: string) => void
@@ -17,6 +16,9 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
     if (!trimmed) return
     onSend(trimmed)
     setValue("")
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto"
+    }
     textareaRef.current?.focus()
   }
 
@@ -27,22 +29,36 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
     }
   }
 
+  const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setValue(e.target.value)
+    const el = e.target
+    el.style.height = "auto"
+    el.style.height = Math.min(el.scrollHeight, 200) + "px"
+  }
+
   return (
-    <div className="shrink-0 border-t p-4">
-      <div className="flex items-end gap-2">
-        <Textarea
+    <div className="shrink-0 px-4 pb-4">
+      <div className="overflow-hidden rounded-xl border bg-background shadow-sm">
+        <textarea
           ref={textareaRef}
           value={value}
-          onChange={(e) => setValue(e.target.value)}
+          onChange={handleInput}
           onKeyDown={handleKeyDown}
           placeholder={disabled ? "Connecting..." : "Type a message..."}
           disabled={disabled}
-          className="min-h-[40px] max-h-[120px] resize-none"
-          rows={1}
+          rows={2}
+          className="w-full resize-none bg-transparent px-4 pt-3 pb-2 text-sm outline-none placeholder:text-muted-foreground disabled:opacity-50"
         />
-        <Button size="icon" onClick={handleSend} disabled={disabled || !value.trim()}>
-          <Send className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center justify-end border-t px-3 py-1.5">
+          <Button
+            size="icon"
+            className="h-7 w-7 rounded-lg"
+            onClick={handleSend}
+            disabled={disabled || !value.trim()}
+          >
+            <ArrowUp className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
     </div>
   )
