@@ -12,8 +12,8 @@ export function createUpdateSceneTool(
     id: "update_scene",
     description:
       "Update the game scene displayed to the player. Pass only the fields you want to change. " +
-      "Array fields (characters, map.overlays, map.labels, objectives) merge by id — " +
-      "pass {id, _remove: true} to delete an element.\n\n" +
+      "Array fields (characters, overlays, labels) are FULL REPLACEMENT — " +
+      "include ALL items you want to keep; omitted items are removed.\n\n" +
       "Map grid: write a CSV file first (.map.csv), one terrain name per cell, comma-separated. " +
       "Valid terrain: wall, grass, stone, wood, dirt, sand, water, lava, ice, void (or empty). " +
       "Append .dark or .light for shade variants (e.g. wood.dark for furniture vs wood floor). " +
@@ -35,7 +35,7 @@ export function createUpdateSceneTool(
             },
             overlays: {
               type: "array",
-              description: "Map overlays (doors, chests, etc). Merge by id.",
+              description: "Map overlays (doors, chests, etc). Full replacement.",
               items: {
                 type: "object",
                 properties: {
@@ -44,14 +44,13 @@ export function createUpdateSceneTool(
                   y: { type: "integer" },
                   type: { type: "string", description: "door, chest, trap, stairs, marker" },
                   label: { type: "string" },
-                  _remove: { type: "boolean" },
                 },
                 required: ["id"],
               },
             },
             labels: {
               type: "array",
-              description: "Text labels on the map grid. Merge by id.",
+              description: "Text labels on the map grid. Full replacement.",
               items: {
                 type: "object",
                 properties: {
@@ -60,7 +59,6 @@ export function createUpdateSceneTool(
                   x: { type: "integer" },
                   y: { type: "integer" },
                   style: { type: "string", enum: ["area", "label", "alert"] },
-                  _remove: { type: "boolean" },
                 },
                 required: ["id"],
               },
@@ -69,7 +67,7 @@ export function createUpdateSceneTool(
         },
         characters: {
           type: "array",
-          description: "Characters on the scene. Merge by id. Set location to \"x,y\" for grid placement.",
+          description: "ALL characters in the scene. Full replacement — include every character you want to keep.",
           items: {
             type: "object",
             properties: {
@@ -81,14 +79,13 @@ export function createUpdateSceneTool(
               status: { type: "string" },
               location: { type: "string", description: "Grid position as \"x,y\"" },
               hidden: { type: "boolean", description: "Set true to hide from the player" },
-              _remove: { type: "boolean" },
             },
             required: ["id"],
           },
         },
         mainQuest: {
           type: "object",
-          description: "Main quest (partial update). Objectives merge by id.",
+          description: "Main quest. Full replacement when provided.",
           properties: {
             title: { type: "string" },
             summary: { type: "string" },
@@ -100,7 +97,6 @@ export function createUpdateSceneTool(
                   id: { type: "string" },
                   text: { type: "string" },
                   status: { type: "string", enum: ["active", "completed", "failed", "hidden"] },
-                  _remove: { type: "boolean" },
                 },
                 required: ["id"],
               },

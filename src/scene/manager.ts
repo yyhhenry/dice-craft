@@ -12,43 +12,16 @@ function createEmptyState(sessionId: string): SceneState {
   }
 }
 
-interface HasId {
-  id: string
-  _remove?: boolean
-}
-
-function mergeById<T extends HasId>(existing: T[], incoming: HasId[]): T[] {
-  const result = [...existing]
-  for (const item of incoming) {
-    if (item._remove) {
-      const idx = result.findIndex((e) => e.id === item.id)
-      if (idx >= 0) result.splice(idx, 1)
-      continue
-    }
-    const idx = result.findIndex((e) => e.id === item.id)
-    if (idx >= 0) {
-      result[idx] = { ...result[idx], ...item } as T
-    } else {
-      result.push(item as T)
-    }
-  }
-  return result
-}
-
 export interface UpdateScenePatch {
   title?: string
   map?: {
     title?: string
     mapFile?: string
-    overlays?: HasId[]
-    labels?: HasId[]
+    overlays?: Record<string, unknown>[]
+    labels?: Record<string, unknown>[]
   }
-  characters?: HasId[]
-  mainQuest?: {
-    title?: string
-    summary?: string
-    objectives?: HasId[]
-  }
+  characters?: Record<string, unknown>[]
+  mainQuest?: Record<string, unknown>
   playerCard?: Record<string, unknown>
 }
 
@@ -89,25 +62,19 @@ export class SceneManager {
         }
       }
       if (patch.map.overlays) {
-        current.map.overlays = mergeById(current.map.overlays ?? [], patch.map.overlays)
+        current.map.overlays = patch.map.overlays as SceneState["map"]["overlays"]
       }
       if (patch.map.labels) {
-        current.map.labels = mergeById(current.map.labels ?? [], patch.map.labels)
+        current.map.labels = patch.map.labels as SceneState["map"]["labels"]
       }
     }
 
     if (patch.characters) {
-      current.characters = mergeById(current.characters, patch.characters)
+      current.characters = patch.characters as SceneState["characters"]
     }
 
     if (patch.mainQuest) {
-      const mq = current.mainQuest ?? { title: "", objectives: [] }
-      if (patch.mainQuest.title !== undefined) mq.title = patch.mainQuest.title
-      if (patch.mainQuest.summary !== undefined) mq.summary = patch.mainQuest.summary
-      if (patch.mainQuest.objectives) {
-        mq.objectives = mergeById(mq.objectives, patch.mainQuest.objectives)
-      }
-      current.mainQuest = mq
+      current.mainQuest = patch.mainQuest as SceneState["mainQuest"]
     }
 
     if (patch.playerCard) {
