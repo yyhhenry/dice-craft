@@ -12,58 +12,74 @@ export function useWebSocket(sessionId: string | null, workspaceId: string | nul
   const [connected, setConnected] = useState(false)
   const wsRef = useRef<WebSocket | null>(null)
   const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const sessionIdRef = useRef(sessionId)
+  const workspaceIdRef = useRef(workspaceId)
 
-  const connect = useCallback(() => {
-    if (!sessionId || !workspaceId) return
-
-    const protocol = location.protocol === "https:" ? "wss:" : "ws:"
-    const url = `${protocol}//${location.host}/api/ws/sessions/${sessionId}?workspaceId=${workspaceId}`
-    const ws = new WebSocket(url)
-    wsRef.current = ws
-
-    ws.onopen = () => {
-      setConnected(true)
-      if (reconnectTimer.current) {
-        clearTimeout(reconnectTimer.current)
-        reconnectTimer.current = null
-      }
-    }
-
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data)
-      if (data.type === "message") {
-        setMessages((prev) => [...prev, data.payload as ChatMessage])
-      } else if (data.type === "status") {
-        setStatus(data.payload as AgentStatus)
-      }
-    }
-
-    ws.onclose = () => {
-      setConnected(false)
-      wsRef.current = null
-      // Auto-reconnect after 2 seconds
-      reconnectTimer.current = setTimeout(() => connect(), 2000)
-    }
-
-    ws.onerror = () => {
-      ws.close()
-    }
-  }, [sessionId, workspaceId])
+  sessionIdRef.current = sessionId
+  workspaceIdRef.current = workspaceId
 
   useEffect(() => {
+    if (!sessionId || !workspaceId) return
+
     setMessages([])
     setStatus({ primaryActive: false, subagentCount: 0 })
+    setConnected(false)
+
+    let cancelled = false
+
+    function connect() {
+      if (cancelled) return
+
+      const protocol = location.protocol === "https:" ? "wss:" : "ws:"
+      const url = `${protocol}//${location.host}/api/ws/sessions/${sessionId}?workspaceId=${workspaceId}`
+      const ws = new WebSocket(url)
+      wsRef.current = ws
+
+      ws.onopen = () => {
+        if (cancelled) { ws.close(); return }
+        setConnected(true)
+      }
+
+      ws.onmessage = (event) => {
+        if (cancelled) return
+        try {
+          const data = JSON.parse(event.data)
+          if (data.type === "message") {
+            setMessages((prev) => [...prev, data.payload as ChatMessage])
+          } else if (data.type === "status") {
+            setStatus(data.payload as AgentStatus)
+          }
+        } catch {
+          // ignore parse errors
+        }
+      }
+
+      ws.onclose = () => {
+        if (cancelled) return
+        setConnected(false)
+        wsRef.current = null
+        reconnectTimer.current = setTimeout(() => connect(), 2000)
+      }
+
+      ws.onerror = () => {
+        ws.close()
+      }
+    }
+
     connect()
 
     return () => {
+      cancelled = true
       if (reconnectTimer.current) {
         clearTimeout(reconnectTimer.current)
         reconnectTimer.current = null
       }
-      wsRef.current?.close()
-      wsRef.current = null
+      if (wsRef.current) {
+        wsRef.current.close()
+        wsRef.current = null
+      }
     }
-  }, [connect])
+  }, [sessionId, workspaceId])
 
   const send = useCallback((content: string) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {

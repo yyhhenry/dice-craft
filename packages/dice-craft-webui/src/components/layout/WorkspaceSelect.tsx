@@ -48,7 +48,7 @@ export function WorkspaceSelect({
   return (
     <div className="flex items-center gap-1">
       <Select
-        value={selectedId ?? undefined}
+        value={selectedId ?? ""}
         onValueChange={onSelect}
         disabled={loading}
       >

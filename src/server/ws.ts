@@ -20,15 +20,21 @@ export class WsManager {
   }
 
   open(ws: ServerWebSocket<WsData>): void {
-    const { sessionId } = ws.data
+    const { sessionId, workspaceId } = ws.data
     if (!this.connections.has(sessionId)) {
       this.connections.set(sessionId, new Set())
     }
     this.connections.get(sessionId)!.add(ws)
 
-    const instance = this.appPool.get(sessionId)
-    if (instance) {
+    // Eagerly create App so callbacks are wired before any message
+    try {
+      const instance = this.appPool.getOrCreate(sessionId, workspaceId, {
+        onMessage: (sid, msg) => this.broadcastMessage(sid, msg),
+        onStatusChange: (sid, primaryActive, subagentCount) => this.sendStatus(sid, primaryActive, subagentCount),
+      })
       this.sendStatus(sessionId, instance.app.primaryAgent.isRunning(), instance.app.dispatcher.getActiveCount())
+    } catch (err) {
+      ws.send(JSON.stringify({ type: "error", payload: { message: err instanceof Error ? err.message : "Failed to initialize" } }))
     }
   }
 
@@ -64,10 +70,16 @@ export class WsManager {
   }
 
   private handleSendMessage(sessionId: string, workspaceId: WorkspaceID, content: string): void {
-    const instance = this.appPool.getOrCreate(sessionId, workspaceId, {
-      onMessage: (sid, msg) => this.broadcastMessage(sid, msg),
-      onStatusChange: (sid, primaryActive, subagentCount) => this.sendStatus(sid, primaryActive, subagentCount),
-    })
+    let instance;
+    try {
+      instance = this.appPool.getOrCreate(sessionId, workspaceId, {
+        onMessage: (sid, msg) => this.broadcastMessage(sid, msg),
+        onStatusChange: (sid, primaryActive, subagentCount) => this.sendStatus(sid, primaryActive, subagentCount),
+      })
+    } catch (err) {
+      this.broadcast(sessionId, JSON.stringify({ type: "error", payload: { message: err instanceof Error ? err.message : "Failed to initialize" } }))
+      return
+    }
 
     const { app } = instance
 
