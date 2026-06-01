@@ -124,11 +124,7 @@ export class AgentLoop {
     while (iterations < this.maxIterations) {
       iterations++
 
-      const result = await this.model.chat(
-        messages,
-        tools.length > 0 ? tools : undefined,
-        callbacks,
-      )
+      const result = await this.model.chat(messages, tools.length > 0 ? tools : undefined, callbacks)
 
       if (result.content && !result.toolCalls) {
         messages.push({ role: "assistant", content: result.content })

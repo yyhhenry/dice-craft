@@ -47,7 +47,12 @@ describe("ChatManager", () => {
 
   test("getRecentMessages returns last N", () => {
     for (let i = 0; i < 10; i++) {
-      manager.sendMessage("sess_1", { content: `msg_${i}`, senderId: "agent", senderName: "Agent", senderRole: "agent" })
+      manager.sendMessage("sess_1", {
+        content: `msg_${i}`,
+        senderId: "agent",
+        senderName: "Agent",
+        senderRole: "agent",
+      })
     }
     const recent = manager.getRecentMessages("sess_1", 3)
     expect(recent).toHaveLength(3)

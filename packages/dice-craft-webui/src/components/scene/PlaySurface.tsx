@@ -13,14 +13,14 @@ interface PlaySurfaceProps {
 export function PlaySurface({ scene }: PlaySurfaceProps) {
   const hasContent = scene && scene.version > 0
 
+  const otherCharacters = useMemo(
+    () => (hasContent ? scene.characters.filter((c) => !c.hidden && c.role !== "player") : []),
+    [hasContent, scene],
+  )
+
   if (!hasContent) {
     return <MapPanel scene={null} />
   }
-
-  const otherCharacters = useMemo(
-    () => scene.characters.filter((c) => !c.hidden && c.role !== "player"),
-    [scene.characters],
-  )
 
   const title = scene.title ?? scene.map.title
 

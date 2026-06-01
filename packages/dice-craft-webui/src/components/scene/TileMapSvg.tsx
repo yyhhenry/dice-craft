@@ -41,67 +41,65 @@ export function TileMapSvg({ map, characters }: TileMapSvgProps) {
     setViewBox({ x: -PAD, y: -PAD, w: svgW + PAD * 2, h: svgH + PAD * 2 })
   }
 
-  const cellMap = useMemo(() => {
-    const m = new Map<string, string>()
-    for (const cell of cells) {
-      m.set(`${cell.x},${cell.y}`, cell.terrain)
-    }
-    return m
-  }, [cells])
-
   const terrainPatterns = useMemo(() => {
     const ids = new Set(["void", ...cells.map((c) => c.terrain)])
     return Array.from(ids).map((id) => ({ id, ...resolveTerrainPattern(id) }))
   }, [cells])
 
-  const visibleChars = useMemo(
-    () => characters.filter((c) => !c.hidden),
-    [characters],
+  const visibleChars = useMemo(() => characters.filter((c) => !c.hidden), [characters])
+
+  const handleWheel = useCallback(
+    (e: React.WheelEvent) => {
+      e.preventDefault()
+      const svg = svgRef.current
+      if (!svg) return
+
+      const rect = svg.getBoundingClientRect()
+      const mx = ((e.clientX - rect.left) / rect.width) * viewBox.w + viewBox.x
+      const my = ((e.clientY - rect.top) / rect.height) * viewBox.h + viewBox.y
+
+      const factor = e.deltaY > 0 ? 1.1 : 0.9
+      const minW = svgW * 0.25
+      const maxW = defaultVB.w * 2
+      const nw = Math.max(minW, Math.min(maxW, viewBox.w * factor))
+      const nh = (nw / svgW) * svgH
+
+      setViewBox({
+        x: mx - ((mx - viewBox.x) / viewBox.w) * nw,
+        y: my - ((my - viewBox.y) / viewBox.h) * nh,
+        w: nw,
+        h: nh,
+      })
+    },
+    [viewBox, svgW, svgH, defaultVB.w],
   )
 
-  const handleWheel = useCallback((e: React.WheelEvent) => {
-    e.preventDefault()
-    const svg = svgRef.current
-    if (!svg) return
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      if (e.button !== 0) return
+      setDragging(true)
+      dragStart.current = { x: e.clientX, y: e.clientY, vx: viewBox.x, vy: viewBox.y }
+    },
+    [viewBox],
+  )
 
-    const rect = svg.getBoundingClientRect()
-    const mx = ((e.clientX - rect.left) / rect.width) * viewBox.w + viewBox.x
-    const my = ((e.clientY - rect.top) / rect.height) * viewBox.h + viewBox.y
-
-    const factor = e.deltaY > 0 ? 1.1 : 0.9
-    const minW = svgW * 0.25
-    const maxW = defaultVB.w * 2
-    const nw = Math.max(minW, Math.min(maxW, viewBox.w * factor))
-    const nh = (nw / svgW) * svgH
-
-    setViewBox({
-      x: mx - ((mx - viewBox.x) / viewBox.w) * nw,
-      y: my - ((my - viewBox.y) / viewBox.h) * nh,
-      w: nw,
-      h: nh,
-    })
-  }, [viewBox, svgW, svgH])
-
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    if (e.button !== 0) return
-    setDragging(true)
-    dragStart.current = { x: e.clientX, y: e.clientY, vx: viewBox.x, vy: viewBox.y }
-  }, [viewBox])
-
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!dragging) return
-    const svg = svgRef.current
-    if (!svg) return
-    const rect = svg.getBoundingClientRect()
-    const scale = viewBox.w / rect.width
-    const dx = (e.clientX - dragStart.current.x) * scale
-    const dy = (e.clientY - dragStart.current.y) * scale
-    setViewBox((v) => ({
-      ...v,
-      x: dragStart.current.vx - dx,
-      y: dragStart.current.vy - dy,
-    }))
-  }, [dragging, viewBox.w])
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent) => {
+      if (!dragging) return
+      const svg = svgRef.current
+      if (!svg) return
+      const rect = svg.getBoundingClientRect()
+      const scale = viewBox.w / rect.width
+      const dx = (e.clientX - dragStart.current.x) * scale
+      const dy = (e.clientY - dragStart.current.y) * scale
+      setViewBox((v) => ({
+        ...v,
+        x: dragStart.current.vx - dx,
+        y: dragStart.current.vy - dy,
+      }))
+    },
+    [dragging, viewBox.w],
+  )
 
   const handleMouseUp = useCallback(() => {
     setDragging(false)
@@ -133,14 +131,7 @@ export function TileMapSvg({ map, characters }: TileMapSvgProps) {
           >
             {t.pixels.map((row, y) =>
               Array.from(row).map((ch, x) => (
-                <rect
-                  key={y * PATTERN_SIZE + x}
-                  x={x}
-                  y={y}
-                  width={1}
-                  height={1}
-                  fill={t.palette[ch] ?? "#ff00ff"}
-                />
+                <rect key={y * PATTERN_SIZE + x} x={x} y={y} width={1} height={1} fill={t.palette[ch] ?? "#ff00ff"} />
               )),
             )}
           </pattern>
@@ -229,14 +220,7 @@ export function TileMapSvg({ map, characters }: TileMapSvgProps) {
         const color = ROLE_COLORS[ch.role] ?? ROLE_COLORS.neutral
         return (
           <g key={`ch-${ch.id}`}>
-            <circle
-              cx={cx}
-              cy={cy}
-              r={r}
-              fill={color}
-              stroke="#fff"
-              strokeWidth={1.5}
-            />
+            <circle cx={cx} cy={cy} r={r} fill={color} stroke="#fff" strokeWidth={1.5} />
             <text
               x={cx}
               y={cy}

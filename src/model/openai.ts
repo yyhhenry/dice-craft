@@ -34,7 +34,7 @@ export class OpenAIModel {
   async chat(
     messages: ChatCompletionMessageParam[],
     tools?: Tool[],
-    _callbacks?: StreamCallbacks
+    _callbacks?: StreamCallbacks,
   ): Promise<ChatResponse> {
     const request: OpenAI.ChatCompletionCreateParams = {
       model: this.config.model,

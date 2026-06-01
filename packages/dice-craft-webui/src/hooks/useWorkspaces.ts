@@ -19,14 +19,11 @@ export function useWorkspaces() {
     refresh()
   }, [refresh])
 
-  const create = useCallback(
-    async (name: string) => {
-      const ws = await api.createWorkspace(name)
-      setWorkspaces((prev) => [...prev, ws])
-      return ws
-    },
-    []
-  )
+  const create = useCallback(async (name: string) => {
+    const ws = await api.createWorkspace(name)
+    setWorkspaces((prev) => [...prev, ws])
+    return ws
+  }, [])
 
   return { workspaces, loading, error, refresh, create }
 }

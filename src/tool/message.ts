@@ -26,8 +26,7 @@ export function createMessageTool(
         },
         sender_name: {
           type: "string",
-          description:
-            "Your display name. Set to your character/role name (e.g. 'GM', 'Alice', 'Bob').",
+          description: "Your display name. Set to your character/role name (e.g. 'GM', 'Alice', 'Bob').",
         },
       },
       required: ["content", "sender_name"],

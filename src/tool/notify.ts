@@ -21,8 +21,7 @@ export function createNotifyTool(notifyFn: NotifyFn): Tool {
       properties: {
         content: {
           type: "string",
-          description:
-            "The notification content: user's message, scene description, or GM instruction",
+          description: "The notification content: user's message, scene description, or GM instruction",
         },
         targets: {
           type: "array",
@@ -36,8 +35,7 @@ export function createNotifyTool(notifyFn: NotifyFn): Tool {
               },
               expect_reply: {
                 type: "boolean",
-                description:
-                  "Whether the NPC should reply via message tool (default false, just update context)",
+                description: "Whether the NPC should reply via message tool (default false, just update context)",
               },
             },
             required: ["session_id"],
@@ -59,9 +57,7 @@ export function createNotifyTool(notifyFn: NotifyFn): Tool {
 
       await notifyFn(content, targets)
 
-      const summary = targets
-        .map((t) => `${t.session_id}(${t.expect_reply ? "reply" : "silent"})`)
-        .join(", ")
+      const summary = targets.map((t) => `${t.session_id}(${t.expect_reply ? "reply" : "silent"})`).join(", ")
       return { content: `Notified: ${summary}` }
     },
   }

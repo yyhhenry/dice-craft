@@ -57,9 +57,5 @@ export function ChatStatus({ status, connected }: ChatStatusProps) {
     )
   }
 
-  return (
-    <div className="text-xs text-muted-foreground/50">
-      Idle
-    </div>
-  )
+  return <div className="text-xs text-muted-foreground/50">Idle</div>
 }

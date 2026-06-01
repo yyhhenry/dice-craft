@@ -87,11 +87,14 @@ export class SubagentDispatcher {
     if (options.background) {
       this.emitNpcCount()
       loop.receiveMessage(prompt)
-      loop.waitForIdle().then(() => {
-        this.persistLoopHistory(session.id, loop)
-        const content = this.extractLastAssistantContent(loop.getHistory())
-        this.onSubagentDone?.(session.id, agentName, content)
-      }).catch(() => {})
+      loop
+        .waitForIdle()
+        .then(() => {
+          this.persistLoopHistory(session.id, loop)
+          const content = this.extractLastAssistantContent(loop.getHistory())
+          this.onSubagentDone?.(session.id, agentName, content)
+        })
+        .catch(() => {})
       return { content: "", sessionId: session.id }
     }
 
@@ -118,16 +121,17 @@ export class SubagentDispatcher {
         this.persistLoopHistory(sessionId, entry.loop)
       })
     }
-    entry.loop.waitForIdle().then(() => {
-      this.persistLoopHistory(sessionId, entry.loop)
-    }).catch(() => {})
+    entry.loop
+      .waitForIdle()
+      .then(() => {
+        this.persistLoopHistory(sessionId, entry.loop)
+      })
+      .catch(() => {})
     return Promise.resolve()
   }
 
   async notifyMultiple(targets: NotifyTarget[], content: string): Promise<void> {
-    await Promise.all(
-      targets.map((t) => this.send(t.session_id, content, t.expect_reply ?? false)),
-    )
+    await Promise.all(targets.map((t) => this.send(t.session_id, content, t.expect_reply ?? false)))
   }
 
   dismiss(sessionId: string): void {

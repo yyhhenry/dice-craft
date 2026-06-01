@@ -34,10 +34,7 @@ export function createBashTool(guard: WorkspaceGuard): Tool {
     },
     async execute(args: Record<string, unknown>): Promise<ToolResult> {
       const command = args.command as string
-      const timeout = Math.min(
-        (args.timeout as number) || DEFAULT_TIMEOUT,
-        MAX_TIMEOUT,
-      )
+      const timeout = Math.min((args.timeout as number) || DEFAULT_TIMEOUT, MAX_TIMEOUT)
 
       if (!command) {
         return { content: "Error: command is required", isError: true }
@@ -56,10 +53,7 @@ export function createBashTool(guard: WorkspaceGuard): Tool {
       }, timeout)
 
       try {
-        const [stdout, stderr] = await Promise.all([
-          new Response(proc.stdout).text(),
-          new Response(proc.stderr).text(),
-        ])
+        const [stdout, stderr] = await Promise.all([new Response(proc.stdout).text(), new Response(proc.stderr).text()])
         await proc.exited
         clearTimeout(timer)
 
@@ -76,8 +70,7 @@ export function createBashTool(guard: WorkspaceGuard): Tool {
         if (stderr) fullOutput += (fullOutput ? "\n" : "") + stderr
 
         const lines = fullOutput.split("\n")
-        const needsTruncate =
-          fullOutput.length > MAX_OUTPUT || lines.length > MAX_LINES
+        const needsTruncate = fullOutput.length > MAX_OUTPUT || lines.length > MAX_LINES
 
         if (needsTruncate) {
           const outputPath = saveOutput(guard.getWorkspacePath(), fullOutput)

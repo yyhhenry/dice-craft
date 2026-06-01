@@ -105,7 +105,7 @@ describe("AgentLoop", () => {
         content: null,
         toolCalls: [{ id: "call_1", name: "loop_tool", arguments: {} }],
         finishReason: "tool_calls",
-      })
+      }),
     )
 
     const agent = new AgentLoop(model, registry, { maxIterations: 3 })
@@ -213,7 +213,7 @@ describe("AgentLoop", () => {
     // Check that the injected event appeared in messages
     const secondCallMessages = (model.chat as any).mock.calls[1][0] as any[]
     const eventMessage = secondCallMessages.find(
-      (m: any) => m.role === "user" && m.content.includes("Injected message")
+      (m: any) => m.role === "user" && m.content.includes("Injected message"),
     )
     expect(eventMessage).toBeTruthy()
     expect(eventMessage.content).toContain('<event source="user">')
@@ -252,7 +252,7 @@ describe("AgentLoop", () => {
 
     const secondCallMessages = (model.chat as any).mock.calls[1][0] as any[]
     const eventMessages = secondCallMessages.filter(
-      (m: any) => m.role === "user" && m.content.includes("<event source=")
+      (m: any) => m.role === "user" && m.content.includes("<event source="),
     )
     expect(eventMessages).toHaveLength(3)
   })
@@ -287,7 +287,7 @@ describe("AgentLoop", () => {
 
     const secondCallMessages = (model.chat as any).mock.calls[1][0] as any[]
     const eventMessages = secondCallMessages.filter(
-      (m: any) => m.role === "user" && m.content.includes("<event source=")
+      (m: any) => m.role === "user" && m.content.includes("<event source="),
     )
     expect(eventMessages).toHaveLength(0)
   })

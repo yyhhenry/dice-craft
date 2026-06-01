@@ -9,7 +9,8 @@ export function createTimeTool(): Tool {
       properties: {
         timezone_offset: {
           type: "number",
-          description: "Timezone offset from UTC in hours. e.g. 8 for UTC+8, -5 for UTC-5. Defaults to 8 (Beijing time)",
+          description:
+            "Timezone offset from UTC in hours. e.g. 8 for UTC+8, -5 for UTC-5. Defaults to 8 (Beijing time)",
         },
       },
       required: [],

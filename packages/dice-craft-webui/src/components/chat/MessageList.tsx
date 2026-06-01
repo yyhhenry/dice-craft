@@ -17,18 +17,12 @@ export function MessageList({ messages, loading }: MessageListProps) {
 
   if (loading) {
     return (
-      <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
-        Loading messages...
-      </div>
+      <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">Loading messages...</div>
     )
   }
 
   if (messages.length === 0) {
-    return (
-      <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
-        No messages yet
-      </div>
-    )
+    return <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">No messages yet</div>
   }
 
   return (

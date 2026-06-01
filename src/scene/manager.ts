@@ -38,11 +38,7 @@ export class SceneManager {
     return JSON.parse(fs.readFileSync(filePath, "utf-8"))
   }
 
-  updateState(
-    sessionId: string,
-    patch: UpdateScenePatch,
-    workspacePath: string,
-  ): SceneState {
+  updateState(sessionId: string, patch: UpdateScenePatch, workspacePath: string): SceneState {
     const current = this.getState(sessionId) ?? createEmptyState(sessionId)
 
     if (patch.title !== undefined) current.title = patch.title
@@ -96,9 +92,7 @@ export class SceneManager {
 
   parseMapFile(filePath: string): { width: number; height: number; cells: SceneMapCell[] } {
     const content = fs.readFileSync(filePath, "utf-8")
-    const lines = content
-      .split("\n")
-      .filter((line) => line.trim() && !line.startsWith("#"))
+    const lines = content.split("\n").filter((line) => line.trim() && !line.startsWith("#"))
 
     const cells: SceneMapCell[] = []
     let maxWidth = 0

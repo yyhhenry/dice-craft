@@ -44,8 +44,11 @@ describe("SubagentDispatcher", () => {
       finishReason: "stop",
     })
     const dispatcher = new SubagentDispatcher(
-      model, toolRegistry, agentRegistry,
-      sessionManager.sessionManager, sessionManager.workspaceId
+      model,
+      toolRegistry,
+      agentRegistry,
+      sessionManager.sessionManager,
+      sessionManager.workspaceId,
     )
 
     const result = await dispatcher.spawn("explore", "Find all TypeScript files")
@@ -60,8 +63,11 @@ describe("SubagentDispatcher", () => {
       finishReason: "stop",
     })
     const dispatcher = new SubagentDispatcher(
-      model, toolRegistry, agentRegistry,
-      sessionManager.sessionManager, sessionManager.workspaceId
+      model,
+      toolRegistry,
+      agentRegistry,
+      sessionManager.sessionManager,
+      sessionManager.workspaceId,
     )
 
     const result = await dispatcher.spawn("explore", "Do background work", { background: true })
@@ -76,8 +82,11 @@ describe("SubagentDispatcher", () => {
       finishReason: "stop",
     })
     const dispatcher = new SubagentDispatcher(
-      model, toolRegistry, agentRegistry,
-      sessionManager.sessionManager, sessionManager.workspaceId
+      model,
+      toolRegistry,
+      agentRegistry,
+      sessionManager.sessionManager,
+      sessionManager.workspaceId,
     )
 
     await expect(dispatcher.spawn("nonexistent", "test")).rejects.toThrow("Unknown agent type: nonexistent")
@@ -103,8 +112,11 @@ describe("SubagentDispatcher", () => {
     })
 
     const dispatcher = new SubagentDispatcher(
-      model, toolRegistry, agentRegistry,
-      sessionManager.sessionManager, sessionManager.workspaceId
+      model,
+      toolRegistry,
+      agentRegistry,
+      sessionManager.sessionManager,
+      sessionManager.workspaceId,
     )
 
     const first = await dispatcher.spawn("explore", "First message", { background: true })
@@ -121,11 +133,16 @@ describe("SubagentDispatcher", () => {
       finishReason: "stop",
     })
     const dispatcher = new SubagentDispatcher(
-      model, toolRegistry, agentRegistry,
-      sessionManager.sessionManager, sessionManager.workspaceId
+      model,
+      toolRegistry,
+      agentRegistry,
+      sessionManager.sessionManager,
+      sessionManager.workspaceId,
     )
 
-    expect(() => dispatcher.send("nonexistent-session", "test", false)).toThrow("Session not found: nonexistent-session")
+    expect(() => dispatcher.send("nonexistent-session", "test", false)).toThrow(
+      "Session not found: nonexistent-session",
+    )
   })
 
   test("hasSession returns false for foreground session after completion", async () => {
@@ -135,8 +152,11 @@ describe("SubagentDispatcher", () => {
       finishReason: "stop",
     })
     const dispatcher = new SubagentDispatcher(
-      model, toolRegistry, agentRegistry,
-      sessionManager.sessionManager, sessionManager.workspaceId
+      model,
+      toolRegistry,
+      agentRegistry,
+      sessionManager.sessionManager,
+      sessionManager.workspaceId,
     )
 
     const result = await dispatcher.spawn("explore", "test")
@@ -152,8 +172,11 @@ describe("SubagentDispatcher", () => {
       finishReason: "stop",
     })
     const dispatcher = new SubagentDispatcher(
-      model, toolRegistry, agentRegistry,
-      sessionManager.sessionManager, sessionManager.workspaceId
+      model,
+      toolRegistry,
+      agentRegistry,
+      sessionManager.sessionManager,
+      sessionManager.workspaceId,
     )
 
     const result = await dispatcher.spawn("explore", "test", { background: true })
@@ -168,8 +191,11 @@ describe("SubagentDispatcher", () => {
       finishReason: "stop",
     })
     const dispatcher = new SubagentDispatcher(
-      model, toolRegistry, agentRegistry,
-      sessionManager.sessionManager, sessionManager.workspaceId
+      model,
+      toolRegistry,
+      agentRegistry,
+      sessionManager.sessionManager,
+      sessionManager.workspaceId,
     )
 
     const result = await dispatcher.spawn("explore", "test prompt")
@@ -187,16 +213,22 @@ describe("SubagentDispatcher", () => {
       finishReason: "stop",
     })
     const dispatcher = new SubagentDispatcher(
-      model, toolRegistry, agentRegistry,
-      sessionManager.sessionManager, sessionManager.workspaceId
+      model,
+      toolRegistry,
+      agentRegistry,
+      sessionManager.sessionManager,
+      sessionManager.workspaceId,
     )
 
     const result = await dispatcher.spawn("explore", "original prompt")
     const sessionId = result.sessionId
 
     const dispatcher2 = new SubagentDispatcher(
-      model, toolRegistry, agentRegistry,
-      sessionManager.sessionManager, sessionManager.workspaceId
+      model,
+      toolRegistry,
+      agentRegistry,
+      sessionManager.sessionManager,
+      sessionManager.workspaceId,
     )
 
     expect(dispatcher2.hasSession(sessionId)).toBe(false)
@@ -207,17 +239,20 @@ describe("SubagentDispatcher", () => {
   test("notifyMultiple sends to multiple targets", async () => {
     const model = createMockModel({ content: "ok", toolCalls: null, finishReason: "stop" })
     const dispatcher = new SubagentDispatcher(
-      model, toolRegistry, agentRegistry,
-      sessionManager.sessionManager, sessionManager.workspaceId
+      model,
+      toolRegistry,
+      agentRegistry,
+      sessionManager.sessionManager,
+      sessionManager.workspaceId,
     )
 
     const r1 = await dispatcher.spawn("explore", "task 1", { background: true })
     const r2 = await dispatcher.spawn("explore", "task 2", { background: true })
     await new Promise((r) => setTimeout(r, 10))
 
-    await dispatcher.notifyMultiple([
-      { session_id: r1.sessionId },
-      { session_id: r2.sessionId, expect_reply: true },
-    ], "notification content")
+    await dispatcher.notifyMultiple(
+      [{ session_id: r1.sessionId }, { session_id: r2.sessionId, expect_reply: true }],
+      "notification content",
+    )
   })
 })

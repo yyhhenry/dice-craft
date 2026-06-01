@@ -1,20 +1,9 @@
 import { useState } from "react"
 import { Settings, Plus } from "lucide-react"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { WorkspaceSettings } from "@/components/settings/WorkspaceSettings"
 import type { WorkspaceInfo } from "@/lib/api"
 
@@ -26,13 +15,7 @@ interface WorkspaceSelectProps {
   onSelect: (id: string) => void
 }
 
-export function WorkspaceSelect({
-  workspaces,
-  loading,
-  onCreate,
-  selectedId,
-  onSelect,
-}: WorkspaceSelectProps) {
+export function WorkspaceSelect({ workspaces, loading, onCreate, selectedId, onSelect }: WorkspaceSelectProps) {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [createOpen, setCreateOpen] = useState(false)
   const [newName, setNewName] = useState("")
@@ -47,11 +30,7 @@ export function WorkspaceSelect({
 
   return (
     <div className="flex items-center gap-1">
-      <Select
-        value={selectedId ?? ""}
-        onValueChange={onSelect}
-        disabled={loading}
-      >
+      <Select value={selectedId ?? ""} onValueChange={onSelect} disabled={loading}>
         <SelectTrigger className="flex-1">
           <SelectValue placeholder={loading ? "Loading..." : "Select workspace"} />
         </SelectTrigger>
@@ -63,30 +42,13 @@ export function WorkspaceSelect({
           ))}
         </SelectContent>
       </Select>
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => setCreateOpen(true)}
-        title="New workspace"
-      >
+      <Button variant="ghost" size="icon" onClick={() => setCreateOpen(true)} title="New workspace">
         <Plus className="h-4 w-4" />
       </Button>
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => setSettingsOpen(true)}
-        disabled={!selectedId}
-        title="Settings"
-      >
+      <Button variant="ghost" size="icon" onClick={() => setSettingsOpen(true)} disabled={!selectedId} title="Settings">
         <Settings className="h-4 w-4" />
       </Button>
-      {selectedId && (
-        <WorkspaceSettings
-          workspaceId={selectedId}
-          open={settingsOpen}
-          onOpenChange={setSettingsOpen}
-        />
-      )}
+      {selectedId && <WorkspaceSettings workspaceId={selectedId} open={settingsOpen} onOpenChange={setSettingsOpen} />}
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>

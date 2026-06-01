@@ -1,13 +1,11 @@
 import type { Tool, ToolResult } from "./base"
 import type { SubagentDispatcher } from "../agent/subagent"
 
-export function createSpawnSubagentTool(
-  dispatcher: SubagentDispatcher,
-  sessionRef: { id: string },
-): Tool {
+export function createSpawnSubagentTool(dispatcher: SubagentDispatcher, sessionRef: { id: string }): Tool {
   return {
     id: "spawn_subagent",
-    description: "Spawn a subagent. NPC agents run in background (persistent, use notify to talk to them). Other types (explore, general, review) run in foreground and return their result.",
+    description:
+      "Spawn a subagent. NPC agents run in background (persistent, use notify to talk to them). Other types (explore, general, review) run in foreground and return their result.",
     parameters: {
       type: "object",
       properties: {
@@ -28,12 +26,7 @@ export function createSpawnSubagentTool(
       const background = agentType === "npc"
 
       try {
-        const result = await dispatcher.spawn(
-          agentType,
-          prompt,
-          { background },
-          sessionRef.id,
-        )
+        const result = await dispatcher.spawn(agentType, prompt, { background }, sessionRef.id)
 
         if (background) {
           return {

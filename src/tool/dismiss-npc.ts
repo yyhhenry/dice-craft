@@ -4,7 +4,8 @@ import type { SubagentDispatcher } from "../agent/subagent"
 export function createDismissNpcTool(dispatcher: SubagentDispatcher): Tool {
   return {
     id: "dismiss_npc",
-    description: "Dismiss an NPC subagent permanently. Use when starting a new game or when the user explicitly ends the current game. Do NOT dismiss NPCs just because a game round ended — the user may continue.",
+    description:
+      "Dismiss an NPC subagent permanently. Use when starting a new game or when the user explicitly ends the current game. Do NOT dismiss NPCs just because a game round ended — the user may continue.",
     parameters: {
       type: "object",
       properties: {

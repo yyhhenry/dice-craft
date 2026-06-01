@@ -53,22 +53,18 @@ export function fmtSkills(skills: SkillInfo[], verbose: boolean): string {
   if (verbose) {
     return [
       "<available_skills>",
-      ...described
-        .flatMap((skill) => [
-          "  <skill>",
-          `    <name>${skill.name}</name>`,
-          `    <description>${skill.description}</description>`,
-          `    <location>${skill.location}</location>`,
-          "  </skill>",
-        ]),
+      ...described.flatMap((skill) => [
+        "  <skill>",
+        `    <name>${skill.name}</name>`,
+        `    <description>${skill.description}</description>`,
+        `    <location>${skill.location}</location>`,
+        "  </skill>",
+      ]),
       "</available_skills>",
     ].join("\n")
   }
 
-  return [
-    "## Available Skills",
-    ...described.map((s) => `- **${s.name}**: ${s.description}`),
-  ].join("\n")
+  return ["## Available Skills", ...described.map((s) => `- **${s.name}**: ${s.description}`)].join("\n")
 }
 
 export function createSkillTool(skillsDir: string): Tool {

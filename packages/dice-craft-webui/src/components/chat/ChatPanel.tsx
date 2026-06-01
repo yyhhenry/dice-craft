@@ -28,7 +28,7 @@ export function ChatPanel({ sessionId, wsMessages, status, connected, send, acti
   return (
     <div className="relative flex h-full flex-col">
       {active && (
-        <div className="pointer-events-none absolute left-3 top-2 z-10 flex items-center gap-1.5">
+        <div className="pointer-events-none absolute top-2 left-3 z-10 flex items-center gap-1.5">
           <MessageSquareText className="h-4 w-4 text-foreground" />
           <span className="text-xs font-medium text-foreground">Chat</span>
         </div>

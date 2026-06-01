@@ -30,10 +30,7 @@ describe("createNotifyTool", () => {
 
     const result = await tool.execute({
       content: "大家好",
-      targets: [
-        { session_id: "npc_1" },
-        { session_id: "npc_2", expect_reply: true },
-      ],
+      targets: [{ session_id: "npc_1" }, { session_id: "npc_2", expect_reply: true }],
     })
 
     expect(result.isError).toBeFalsy()

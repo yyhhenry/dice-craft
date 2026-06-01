@@ -45,7 +45,7 @@ describe("SpawnSubagentTool", () => {
       toolRegistry,
       agentRegistry,
       sessionManager.sessionManager,
-      sessionManager.workspaceId
+      sessionManager.workspaceId,
     )
   })
 

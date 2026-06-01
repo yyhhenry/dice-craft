@@ -53,8 +53,7 @@ export const api = {
       body: JSON.stringify({ name }),
     }),
 
-  getWorkspaceConfig: (id: string) =>
-    request<WorkspaceConfig>(`/api/workspaces/${id}/config`),
+  getWorkspaceConfig: (id: string) => request<WorkspaceConfig>(`/api/workspaces/${id}/config`),
 
   putWorkspaceConfig: (id: string, config: WorkspaceConfig) =>
     request<WorkspaceConfig>(`/api/workspaces/${id}/config`, {
@@ -63,8 +62,7 @@ export const api = {
       body: JSON.stringify(config),
     }),
 
-  getSessions: (workspaceId: string) =>
-    request<SessionInfo[]>(`/api/workspaces/${workspaceId}/sessions`),
+  getSessions: (workspaceId: string) => request<SessionInfo[]>(`/api/workspaces/${workspaceId}/sessions`),
 
   createSession: (workspaceId: string, title?: string) =>
     request<SessionInfo>(`/api/workspaces/${workspaceId}/sessions`, {
@@ -73,12 +71,9 @@ export const api = {
       body: JSON.stringify({ title }),
     }),
 
-  getMessages: (sessionId: string) =>
-    request<ChatMessage[]>(`/api/sessions/${sessionId}/messages`),
+  getMessages: (sessionId: string) => request<ChatMessage[]>(`/api/sessions/${sessionId}/messages`),
 
-  getScene: (sessionId: string) =>
-    request<SceneState>(`/api/sessions/${sessionId}/scene`),
+  getScene: (sessionId: string) => request<SceneState>(`/api/sessions/${sessionId}/scene`),
 
-  deleteSession: (sessionId: string) =>
-    request<{ ok: boolean }>(`/api/sessions/${sessionId}`, { method: "DELETE" }),
+  deleteSession: (sessionId: string) => request<{ ok: boolean }>(`/api/sessions/${sessionId}`, { method: "DELETE" }),
 }

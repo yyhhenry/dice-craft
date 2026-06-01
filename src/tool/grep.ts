@@ -44,13 +44,7 @@ export function createGrepTool(guard: WorkspaceGuard): Tool {
       const resolved = guard.resolvePath(searchPath)
 
       // Build ripgrep command
-      const rgArgs = [
-        "--no-heading",
-        "--line-number",
-        "--max-count", "1",
-        "--max-filesize", "1M",
-        "--color", "never",
-      ]
+      const rgArgs = ["--no-heading", "--line-number", "--max-count", "1", "--max-filesize", "1M", "--color", "never"]
 
       if (include) {
         rgArgs.push("--glob", include)
@@ -114,16 +108,14 @@ export function createGrepTool(guard: WorkspaceGuard): Tool {
             output.push(`${path.relative(guard.resolvePath("."), match.file)}:`)
           }
           const text =
-            match.text.length > MAX_LINE_LENGTH
-              ? match.text.substring(0, MAX_LINE_LENGTH) + "..."
-              : match.text
+            match.text.length > MAX_LINE_LENGTH ? match.text.substring(0, MAX_LINE_LENGTH) + "..." : match.text
           output.push(`  Line ${match.line}: ${text}`)
         }
 
         if (truncated) {
           output.push("")
           output.push(
-            `(Results truncated: showing ${MAX_RESULTS} of ${lines.length} matches. Consider using a more specific path or pattern.)`
+            `(Results truncated: showing ${MAX_RESULTS} of ${lines.length} matches. Consider using a more specific path or pattern.)`,
           )
         }
 

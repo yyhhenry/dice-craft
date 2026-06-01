@@ -57,7 +57,9 @@ export function createGlobTool(guard: WorkspaceGuard): Tool {
       const output = files.map((f) => path.relative(guard.resolvePath("."), f))
       if (truncated) {
         output.push("")
-        output.push(`(Results are truncated: showing first ${MAX_RESULTS} results. Consider using a more specific path or pattern.)`)
+        output.push(
+          `(Results are truncated: showing first ${MAX_RESULTS} results. Consider using a more specific path or pattern.)`,
+        )
       }
 
       return { content: output.join("\n") }

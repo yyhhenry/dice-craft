@@ -65,7 +65,8 @@ export function createEditTool(guard: WorkspaceGuard): Tool {
 
       if (!content.includes(oldString)) {
         return {
-          content: "Error: Could not find oldString in the file. It must match exactly, including whitespace and indentation.",
+          content:
+            "Error: Could not find oldString in the file. It must match exactly, including whitespace and indentation.",
           isError: true,
         }
       }
@@ -79,7 +80,8 @@ export function createEditTool(guard: WorkspaceGuard): Tool {
         const lastIndex = content.lastIndexOf(oldString)
         if (firstIndex !== lastIndex) {
           return {
-            content: "Error: Found multiple matches for oldString. Provide more surrounding context to make the match unique, or use replaceAll=true.",
+            content:
+              "Error: Found multiple matches for oldString. Provide more surrounding context to make the match unique, or use replaceAll=true.",
             isError: true,
           }
         }

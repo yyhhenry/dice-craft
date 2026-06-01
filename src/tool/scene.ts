@@ -18,7 +18,7 @@ export function createUpdateSceneTool(
       "Valid terrain: wall, grass, stone, wood, dirt, sand, water, lava, ice, void (or empty). " +
       "Append .dark or .light for shade variants (e.g. wood.dark for furniture vs wood floor). " +
       "Then pass its path as map.mapFile.\n\n" +
-      "Characters: set location to \"x,y\" to place on grid. " +
+      'Characters: set location to "x,y" to place on grid. ' +
       "Set hidden: true to hide from the player.",
     parameters: {
       type: "object",
@@ -77,7 +77,7 @@ export function createUpdateSceneTool(
               sessionId: { type: "string" },
               summary: { type: "string" },
               status: { type: "string" },
-              location: { type: "string", description: "Grid position as \"x,y\"" },
+              location: { type: "string", description: 'Grid position as "x,y"' },
               hidden: { type: "boolean", description: "Set true to hide from the player" },
             },
             required: ["id"],

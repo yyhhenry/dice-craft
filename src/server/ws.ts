@@ -66,7 +66,7 @@ export class WsManager {
   }
 
   private handleSendMessage(sessionId: string, workspaceId: WorkspaceID, content: string): void {
-    let instance;
+    let instance
     try {
       instance = this.appPool.getOrCreate(sessionId, workspaceId, {
         onMessage: (sid, msg) => this.broadcastMessage(sid, msg),
@@ -74,7 +74,13 @@ export class WsManager {
         onSceneUpdate: (sid, state) => this.broadcastScene(sid, state),
       })
     } catch (err) {
-      this.broadcast(sessionId, JSON.stringify({ type: "error", payload: { message: err instanceof Error ? err.message : "Failed to initialize" } }))
+      this.broadcast(
+        sessionId,
+        JSON.stringify({
+          type: "error",
+          payload: { message: err instanceof Error ? err.message : "Failed to initialize" },
+        }),
+      )
       return
     }
 
@@ -99,13 +105,16 @@ export class WsManager {
     app.primaryAgent.receiveMessage(chatXml)
 
     // Persist history when agent finishes
-    app.primaryAgent.waitForIdle().then(() => {
-      const history = app.primaryAgent.getHistory()
-      this.sessionManager.clearMessages(sessionId)
-      for (const msg of history) {
-        this.sessionManager.appendMessage(sessionId, msg)
-      }
-    }).catch(() => {})
+    app.primaryAgent
+      .waitForIdle()
+      .then(() => {
+        const history = app.primaryAgent.getHistory()
+        this.sessionManager.clearMessages(sessionId)
+        for (const msg of history) {
+          this.sessionManager.appendMessage(sessionId, msg)
+        }
+      })
+      .catch(() => {})
   }
 
   private broadcastMessage(sessionId: string, msg: ChatMessage): void {
@@ -117,10 +126,13 @@ export class WsManager {
   }
 
   private sendStatus(sessionId: string, primaryActive: boolean, npcCount: number): void {
-    this.broadcast(sessionId, JSON.stringify({
-      type: "status",
-      payload: { primaryActive, npcCount },
-    }))
+    this.broadcast(
+      sessionId,
+      JSON.stringify({
+        type: "status",
+        payload: { primaryActive, npcCount },
+      }),
+    )
   }
 
   private broadcast(sessionId: string, data: string): void {

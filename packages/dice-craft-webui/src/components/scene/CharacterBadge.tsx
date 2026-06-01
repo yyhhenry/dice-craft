@@ -19,9 +19,7 @@ export function CharacterBadge({ character }: CharacterBadgeProps) {
         </div>
         <div className="min-w-0">
           <div className="truncate text-sm font-medium">{character.name}</div>
-          {character.status && (
-            <div className="text-[10px] text-muted-foreground">{character.status}</div>
-          )}
+          {character.status && <div className="text-[10px] text-muted-foreground">{character.status}</div>}
         </div>
       </div>
       {character.summary && (

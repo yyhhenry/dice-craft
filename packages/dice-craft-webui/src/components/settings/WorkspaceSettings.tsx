@@ -1,10 +1,5 @@
 import { useState, useEffect } from "react"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
@@ -17,11 +12,7 @@ interface WorkspaceSettingsProps {
   onOpenChange: (open: boolean) => void
 }
 
-export function WorkspaceSettings({
-  workspaceId,
-  open,
-  onOpenChange,
-}: WorkspaceSettingsProps) {
+export function WorkspaceSettings({ workspaceId, open, onOpenChange }: WorkspaceSettingsProps) {
   const { config, save } = useWorkspaceConfig(workspaceId)
   const [apiBaseUrl, setApiBaseUrl] = useState("")
   const [apiKey, setApiKey] = useState("")
@@ -79,14 +70,10 @@ export function WorkspaceSettings({
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
+                className="absolute top-1/2 right-1 h-7 w-7 -translate-y-1/2"
                 onClick={() => setShowKey(!showKey)}
               >
-                {showKey ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
+                {showKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </Button>
             </div>
           </div>

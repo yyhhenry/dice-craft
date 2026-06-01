@@ -40,7 +40,10 @@ export function useWebSocket(sessionId: string | null, workspaceId: string | nul
       wsRef.current = ws
 
       ws.onopen = () => {
-        if (cancelled) { ws.close(); return }
+        if (cancelled) {
+          ws.close()
+          return
+        }
         setConnected(true)
       }
 

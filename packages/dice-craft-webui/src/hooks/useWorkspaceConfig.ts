@@ -34,7 +34,7 @@ export function useWorkspaceConfig(workspaceId: string | null) {
         throw e
       }
     },
-    [workspaceId]
+    [workspaceId],
   )
 
   return { config, loading, error, save }

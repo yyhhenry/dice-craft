@@ -25,9 +25,7 @@ export function QuestPanel({ quest }: QuestPanelProps) {
           {visibleObjectives.map((obj) => (
             <div key={obj.id} className="flex items-center gap-1.5 text-xs">
               {STATUS_ICONS[obj.status]}
-              <span className={obj.status === "completed" ? "line-through text-muted-foreground" : ""}>
-                {obj.text}
-              </span>
+              <span className={obj.status === "completed" ? "text-muted-foreground line-through" : ""}>{obj.text}</span>
             </div>
           ))}
         </div>

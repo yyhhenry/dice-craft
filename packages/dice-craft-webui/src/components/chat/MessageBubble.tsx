@@ -20,10 +20,8 @@ export function MessageBubble({ message }: MessageBubbleProps) {
     return (
       <div className="flex justify-end gap-2">
         <div className="max-w-[70%] min-w-0">
-          <div className="mb-1 text-right text-xs text-muted-foreground">
-            {senderName}
-          </div>
-          <div className="overflow-hidden break-words rounded-lg bg-primary px-3 py-2 text-sm text-primary-foreground">
+          <div className="mb-1 text-right text-xs text-muted-foreground">{senderName}</div>
+          <div className="overflow-hidden rounded-lg bg-primary px-3 py-2 text-sm break-words text-primary-foreground">
             {content}
           </div>
         </div>
@@ -41,14 +39,12 @@ export function MessageBubble({ message }: MessageBubbleProps) {
         {senderRole === "agent" ? (
           <Wrench className="h-4 w-4" />
         ) : (
-          <span className="text-xs font-medium">
-            {senderName.charAt(0).toUpperCase()}
-          </span>
+          <span className="text-xs font-medium">{senderName.charAt(0).toUpperCase()}</span>
         )}
       </div>
       <div className="max-w-[70%] min-w-0">
         <div className="mb-1 text-xs text-muted-foreground">{senderName}</div>
-        <div className="overflow-hidden break-words rounded-lg bg-muted px-3 py-2 text-sm">{content}</div>
+        <div className="overflow-hidden rounded-lg bg-muted px-3 py-2 text-sm break-words">{content}</div>
       </div>
     </div>
   )

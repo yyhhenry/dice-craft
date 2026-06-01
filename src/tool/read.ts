@@ -18,7 +18,8 @@ export function createReadTool(guard: WorkspaceGuard): Tool {
       properties: {
         filePath: {
           type: "string",
-          description: "The path to the file or directory to read (relative to workspace, or absolute within workspace)",
+          description:
+            "The path to the file or directory to read (relative to workspace, or absolute within workspace)",
         },
         offset: {
           type: "number",
@@ -76,8 +77,7 @@ export function createReadTool(guard: WorkspaceGuard): Tool {
       const truncated = start + sliced.length < lines.length
 
       const numberedLines = sliced.map((line, i) => {
-        const truncatedLine =
-          line.length > MAX_LINE_LENGTH ? line.substring(0, MAX_LINE_LENGTH) + "..." : line
+        const truncatedLine = line.length > MAX_LINE_LENGTH ? line.substring(0, MAX_LINE_LENGTH) + "..." : line
         return `${i + offset}: ${truncatedLine}`
       })
 

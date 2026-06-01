@@ -67,30 +67,20 @@ export function createApp(options: {
   const sessionRef = { id: options.primarySessionId ?? "sess_primary" }
   const onMessage = options.onMessage
 
-  const dispatcher = new SubagentDispatcher(
-    model,
-    toolRegistry,
-    agentRegistry,
-    sessionManager,
-    workspaceId,
-    (ctx) => {
-      const npcRegistry = new ToolRegistry()
-      for (const tool of toolRegistry.all()) {
-        npcRegistry.register(tool)
-      }
-      npcRegistry.register(
-        createMessageTool(chatManager, sessionRef, ctx.sessionId, "npc", (name, _content) => {
-          if (onMessage) onMessage(name, _content)
-        }),
-      )
-      return npcRegistry
-    },
-  )
+  const dispatcher = new SubagentDispatcher(model, toolRegistry, agentRegistry, sessionManager, workspaceId, (ctx) => {
+    const npcRegistry = new ToolRegistry()
+    for (const tool of toolRegistry.all()) {
+      npcRegistry.register(tool)
+    }
+    npcRegistry.register(
+      createMessageTool(chatManager, sessionRef, ctx.sessionId, "npc", (name, _content) => {
+        if (onMessage) onMessage(name, _content)
+      }),
+    )
+    return npcRegistry
+  })
 
-  const notifyFn = async (
-    content: string,
-    targets: import("./tool/notify").NotifyTarget[],
-  ) => {
+  const notifyFn = async (content: string, targets: import("./tool/notify").NotifyTarget[]) => {
     await dispatcher.notifyMultiple(targets, content)
   }
   toolRegistry.register(createNotifyTool(notifyFn))
