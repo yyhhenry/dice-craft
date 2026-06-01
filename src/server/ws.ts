@@ -20,21 +20,16 @@ export class WsManager {
   }
 
   open(ws: ServerWebSocket<WsData>): void {
-    const { sessionId, workspaceId } = ws.data
+    const { sessionId } = ws.data
     if (!this.connections.has(sessionId)) {
       this.connections.set(sessionId, new Set())
     }
     this.connections.get(sessionId)!.add(ws)
 
-    // Eagerly create App so callbacks are wired before any message
-    try {
-      const instance = this.appPool.getOrCreate(sessionId, workspaceId, {
-        onMessage: (sid, msg) => this.broadcastMessage(sid, msg),
-        onStatusChange: (sid, primaryActive, subagentCount) => this.sendStatus(sid, primaryActive, subagentCount),
-      })
+    // If App already exists, send current status
+    const instance = this.appPool.get(sessionId)
+    if (instance) {
       this.sendStatus(sessionId, instance.app.primaryAgent.isRunning(), instance.app.dispatcher.getActiveCount())
-    } catch (err) {
-      ws.send(JSON.stringify({ type: "error", payload: { message: err instanceof Error ? err.message : "Failed to initialize" } }))
     }
   }
 

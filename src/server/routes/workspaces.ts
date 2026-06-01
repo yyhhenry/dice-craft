@@ -24,7 +24,7 @@ export function workspaceRoutes(deps: ServerDeps) {
   router.get("/workspaces/:id/config", (c) => {
     const id = c.req.param("id") as WorkspaceID
     const config = deps.workspaceManager.getConfig(id)
-    if (!config) return c.json({ error: "Not configured" }, 404)
+    if (!config) return c.json({ apiBaseUrl: "", apiKey: "", modelName: "" })
     const masked = { ...config, apiKey: config.apiKey.slice(0, 6) + "..." }
     return c.json(masked)
   })
