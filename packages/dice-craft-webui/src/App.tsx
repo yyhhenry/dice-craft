@@ -8,8 +8,10 @@ import { Button } from "@/components/ui/button"
 import { PanelLeftClose, PanelLeftOpen, Dice5 } from "lucide-react"
 import { Sidebar } from "@/components/layout/Sidebar"
 import { ChatPanel } from "@/components/chat/ChatPanel"
-import { ScenePlaceholder } from "@/components/scene/ScenePlaceholder"
+import { PlaySurface } from "@/components/scene/PlaySurface"
 import { useWorkspaces } from "@/hooks/useWorkspaces"
+import { useWebSocket } from "@/hooks/useWebSocket"
+import { useScene } from "@/hooks/useScene"
 import { TooltipProvider } from "@/components/ui/tooltip"
 
 type ActivePanel = "scene" | "chat"
@@ -20,6 +22,12 @@ export function App() {
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [activePanel, setActivePanel] = useState<ActivePanel>("scene")
+
+  const { messages: wsMessages, status, scene: wsScene, connected, send } = useWebSocket(
+    selectedSessionId,
+    selectedWorkspaceId,
+  )
+  const scene = useScene(selectedSessionId, wsScene)
 
   useEffect(() => {
     if (!selectedWorkspaceId && workspaces.length > 0) {
@@ -80,7 +88,7 @@ export function App() {
                     <span className="text-xs font-medium text-foreground">Active</span>
                   </div>
                 )}
-                <ScenePlaceholder />
+                <PlaySurface scene={scene} />
               </div>
             </ResizablePanel>
             <ResizableHandle />
@@ -89,10 +97,13 @@ export function App() {
                 className="h-full"
                 onClick={() => setActivePanel("chat")}
               >
-                {selectedSessionId && selectedWorkspaceId ? (
+                {selectedSessionId ? (
                   <ChatPanel
                     sessionId={selectedSessionId}
-                    workspaceId={selectedWorkspaceId}
+                    wsMessages={wsMessages}
+                    status={status}
+                    connected={connected}
+                    send={send}
                     active={activePanel === "chat"}
                   />
                 ) : (

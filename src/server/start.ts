@@ -4,6 +4,7 @@ import { WorkspaceManager } from "../workspace/manager"
 import { SessionStore } from "../session/store"
 import { SessionManager } from "../session/manager"
 import { ChatManager } from "../chat/manager"
+import { SceneManager } from "../scene/manager"
 import { type WorkspaceID, type UserID } from "../workspace/types"
 import { AppPool } from "./app-pool"
 import { WsManager, type WsData } from "./ws"
@@ -21,11 +22,12 @@ export async function startServer(port = 3001) {
   const sessionStore = new SessionStore("data")
   const sessionManager = new SessionManager(sessionStore)
   const chatManager = new ChatManager("data")
+  const sceneManager = new SceneManager("data")
 
   const appPool = new AppPool({ workspaceManager, sessionManager })
   const wsManager = new WsManager(appPool, sessionManager)
 
-  const honoApp = createServer({ workspaceManager, sessionManager, chatManager })
+  const honoApp = createServer({ workspaceManager, sessionManager, chatManager, sceneManager })
 
   Bun.serve<WsData>({
     port,

@@ -92,3 +92,14 @@ description: Brief description
 - Maintain game integrity — never leak hidden information to unauthorized parties
 - Always use `message` to communicate — your text output is invisible
 - Control NPC information carefully — only tell them what their character would know
+
+## Scene & State
+
+Maintain internal game state in `.game-state/` (file tools) — this is private. Use `update_scene` to control what the player sees — this is public. After game actions: update internal state → update_scene → message.
+
+### Maps
+Write a text-art map file (`.game-state/*.map`), one char per cell:
+W=wall g=grass s=stone f=wood d=dirt a=sand w=water l=lava i=ice .=void
+Then call `update_scene` with `mapFile` path. Use `edit` for tweaks, `bash` for algorithmic effects.
+
+Never leak hidden info into SceneState.
