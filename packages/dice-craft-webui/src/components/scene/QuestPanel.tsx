@@ -13,7 +13,7 @@ const STATUS_ICONS = {
 }
 
 export function QuestPanel({ quest }: QuestPanelProps) {
-  const visibleObjectives = quest.objectives.filter((o) => o.status !== "hidden")
+  const visibleObjectives = (quest.objectives ?? []).filter((o) => o.status !== "hidden")
 
   return (
     <div className="px-4 py-3">

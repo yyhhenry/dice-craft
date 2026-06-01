@@ -67,9 +67,9 @@ export const SceneObjectiveSchema = z.object({
 })
 
 export const SceneQuestSchema = z.object({
-  title: z.string(),
+  title: z.string().optional(),
   summary: z.string().optional(),
-  objectives: z.array(SceneObjectiveSchema),
+  objectives: z.array(SceneObjectiveSchema).optional(),
 })
 
 export const StatEntrySchema = z.object({

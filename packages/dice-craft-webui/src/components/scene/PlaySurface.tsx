@@ -56,9 +56,9 @@ export function PlaySurface({ scene }: PlaySurfaceProps) {
       </div>
 
       {/* Bottom panels */}
-      {(scene.mainQuest || scene.playerCard) && (
+      {(scene.mainQuest?.title || scene.playerCard) && (
         <div className="mt-3 flex gap-3">
-          {scene.mainQuest && (
+          {scene.mainQuest?.title && (
             <div className="flex-1 rounded-2xl bg-card/40">
               <QuestPanel quest={scene.mainQuest} />
             </div>
