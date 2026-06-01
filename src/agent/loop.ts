@@ -75,20 +75,23 @@ export class AgentLoop {
   private async runLoop(): Promise<void> {
     this.running = true
     this.onStatusChange?.(true)
-    while (this.pendingMessage) {
-      const msg = this.pendingMessage
-      this.pendingMessage = null
-      const { response } = await this.run(msg)
-      if (response && this.onResponse) {
-        this.onResponse(response)
+    try {
+      while (this.pendingMessage) {
+        const msg = this.pendingMessage
+        this.pendingMessage = null
+        const { response } = await this.run(msg)
+        if (response && this.onResponse) {
+          this.onResponse(response)
+        }
       }
+    } finally {
+      this.running = false
+      this.onStatusChange?.(false)
+      for (const resolve of this.idleResolvers) {
+        resolve()
+      }
+      this.idleResolvers = []
     }
-    this.running = false
-    this.onStatusChange?.(false)
-    for (const resolve of this.idleResolvers) {
-      resolve()
-    }
-    this.idleResolvers = []
   }
 
   private flushEvents(): ChatCompletionMessageParam[] {
