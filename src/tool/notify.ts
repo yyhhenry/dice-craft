@@ -11,11 +11,10 @@ export function createNotifyTool(notifyFn: NotifyFn): Tool {
   return {
     id: "notify",
     description:
-      "Send a notification to one or more NPC agents. " +
-      "Use this to forward user messages to NPCs, inform NPCs of scene events, " +
-      "or instruct NPCs to respond. " +
-      "This does NOT write to the chat - it only sends to the NPC's context. " +
-      "The NPC will use their own message tool to speak if expect_reply is true.",
+      "Send a notification to one or more NPC subagents (by session_id from spawn_subagent). " +
+      "REQUIRED when the player talks to a spawned NPC: forward their words with expect_reply true. " +
+      "Do NOT speak for NPCs in the message tool — notify instead. " +
+      "This does NOT write to the chat; the NPC replies via its own message tool when expect_reply is true.",
     parameters: {
       type: "object",
       properties: {

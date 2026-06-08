@@ -126,6 +126,7 @@ describe("WorkspaceManager", () => {
 
     const dndRoot = path.join(ws.path, "skills", "dnd")
     expect(fs.existsSync(path.join(dndRoot, "runtime", "scripts", "roll.py"))).toBe(true)
+    expect(fs.existsSync(path.join(ws.path, "skills", "map", "SKILL.md"))).toBe(true)
     expect(fs.existsSync(path.join(dndRoot, "instances", "example_ring", "meta.json"))).toBe(true)
   })
 
@@ -145,5 +146,6 @@ describe("WorkspaceManager", () => {
 
     expect(fs.existsSync(path.join(dndRoot, "runtime", "scripts", "state.py"))).toBe(true)
     expect(fs.existsSync(path.join(dndRoot, "instances", "example_ring", "adventure.json"))).toBe(true)
+    expect(fs.existsSync(path.join(ws.path, "skills", "map", "GUIDE.md"))).toBe(true)
   })
 })

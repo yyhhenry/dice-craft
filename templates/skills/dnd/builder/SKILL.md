@@ -1,15 +1,10 @@
 ---
 name: dnd-builder
-description: Rules and templates for building a single DND adventure instance under skills/dnd/instances/.
+description: Build a DND adventure instance under skills/dnd/instances/<slug>/.
 ---
 
-# DND Builder Skill
+# DND Builder
 
-Read these files in order:
+Read **`skills/dnd/builder/BUILD.md`** — workflow, schema, maps (via `skill("map")`), self-review checklist, and delivery.
 
-1. `skills/dnd/builder/BUILD.md` — workflow
-2. `skills/dnd/builder/schema.md` — field visibility rules
-3. `skills/dnd/builder/templates/` — copy and fill for each new instance
-4. `skills/dnd/builder/review-checklist.md` — pass to review subagent
-
-Output directory: `skills/dnd/instances/<slug>/`
+Copy templates from `skills/dnd/builder/templates/`.

@@ -26,10 +26,12 @@ export function buildPrimarySystemPrompt(opts: {
       `Skill pack: ${skill}`,
       `Directory: ${rel}/`,
       "Read all files in this directory before running the adventure.",
-      "Use `skill(\"dnd-runtime\")` for roll/state script usage.",
+      skill === "dnd"
+        ? "Load `skill(\"dnd-runtime\")` then `skill(\"map\")` when using the scene canvas."
+        : "Load the active skill pack's runtime skill; load `skill(\"map\")` if the game uses grid maps.",
       "",
       "## Language",
-      "Use the same language as the player for all player-facing output (message, update_scene copy, notify instructions to NPCs).",
+      "Use the same language as the player for all player-facing output.",
     )
   } else {
     parts.push(

@@ -120,7 +120,7 @@ export class WsManager {
         app,
         sessionId,
         workspaceId,
-        `<event source="system">Play mode started. Instance: skills/${skill}/instances/${slug}/. Load dnd-runtime skill, read instance files, init state, set up scene, welcome the player. Use the same language as the player for all player-facing text.</event>`,
+        `<event source="system">Play mode started. Instance: skills/${skill}/instances/${slug}/. Load runtime skill${skill === "dnd" ? " (dnd-runtime)" : ""} and map skill if needed, read instance files, follow startup in runtime skill, welcome the player. Use the same language as the player.</event>`,
       )
       return
     }
