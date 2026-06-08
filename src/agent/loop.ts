@@ -12,6 +12,8 @@ export interface AgentConfig {
   systemPrompt?: string
   /** Called when model produces text without using any tool. Fallback output. */
   onResponse?: (response: string) => void
+  /** Called when the agent loop fails (e.g. API error). */
+  onError?: (error: unknown) => void
   /** Called when running state changes (true = started, false = idle). */
   onStatusChange?: (running: boolean) => void
 }
@@ -26,6 +28,7 @@ export class AgentLoop {
   private running = false
   private pendingMessage: string | null = null
   private onResponse: ((response: string) => void) | undefined
+  private onError: ((error: unknown) => void) | undefined
   onStatusChange: ((running: boolean) => void) | undefined
   private idleResolvers: Array<() => void> = []
 
@@ -35,6 +38,7 @@ export class AgentLoop {
     this.maxIterations = config.maxIterations ?? 20
     this.systemPrompt = config.systemPrompt
     this.onResponse = config.onResponse
+    this.onError = config.onError
     this.onStatusChange = config.onStatusChange
   }
 
@@ -79,9 +83,14 @@ export class AgentLoop {
       while (this.pendingMessage) {
         const msg = this.pendingMessage
         this.pendingMessage = null
-        const { response } = await this.run(msg)
-        if (response && this.onResponse) {
-          this.onResponse(response)
+        try {
+          const { response } = await this.run(msg)
+          if (response?.trim() && this.onResponse) {
+            this.onResponse(response)
+          }
+        } catch (error) {
+          this.onError?.(error)
+          break
         }
       }
     } finally {

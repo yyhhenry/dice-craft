@@ -98,4 +98,25 @@ export class WorkspaceManager {
     fs.mkdirSync(this.metaDir, { recursive: true })
     fs.writeFileSync(path.join(this.metaDir, `${id}-config.json`), JSON.stringify(config, null, 2))
   }
+
+  /** Copy missing template files into an existing workspace. */
+  syncTemplates(id: WorkspaceID): void {
+    const ws = this.get(id)
+    if (!ws) return
+
+    for (const [relPath, content] of Object.entries(TEMPLATES)) {
+      const filePath = path.join(ws.path, relPath)
+      if (!fs.existsSync(filePath)) {
+        fs.mkdirSync(path.dirname(filePath), { recursive: true })
+        fs.writeFileSync(filePath, content)
+      }
+    }
+  }
+
+  /** Sync templates into every registered workspace (e.g. on server start). */
+  syncAllTemplates(): void {
+    for (const ws of this.list()) {
+      this.syncTemplates(ws.id)
+    }
+  }
 }

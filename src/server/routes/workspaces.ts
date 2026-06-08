@@ -7,6 +7,7 @@ export function workspaceRoutes(deps: ServerDeps) {
   const router = new Hono()
 
   router.get("/workspaces", (c) => {
+    deps.workspaceManager.syncAllTemplates()
     return c.json(deps.workspaceManager.list())
   })
 

@@ -257,6 +257,25 @@ describe("AgentLoop", () => {
     expect(eventMessages).toHaveLength(3)
   })
 
+  test("receiveMessage calls onError when model.chat fails", async () => {
+    const registry = new ToolRegistry()
+    const model = createMockModel({ content: "x", toolCalls: null, finishReason: "stop" })
+    model.chat = mock(() => Promise.reject(new Error("API unavailable")))
+
+    const errors: unknown[] = []
+    const agent = new AgentLoop(model, registry, {
+      onError: (err) => errors.push(err),
+    })
+
+    agent.receiveMessage("Hello")
+    await agent.waitForIdle()
+
+    expect(errors).toHaveLength(1)
+    expect(errors[0]).toBeInstanceOf(Error)
+    expect((errors[0] as Error).message).toBe("API unavailable")
+    expect(agent.isRunning()).toBe(false)
+  })
+
   test("no events injected when queue is empty", async () => {
     const tool = createMockTool("test_tool", "Tool result")
     const registry = new ToolRegistry()

@@ -30,6 +30,7 @@ export class AgentRegistry {
 }
 
 import builderPrompt from "./prompt/builder.txt" with { type: "text" }
+import dmPrompt from "./prompt/dm.txt" with { type: "text" }
 import explorePrompt from "./prompt/explore.txt" with { type: "text" }
 import reviewPrompt from "./prompt/review.txt" with { type: "text" }
 import npcPrompt from "./prompt/npc.txt" with { type: "text" }
@@ -40,9 +41,16 @@ export function loadAgents(): AgentRegistry {
 
   registry.register({
     name: "builder",
-    description: "Primary agent for building tabletop games and running as GM",
+    description: "Creates tabletop games from player descriptions (build mode)",
     mode: "primary",
     systemPrompt: builderPrompt,
+  })
+
+  registry.register({
+    name: "dm",
+    description: "Runs adventures from game instance files (play mode)",
+    mode: "subagent",
+    systemPrompt: dmPrompt,
   })
 
   registry.register({
@@ -61,7 +69,7 @@ export function loadAgents(): AgentRegistry {
 
   registry.register({
     name: "review",
-    description: "Review code and find issues",
+    description: "Review game content for logic, balance, and info leaks",
     mode: "subagent",
     systemPrompt: reviewPrompt,
   })

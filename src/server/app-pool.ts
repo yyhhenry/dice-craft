@@ -35,11 +35,18 @@ export class AppPool {
       onSceneUpdate?: (sessionId: string, state: SceneState) => void
     },
   ): AppInstance {
+    const ws = this.deps.workspaceManager.get(workspaceId)
+    if (!ws) throw new Error(`Workspace not found: ${workspaceId}`)
+
+    this.deps.workspaceManager.syncTemplates(workspaceId)
+
     const existing = this.instances.get(sessionId)
     if (existing) return existing
 
-    const ws = this.deps.workspaceManager.get(workspaceId)
-    if (!ws) throw new Error(`Workspace not found: ${workspaceId}`)
+    const session = this.deps.sessionManager.get(sessionId)
+    const gameMode = session?.gameMode ?? "build"
+    const activeGameSlug = session?.activeGameSlug
+    const activeGameSkill = session?.activeGameSkill ?? "dnd"
 
     const config = this.deps.workspaceManager.getConfig(workspaceId)
     if (!config) throw new Error(`Workspace not configured: ${workspaceId}`)
@@ -56,6 +63,9 @@ export class AppPool {
       workspacePath: ws.path,
       skillsDir: ws.skillsDir,
       primarySessionId: sessionId,
+      gameMode,
+      activeGameSlug,
+      activeGameSkill,
       modelConfig,
     })
 
@@ -101,5 +111,9 @@ export class AppPool {
 
   get(sessionId: string): AppInstance | undefined {
     return this.instances.get(sessionId)
+  }
+
+  reset(sessionId: string): void {
+    this.instances.delete(sessionId)
   }
 }

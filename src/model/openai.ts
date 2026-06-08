@@ -19,6 +19,18 @@ export interface StreamCallbacks {
   onToolCall?: (call: ToolCall) => void
 }
 
+function safeParseToolArguments(raw: string | undefined | null): Record<string, unknown> {
+  if (!raw || !raw.trim()) return {}
+  try {
+    const parsed: unknown = JSON.parse(raw)
+    return typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)
+      ? (parsed as Record<string, unknown>)
+      : {}
+  } catch {
+    return {}
+  }
+}
+
 export class OpenAIModel {
   private client: OpenAI
   private config: ModelConfig
@@ -70,7 +82,7 @@ export class OpenAIModel {
         .map((tc) => ({
           id: tc.id,
           name: tc.function.name,
-          arguments: JSON.parse(tc.function.arguments || "{}"),
+          arguments: safeParseToolArguments(tc.function.arguments),
         }))
     }
 

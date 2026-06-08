@@ -117,4 +117,33 @@ describe("WorkspaceManager", () => {
     const diceDir = path.join(ws.path, "skills", "dice")
     expect(fs.existsSync(path.join(diceDir, "SKILL.md"))).toBe(true)
   })
+
+  test("create workspace copies dnd runtime and example instance", () => {
+    const ws = manager.create(wsId("dnd-ws"), {
+      name: "DND Test",
+      ownerId: userId("user1"),
+    })
+
+    const dndRoot = path.join(ws.path, "skills", "dnd")
+    expect(fs.existsSync(path.join(dndRoot, "runtime", "scripts", "roll.py"))).toBe(true)
+    expect(fs.existsSync(path.join(dndRoot, "instances", "example_ring", "meta.json"))).toBe(true)
+  })
+
+  test("syncTemplates adds missing dnd files to old workspace", () => {
+    const ws = manager.create(wsId("old-ws"), {
+      name: "Old",
+      ownerId: userId("user1"),
+    })
+
+    const dndRoot = path.join(ws.path, "skills", "dnd")
+    if (fs.existsSync(dndRoot)) {
+      fs.rmSync(dndRoot, { recursive: true, force: true })
+    }
+    expect(fs.existsSync(dndRoot)).toBe(false)
+
+    manager.syncTemplates(ws.id)
+
+    expect(fs.existsSync(path.join(dndRoot, "runtime", "scripts", "state.py"))).toBe(true)
+    expect(fs.existsSync(path.join(dndRoot, "instances", "example_ring", "adventure.json"))).toBe(true)
+  })
 })

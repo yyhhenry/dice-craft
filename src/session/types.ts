@@ -8,6 +8,8 @@ export type StoredMessage = ChatCompletionMessageParam & {
   }
 }
 
+export type GameMode = "build" | "play"
+
 export interface SessionInfo {
   id: string
   workspaceId: WorkspaceID
@@ -16,6 +18,12 @@ export interface SessionInfo {
   agentType: string
   systemPrompt?: string
   dismissed?: boolean
+  /** build = create games; play = DM runs active instance */
+  gameMode?: GameMode
+  /** Instance slug under skills/<skill>/instances/ */
+  activeGameSlug?: string
+  /** Skill pack name, default dnd */
+  activeGameSkill?: string
   createdAt: string
   updatedAt: string
   messageCount: number

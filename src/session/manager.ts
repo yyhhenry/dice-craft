@@ -28,6 +28,7 @@ export class SessionManager {
       title: opts.title ?? "New conversation",
       agentType: opts.agentType,
       systemPrompt: opts.systemPrompt,
+      gameMode: "build",
       createdAt: now,
       updatedAt: now,
       messageCount: 0,
@@ -97,7 +98,12 @@ export class SessionManager {
     }
   }
 
-  update(id: string, updates: Partial<Pick<SessionInfo, "title" | "dismissed">>): void {
+  update(
+    id: string,
+    updates: Partial<
+      Pick<SessionInfo, "title" | "dismissed" | "gameMode" | "activeGameSlug" | "activeGameSkill">
+    >,
+  ): void {
     const info = this.get(id)
     if (!info) return
     Object.assign(info, updates, { updatedAt: new Date().toISOString() })

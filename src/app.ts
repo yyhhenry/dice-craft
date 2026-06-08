@@ -9,6 +9,8 @@ import { createMessageTool } from "./tool/message"
 import { createNotifyTool } from "./tool/notify"
 import { createUpdateSceneTool } from "./tool/scene"
 import { AgentRegistry, loadAgents } from "./agent"
+import { buildPrimarySystemPrompt } from "./agent/prompt"
+import type { GameMode } from "./game/instance"
 import { SubagentDispatcher } from "./agent/subagent"
 import { AgentLoop } from "./agent/loop"
 import { SessionStore } from "./session/store"
@@ -39,6 +41,9 @@ export function createApp(options: {
   workspacePath?: string
   skillsDir?: string
   primarySessionId?: string
+  gameMode?: GameMode
+  activeGameSlug?: string
+  activeGameSkill?: string
   modelConfig: ModelConfig
   onMessage?: (senderName: string, content: string) => void
 }): App {
@@ -46,9 +51,11 @@ export function createApp(options: {
 
   const agentRegistry = loadAgents()
 
-  const primary = agentRegistry.getPrimary()
-  if (!primary) throw new Error("No primary agent found")
+  if (!agentRegistry.getPrimary()) throw new Error("No primary agent found")
 
+  const gameMode = options.gameMode ?? "build"
+  const activeGameSlug = options.activeGameSlug
+  const activeGameSkill = options.activeGameSkill ?? "dnd"
   const workspacePath = options.workspacePath ?? process.cwd()
   const guard = new WorkspaceGuard(workspacePath)
 
@@ -107,18 +114,46 @@ export function createApp(options: {
   )
 
   const sceneUpdateRef: { fn?: (state: SceneState) => void } = {}
-  toolRegistry.register(
-    createUpdateSceneTool(sceneManager, sessionRef, workspacePath, (state) => {
-      sceneUpdateRef.fn?.(state)
-    }),
-  )
+  if (gameMode === "play") {
+    toolRegistry.register(
+      createUpdateSceneTool(sceneManager, sessionRef, workspacePath, (state) => {
+        sceneUpdateRef.fn?.(state)
+      }),
+    )
+  }
 
   const skills = discoverSkills(skillsDir ?? path.join(workspacePath, "skills"))
   const skillsSection = fmtSkills(skills, false)
-  const systemPrompt = [primary.systemPrompt, "", skillsSection].join("\n")
+  const systemPrompt = buildPrimarySystemPrompt({
+    agentRegistry,
+    gameMode,
+    activeGameSlug,
+    activeGameSkill,
+    skillsSection,
+  })
 
+  const agentDisplayName = gameMode === "play" ? "DM" : "Builder"
   const primaryAgent = new AgentLoop(model, toolRegistry, {
     systemPrompt,
+    maxIterations: gameMode === "build" ? 50 : 30,
+    onResponse: (response) => {
+      chatManager.sendMessage(sessionRef.id, {
+        content: response,
+        senderId: "agent",
+        senderName: agentDisplayName,
+        senderRole: "agent",
+      })
+      onMessage?.(agentDisplayName, response)
+    },
+    onError: (error) => {
+      const message = error instanceof Error ? error.message : String(error)
+      chatManager.sendMessage(sessionRef.id, {
+        content: `Agent error: ${message}`,
+        senderId: "system",
+        senderName: "System",
+        senderRole: "system",
+      })
+    },
   })
 
   const app: App = {

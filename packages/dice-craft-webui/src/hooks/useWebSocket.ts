@@ -57,6 +57,19 @@ export function useWebSocket(sessionId: string | null, workspaceId: string | nul
             setStatus(data.payload as AgentStatus)
           } else if (data.type === "scene.updated") {
             setScene(data.payload as SceneState)
+          } else if (data.type === "error") {
+            const sid = sessionIdRef.current
+            if (!sid) return
+            const errMsg: ChatMessage = {
+              id: `err_${Date.now()}`,
+              sessionId: sid,
+              senderId: "system",
+              senderName: "System",
+              senderRole: "system",
+              content: data.payload?.message ?? "Unknown error",
+              timestamp: new Date().toISOString(),
+            }
+            setMessages((prev) => [...prev, errMsg])
           }
         } catch {
           // ignore parse errors
