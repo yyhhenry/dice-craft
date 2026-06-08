@@ -13,6 +13,7 @@ describe("buildPrimarySystemPrompt", () => {
     })
     expect(prompt).toContain("Builder")
     expect(prompt).not.toContain("Active Game Instance")
+    expect(prompt).toContain("same language as the player")
   })
 
   test("uses dm in play mode with instance path", () => {
@@ -25,6 +26,6 @@ describe("buildPrimarySystemPrompt", () => {
     })
     expect(prompt).toContain("DM")
     expect(prompt).toContain("skills/dnd/instances/ring_adventure")
-    expect(prompt).toContain("简体中文")
+    expect(prompt).toContain("same language as the player")
   })
 })

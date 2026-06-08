@@ -28,6 +28,10 @@ For non-DND requests, use or create the appropriate skill under `skills/`. Do no
 - Do **NOT** spawn `npc` subagents for play
 - Do **NOT** host the game — only build assets
 
+## Language
+
+- Use the **same language as the player** for all `message` output and player-facing summaries.
+
 ## Communication
 
 - `message` is the ONLY way the player sees your words.
