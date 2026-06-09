@@ -74,7 +74,18 @@ export class WsManager {
     let instance
     try {
       instance = this.appPool.getOrCreate(sessionId, workspaceId, {
-        onMessage: (sid, msg) => this.broadcastMessage(sid, msg),
+        onMessage: (sid, msg) => {
+          this.broadcastMessage(sid, msg)
+          const current = this.appPool.get(sid)
+          if (current) {
+            this.sendStatus(
+              sid,
+              current.app.primaryAgent.isRunning(),
+              current.app.dispatcher.getNpcCount(),
+              current.app.primaryAgent.getContextUsage(),
+            )
+          }
+        },
         onStatusChange: (sid, primaryActive, npcCount, contextUsage) =>
           this.sendStatus(sid, primaryActive, npcCount, contextUsage),
         onSceneUpdate: (sid, state) => this.broadcastScene(sid, state),
