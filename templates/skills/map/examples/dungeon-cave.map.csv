@@ -1,0 +1,10 @@
+# 地下洞穴
+# 8x8 dungeon with corridors and a chamber
+wall,wall,wall,wall,wall,wall,wall,wall
+wall,stone,stone,wall,wall,stone,stone,wall
+wall,stone,stone,wall,wall,stone,stone,wall
+wall,stone,stone,stone,stone,stone,stone,wall
+wall,wall,wall,stone,stone,wall,wall,wall
+wall,stone.dark,stone.dark,stone,stone,stone.dark,wall,wall
+wall,stone.dark,stone.dark,stone.dark,stone.dark,stone.dark,wall,wall
+wall,wall,wall,wall,wall,wall,wall,wall

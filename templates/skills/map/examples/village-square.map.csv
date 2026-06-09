@@ -1,0 +1,10 @@
+# 村庄广场
+# 8x8 open village square with fountain
+grass,grass,dirt,dirt,dirt,dirt,grass,grass
+grass,dirt,dirt,stone,stone,dirt,dirt,grass
+dirt,dirt,stone,stone,stone,stone,dirt,dirt
+dirt,stone,stone,stone.light,stone.light,stone,stone,dirt
+dirt,stone,stone,stone.light,stone.light,stone,stone,dirt
+dirt,dirt,stone,stone,stone,stone,dirt,dirt
+grass,dirt,dirt,stone,stone,dirt,dirt,grass
+grass,grass,dirt,dirt,dirt,dirt,grass,grass

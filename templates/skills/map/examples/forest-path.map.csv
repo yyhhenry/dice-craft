@@ -1,0 +1,10 @@
+# 森林小径
+# 6x8 outdoor path through woods
+grass,grass,wood,wood,wood,wood
+grass,dirt,dirt,wood,wood,wood
+wood,wood,dirt,dirt,grass,wood
+wood,wood,grass,dirt,dirt,grass
+wood,grass,grass,dirt,wood,wood
+wood,wood,dirt,dirt,wood,wood
+grass,dirt,dirt,grass,grass,wood
+grass,grass,grass,grass,wood,wood
