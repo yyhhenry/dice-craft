@@ -76,6 +76,11 @@ export class AppPool {
       })
       app.primaryAgent.setHistory(history)
 
+      const compactState = this.deps.sessionManager.getCompactState(sessionId)
+      if (compactState) {
+        app.primaryAgent.restoreCompactState(compactState)
+      }
+
       // Restore active (non-dismissed) subagent sessions
       const subagents = this.deps.sessionManager.listSubagents(sessionId)
       for (const sub of subagents) {

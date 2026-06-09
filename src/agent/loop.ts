@@ -19,7 +19,7 @@ export interface AgentConfig {
   onStatusChange?: (running: boolean) => void
 }
 
-interface CompactState {
+export interface CompactState {
   summary: string
   compactedUpTo: number
 }
@@ -143,6 +143,14 @@ export class AgentLoop {
       compacted: this.compactState !== null,
       compactedMessageCount: this.compactState?.compactedUpTo ?? 0,
     }
+  }
+
+  getCompactState(): CompactState | null {
+    return this.compactState ? { ...this.compactState } : null
+  }
+
+  restoreCompactState(state: CompactState): void {
+    this.compactState = { ...state }
   }
 
   injectEvent(source: string, content: string): void {

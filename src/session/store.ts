@@ -2,6 +2,7 @@ import fs from "fs"
 import path from "path"
 import type { WorkspaceID } from "../workspace/types"
 import type { SessionInfo, StoredMessage } from "./types"
+import type { CompactState } from "../agent/loop"
 
 export class SessionStore {
   private baseDir: string
@@ -64,5 +65,26 @@ export class SessionStore {
     if (fs.existsSync(dir)) {
       fs.rmSync(dir, { recursive: true, force: true })
     }
+  }
+
+  readCompactState(sessionId: string): CompactState | null {
+    const filePath = path.join(this.sessionDir(sessionId), "compact-state.json")
+    if (!fs.existsSync(filePath)) return null
+    try {
+      return JSON.parse(fs.readFileSync(filePath, "utf-8"))
+    } catch {
+      return null
+    }
+  }
+
+  writeCompactState(sessionId: string, state: CompactState | null): void {
+    const filePath = path.join(this.sessionDir(sessionId), "compact-state.json")
+    if (state === null) {
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath)
+      return
+    }
+    const dir = this.sessionDir(sessionId)
+    fs.mkdirSync(dir, { recursive: true })
+    fs.writeFileSync(filePath, JSON.stringify(state, null, 2))
   }
 }

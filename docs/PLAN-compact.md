@@ -345,3 +345,30 @@ ChatPanel 底部显示 context usage 指示器：
 
 12. `bun run check` 通过
 13. 手动测试：长对话触发压缩，验证 UI 显示和对话连贯性
+
+---
+
+## 补充：CompactState 文件持久化
+
+### 问题
+
+当前实现中 `compactState` 是纯内存状态。服务器重启后 `setHistory()` 加载全量 raw messages 并将 `compactState` 重置为 null。下次触发 compact 时 `summarize()` 会把所有旧消息（可能远超模型上下文）塞进一个 API 请求，导致失败。
+
+### 方案
+
+独立文件 `data/sessions/<id>/compact-state.json` 存储：
+
+```json
+{
+  "summary": "...",
+  "compactedUpTo": 32
+}
+```
+
+### 实现
+
+1. `src/agent/loop.ts`：导出 `CompactState`，新增 `getCompactState()` / `restoreCompactState()`
+2. `src/session/store.ts`：新增 `readCompactState()` / `writeCompactState()`
+3. `src/session/manager.ts`：透传方法
+4. `src/server/app-pool.ts`：加载 session 时恢复 compact state
+5. `src/server/ws.ts`：`waitForIdle` 保存 history 时同步保存 compact state

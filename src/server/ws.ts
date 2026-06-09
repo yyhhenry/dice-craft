@@ -130,6 +130,7 @@ export class WsManager {
         for (const msg of history) {
           this.sessionManager.appendMessage(sessionId, msg)
         }
+        this.sessionManager.saveCompactState(sessionId, app.primaryAgent.getCompactState())
         this.sendStatus(sessionId, false, app.dispatcher.getNpcCount(), app.primaryAgent.getContextUsage())
       })
       .catch(() => {})

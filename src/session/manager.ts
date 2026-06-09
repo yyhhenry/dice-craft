@@ -1,6 +1,7 @@
 import type { WorkspaceID } from "../workspace/types"
 import type { SessionInfo, StoredMessage } from "./types"
 import type { ChatCompletionMessageParam } from "openai/resources/chat/completions"
+import type { CompactState } from "../agent/loop"
 import { SessionStore } from "./store"
 import { generateSessionID, generateMessageID } from "../workspace/types"
 
@@ -106,5 +107,13 @@ export class SessionManager {
 
   delete(id: string): void {
     this.store.deleteSession(id)
+  }
+
+  getCompactState(sessionId: string): CompactState | null {
+    return this.store.readCompactState(sessionId)
+  }
+
+  saveCompactState(sessionId: string, state: CompactState | null): void {
+    this.store.writeCompactState(sessionId, state)
   }
 }
