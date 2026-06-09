@@ -2,9 +2,20 @@
 
 ## CSV format
 
-One terrain token per cell, comma-separated rows. Lines starting with `#` are comments.
+One terrain token per cell, comma-separated rows.
+
+### Comments
+
+Lines starting with `#` are ignored by the parser. Use them for:
+
+- Map title and dimensions (`# 标准酒馆` / `# 6x6 standard tavern`)
+- Suggested overlay positions (`# overlay: door at 2,0 — south entrance`)
+- Notes for the GM (`# players enter from the bottom`)
 
 ```
+# 标准酒馆
+# 6x6 standard tavern with bar counter
+# overlay: door at 2,5 — main entrance
 wall,wall,wall,wall,wall,wall
 wall,wood,wood,wood,wood,wall
 wall,wood,dirt,dirt,wood,wall

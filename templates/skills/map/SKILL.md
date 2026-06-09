@@ -16,7 +16,9 @@ Reference maps in `skills/map/examples/`:
 
 | File | Scene |
 |------|-------|
-| `tavern.map.csv` | 室内酒馆 (6×6) |
+| `tavern.map.csv` | 标准酒馆 (6×6) |
+| `tavern-large.map.csv` | 大型酒馆 (10×8) |
+| `tavern-small.map.csv` | 路边小酒馆 (5×4) |
 | `forest-path.map.csv` | 森林小径 (6×8) |
 | `dungeon-cave.map.csv` | 地下洞穴 (8×8) |
 | `village-square.map.csv` | 村庄广场 (8×8) |

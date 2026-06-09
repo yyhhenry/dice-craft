@@ -1,5 +1,8 @@
 # 城堡大厅
 # 8x10 castle hall with throne
+# overlay: door at 3,9 — main gate (south)
+# overlay: door at 4,9 — main gate (south)
+# overlay: stairs at 1,1 — upper floor
 wall,wall,wall,wall,wall,wall,wall,wall
 wall,stone,stone,stone,stone,stone,stone,wall
 wall,stone,stone,stone,stone,stone,stone,wall

@@ -1,3 +1,6 @@
+# 标准酒馆
+# 6x6 standard tavern with bar counter
+# overlay: door at 3,5 — main entrance
 wall,wall,wall,wall,wall,wall
 wall,wood,wood,wood,wood,wall
 wall,wood,dirt,dirt,wood,wall

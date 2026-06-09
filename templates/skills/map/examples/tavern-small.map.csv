@@ -1,0 +1,7 @@
+# 路边小酒馆
+# 5x4 tiny roadside pub
+# overlay: door at 2,3 — entrance
+wall,wall,wall,wall,wall
+wall,wood,wood,wood,wall
+wall,wood,dirt,stone.light,wall
+wall,wall,wall,wall,wall
