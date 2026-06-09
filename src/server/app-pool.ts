@@ -4,7 +4,12 @@ import type { SessionManager } from "../session/manager"
 import type { WorkspaceID } from "../workspace/types"
 import type { ModelConfig } from "../model/openai"
 import type { ChatMessage } from "../chat/types"
-import type { ContextUsage, SceneState } from "../shared/schemas"
+import {
+  COMPACT_RECENT_USER_TURNS,
+  COMPACT_THRESHOLD_RATIO,
+  type ContextUsage,
+  type SceneState,
+} from "../shared/schemas"
 import type { ChatCompletionMessageParam } from "openai/resources/chat/completions"
 
 export interface AppPoolDeps {
@@ -54,6 +59,7 @@ export class AppPool {
       apiKey: config.apiKey,
       model: config.modelName,
     }
+    const compactThresholdTokens = Math.floor(config.contextWindowTokens * COMPACT_THRESHOLD_RATIO)
 
     const app = createApp({
       dataDir: "data",
@@ -62,6 +68,8 @@ export class AppPool {
       skillsDir: ws.skillsDir,
       primarySessionId: sessionId,
       modelConfig,
+      compactThresholdTokens,
+      recentTurnsToKeep: COMPACT_RECENT_USER_TURNS,
     })
 
     // Restore session history

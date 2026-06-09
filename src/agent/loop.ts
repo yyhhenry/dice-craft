@@ -140,7 +140,7 @@ export class AgentLoop {
 
   private estimateTokens(messages: ChatCompletionMessageParam[]): number {
     const chars = messages.reduce((sum, msg) => sum + JSON.stringify(msg).length, 0)
-    return Math.ceil(chars / 4)
+    return chars
   }
 
   private estimateTextTokens(text: string | undefined): number {

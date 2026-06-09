@@ -18,6 +18,7 @@ import { ChatManager } from "./chat/manager"
 import { SceneManager } from "./scene/manager"
 import type { WorkspaceID } from "./workspace/types"
 import type { SceneState } from "./shared/schemas"
+import { COMPACT_RECENT_USER_TURNS } from "./shared/schemas"
 
 export interface App {
   model: OpenAIModel
@@ -40,6 +41,8 @@ export function createApp(options: {
   skillsDir?: string
   primarySessionId?: string
   modelConfig: ModelConfig
+  compactThresholdTokens?: number
+  recentTurnsToKeep?: number
   onMessage?: (senderName: string, content: string) => void
 }): App {
   const model = new OpenAIModel(options.modelConfig)
@@ -66,19 +69,32 @@ export function createApp(options: {
 
   const sessionRef = { id: options.primarySessionId ?? "sess_primary" }
   const onMessage = options.onMessage
+  const compactThresholdTokens = options.compactThresholdTokens
+  const recentTurnsToKeep = options.recentTurnsToKeep ?? COMPACT_RECENT_USER_TURNS
 
-  const dispatcher = new SubagentDispatcher(model, toolRegistry, agentRegistry, sessionManager, workspaceId, (ctx) => {
-    const npcRegistry = new ToolRegistry()
-    for (const tool of toolRegistry.all()) {
-      npcRegistry.register(tool)
-    }
-    npcRegistry.register(
-      createMessageTool(chatManager, sessionRef, ctx.sessionId, "npc", (name, _content) => {
-        if (onMessage) onMessage(name, _content)
-      }),
-    )
-    return npcRegistry
-  })
+  const dispatcher = new SubagentDispatcher(
+    model,
+    toolRegistry,
+    agentRegistry,
+    sessionManager,
+    workspaceId,
+    {
+      compactThresholdTokens,
+      recentTurnsToKeep,
+    },
+    (ctx) => {
+      const npcRegistry = new ToolRegistry()
+      for (const tool of toolRegistry.all()) {
+        npcRegistry.register(tool)
+      }
+      npcRegistry.register(
+        createMessageTool(chatManager, sessionRef, ctx.sessionId, "npc", (name, _content) => {
+          if (onMessage) onMessage(name, _content)
+        }),
+      )
+      return npcRegistry
+    },
+  )
 
   const notifyFn = async (content: string, targets: import("./tool/notify").NotifyTarget[]) => {
     await dispatcher.notifyMultiple(targets, content)
@@ -119,6 +135,8 @@ export function createApp(options: {
 
   const primaryAgent = new AgentLoop(model, toolRegistry, {
     systemPrompt,
+    compactThresholdTokens,
+    recentTurnsToKeep,
   })
 
   const app: App = {

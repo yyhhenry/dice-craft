@@ -2,6 +2,7 @@ import { describe, test, expect, beforeEach, afterEach } from "bun:test"
 import fs from "fs"
 import path from "path"
 import { WorkspaceManager } from "../../src/workspace/manager"
+import { DEFAULT_CONTEXT_WINDOW_TOKENS } from "../../src/shared/schemas"
 import type { WorkspaceID, UserID } from "../../src/workspace/types"
 
 const TEST_DIR = "/tmp/dicecraft-ws-test-" + Date.now()
@@ -116,5 +117,25 @@ describe("WorkspaceManager", () => {
     const ws = manager.initCLI()
     const diceDir = path.join(ws.path, "skills", "dice")
     expect(fs.existsSync(path.join(diceDir, "SKILL.md"))).toBe(true)
+  })
+
+  test("getConfig fills default context window for old config files", () => {
+    manager.create(wsId("legacy-config"), {
+      name: "Legacy Config",
+      ownerId: userId("user1"),
+    })
+    const metaDir = path.join(TEST_DIR, ".meta")
+    fs.writeFileSync(
+      path.join(metaDir, "legacy-config-config.json"),
+      JSON.stringify({
+        apiBaseUrl: "https://test.example.com/v1",
+        apiKey: "test-key",
+        modelName: "test-model",
+      }),
+    )
+
+    const config = manager.getConfig(wsId("legacy-config"))
+
+    expect(config?.contextWindowTokens).toBe(DEFAULT_CONTEXT_WINDOW_TOKENS)
   })
 })
