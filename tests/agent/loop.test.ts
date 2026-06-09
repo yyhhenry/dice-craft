@@ -164,6 +164,74 @@ describe("AgentLoop", () => {
     expect(calledMessages.find((m: any) => m.content === "New message")).toBeTruthy()
   })
 
+  test("history is preserved when system prompt is omitted", async () => {
+    const model = createMockModel({
+      content: "Second response",
+      toolCalls: null,
+      finishReason: "stop",
+    })
+    const registry = new ToolRegistry()
+    const agent = new AgentLoop(model, registry)
+
+    const { history } = await agent.run("First message")
+
+    expect(history).toEqual([
+      { role: "user", content: "First message" },
+      { role: "assistant", content: "Second response" },
+    ])
+    expect(agent.getHistory()).toEqual(history)
+  })
+
+  test("compacts old messages while preserving raw history", async () => {
+    const registry = new ToolRegistry()
+    const model = createMockModel({ content: "", toolCalls: null, finishReason: "stop" })
+    model.chat = mock((messages: any[]) => {
+      const content = messages[0]?.content as string
+      if (content.includes("<context_to_compact>")) {
+        return Promise.resolve({
+          content:
+            "## Current Objective\nContinue the adventure.\n\n## Important Facts and Decisions\nOld facts retained.",
+          toolCalls: null,
+          finishReason: "stop",
+        })
+      }
+      return Promise.resolve({
+        content: "Continued",
+        toolCalls: null,
+        finishReason: "stop",
+      })
+    })
+
+    const agent = new AgentLoop(model, registry, {
+      compactThresholdTokens: 10,
+      recentTurnsToKeep: 2,
+    })
+    const oldContent = "old-context ".repeat(80)
+    const history = [
+      { role: "user" as const, content: oldContent },
+      { role: "assistant" as const, content: "old assistant response" },
+      { role: "user" as const, content: "recent question" },
+      { role: "assistant" as const, content: "recent answer" },
+    ]
+
+    const result = await agent.run("current question", history)
+
+    expect(model.chat).toHaveBeenCalledTimes(2)
+    const modelMessages = (model.chat as any).mock.calls[1][0] as any[]
+    expect(modelMessages[0].role).toBe("system")
+    expect(modelMessages[0].content).toContain("Compact summary of earlier conversation context")
+    expect(modelMessages[0].content).toContain("Old facts retained")
+    expect(modelMessages.some((m) => m.content === "recent question")).toBe(true)
+    expect(modelMessages.some((m) => m.content === "current question")).toBe(true)
+    expect(modelMessages.some((m) => typeof m.content === "string" && m.content.includes("old-context"))).toBe(false)
+
+    expect(result.history.some((m) => m.content === oldContent)).toBe(true)
+    expect(agent.getHistory().some((m) => m.content === oldContent)).toBe(true)
+    expect(agent.getHistory().some((m) => typeof m.content === "string" && m.content.includes("Compact summary"))).toBe(
+      false,
+    )
+  })
+
   test("injectEvent adds events to queue", () => {
     const model = createMockModel({
       content: "Done",

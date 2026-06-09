@@ -27,3 +27,6 @@ data/
 
 # codex
 .codex*
+
+# reference
+/ref

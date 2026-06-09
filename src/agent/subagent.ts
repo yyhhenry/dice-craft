@@ -157,7 +157,7 @@ export class SubagentDispatcher {
     const loop = new AgentLoop(this.model, registry, {
       systemPrompt: session.systemPrompt,
     })
-    loop.setHistory(history.slice(1))
+    loop.setHistory(history)
     this.activeLoops.set(sessionId, { loop, agentType: session.agentType })
     this.emitNpcCount()
   }
