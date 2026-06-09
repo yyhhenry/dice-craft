@@ -91,6 +91,12 @@ export class WsManager {
         onStatusChange: (sid, primaryActive, npcCount, contextUsage) =>
           this.sendStatus(sid, primaryActive, npcCount, contextUsage),
         onSceneUpdate: (sid, state) => this.broadcastScene(sid, state),
+        onIterationComplete: process.env.EAGER_SAVE
+          ? (sid) => {
+              const current = this.appPool.get(sid)
+              if (current) this.saveHistory(sid, current.app)
+            }
+          : undefined,
       })
     } catch (err) {
       this.broadcast(

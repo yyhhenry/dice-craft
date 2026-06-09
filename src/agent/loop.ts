@@ -107,6 +107,7 @@ export class AgentLoop {
   private pendingMessage: string | null = null
   private onResponse: ((response: string) => void) | undefined
   onStatusChange: ((running: boolean) => void) | undefined
+  onIterationComplete: (() => void) | undefined
   private idleResolvers: Array<() => void> = []
 
   constructor(model: OpenAIModel, registry: ToolRegistry, config: AgentConfig = {}) {
@@ -415,6 +416,7 @@ export class AgentLoop {
 
         this.estimator.update(rawMessages)
         this.savedHistory = [...rawMessages]
+        this.onIterationComplete?.()
         continue
       }
 

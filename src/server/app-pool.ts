@@ -38,6 +38,7 @@ export class AppPool {
         contextUsage: ContextUsage,
       ) => void
       onSceneUpdate?: (sessionId: string, state: SceneState) => void
+      onIterationComplete?: (sessionId: string) => void
     },
   ): AppInstance {
     const existing = this.instances.get(sessionId)
@@ -96,6 +97,10 @@ export class AppPool {
 
     app.dispatcher.onNpcCountChange = (count) => {
       callbacks.onStatusChange?.(sessionId, app.primaryAgent.isRunning(), count, app.primaryAgent.getContextUsage())
+    }
+
+    app.primaryAgent.onIterationComplete = () => {
+      callbacks.onIterationComplete?.(sessionId)
     }
 
     // Wire message callback — pass message directly to avoid re-reading from disk
