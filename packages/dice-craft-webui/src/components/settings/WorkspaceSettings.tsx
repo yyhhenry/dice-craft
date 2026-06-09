@@ -17,6 +17,7 @@ export function WorkspaceSettings({ workspaceId, open, onOpenChange }: Workspace
   const [apiBaseUrl, setApiBaseUrl] = useState("")
   const [apiKey, setApiKey] = useState("")
   const [modelName, setModelName] = useState("")
+  const [contextWindowTokens, setContextWindowTokens] = useState("1000000")
   const [showKey, setShowKey] = useState(false)
   const [saving, setSaving] = useState(false)
 
@@ -25,13 +26,19 @@ export function WorkspaceSettings({ workspaceId, open, onOpenChange }: Workspace
       setApiBaseUrl(config.apiBaseUrl)
       setApiKey(config.apiKey)
       setModelName(config.modelName)
+      setContextWindowTokens(String(config.contextWindowTokens ?? 1000000))
     }
   }, [config])
 
   const handleSave = async () => {
     setSaving(true)
     try {
-      await save({ apiBaseUrl, apiKey, modelName })
+      await save({
+        apiBaseUrl,
+        apiKey,
+        modelName,
+        contextWindowTokens: Number.parseInt(contextWindowTokens, 10) || 1000000,
+      })
       onOpenChange(false)
     } catch {
       // error handled by hook
@@ -85,6 +92,19 @@ export function WorkspaceSettings({ workspaceId, open, onOpenChange }: Workspace
               onChange={(e) => setModelName(e.target.value)}
               placeholder="mimo-v2.5-pro"
             />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="contextWindowTokens">Context Window Tokens</Label>
+            <Input
+              id="contextWindowTokens"
+              type="number"
+              min={1}
+              step={1000}
+              value={contextWindowTokens}
+              onChange={(e) => setContextWindowTokens(e.target.value)}
+              placeholder="1000000"
+            />
+            <p className="text-xs text-muted-foreground">Compaction starts at 80% of this value.</p>
           </div>
           <Button onClick={handleSave} disabled={saving} className="w-full">
             {saving ? "Saving..." : "Save"}

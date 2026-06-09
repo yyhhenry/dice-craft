@@ -1,7 +1,7 @@
 import type { ChatCompletionMessageParam } from "openai/resources/chat/completions"
 import { OpenAIModel } from "../model/openai"
 import { ToolRegistry } from "../tool/base"
-import { AgentLoop } from "./loop"
+import { AgentLoop, type AgentConfig } from "./loop"
 import type { AgentRegistry } from "./registry"
 import type { SessionManager } from "../session/manager"
 import type { WorkspaceID } from "../workspace/types"
@@ -36,6 +36,7 @@ export class SubagentDispatcher {
   private workspaceId: WorkspaceID
   private activeLoops = new Map<string, ActiveEntry>()
   private setupLoop: LoopSetupFn | undefined
+  private loopConfig: Pick<AgentConfig, "contextWindowTokens">
 
   onSubagentDone?: (sessionId: string, agentName: string, content: string) => void
   onNpcCountChange?: (count: number) => void
@@ -46,6 +47,7 @@ export class SubagentDispatcher {
     agentRegistry: AgentRegistry,
     sessionManager: SessionManager,
     workspaceId: WorkspaceID,
+    loopConfig: Pick<AgentConfig, "contextWindowTokens"> = {},
     setupLoop?: LoopSetupFn,
   ) {
     this.model = model
@@ -53,6 +55,7 @@ export class SubagentDispatcher {
     this.agentRegistry = agentRegistry
     this.sessionManager = sessionManager
     this.workspaceId = workspaceId
+    this.loopConfig = loopConfig
     this.setupLoop = setupLoop
   }
 
@@ -81,6 +84,7 @@ export class SubagentDispatcher {
 
     const loop = new AgentLoop(this.model, registry, {
       systemPrompt: agentInfo.systemPrompt,
+      contextWindowTokens: this.loopConfig.contextWindowTokens,
     })
     this.activeLoops.set(session.id, { loop, agentType: agentName })
 
@@ -156,6 +160,7 @@ export class SubagentDispatcher {
 
     const loop = new AgentLoop(this.model, registry, {
       systemPrompt: session.systemPrompt,
+      contextWindowTokens: this.loopConfig.contextWindowTokens,
     })
     loop.setHistory(history.slice(1))
     this.activeLoops.set(sessionId, { loop, agentType: session.agentType })

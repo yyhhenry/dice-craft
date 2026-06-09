@@ -8,10 +8,17 @@ export interface ModelConfig {
   model: string
 }
 
+export interface ChatUsage {
+  promptTokens: number
+  completionTokens: number
+  totalTokens: number
+}
+
 export interface ChatResponse {
   content: string | null
   toolCalls: ToolCall[] | null
   finishReason: string | null
+  usage?: ChatUsage | null
 }
 
 export interface StreamCallbacks {
@@ -57,7 +64,7 @@ export class OpenAIModel {
 
     const choice = response.choices[0]
     if (!choice) {
-      return { content: null, toolCalls: null, finishReason: null }
+      return { content: null, toolCalls: null, finishReason: null, usage: null }
     }
 
     const content = choice.message.content || null
@@ -74,6 +81,14 @@ export class OpenAIModel {
         }))
     }
 
-    return { content, toolCalls: toolCallsArray, finishReason }
+    const usage: ChatUsage | null = response.usage
+      ? {
+          promptTokens: response.usage.prompt_tokens,
+          completionTokens: response.usage.completion_tokens,
+          totalTokens: response.usage.total_tokens,
+        }
+      : null
+
+    return { content, toolCalls: toolCallsArray, finishReason, usage }
   }
 }

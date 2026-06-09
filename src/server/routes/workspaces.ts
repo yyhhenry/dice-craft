@@ -1,5 +1,5 @@
 import { Hono } from "hono"
-import { WorkspaceConfigSchema } from "../../shared/schemas"
+import { DEFAULT_CONTEXT_WINDOW_TOKENS, WorkspaceConfigSchema } from "../../shared/schemas"
 import type { ServerDeps } from "../index"
 import { type WorkspaceID, type UserID, generateWorkspaceID } from "../../workspace/types"
 
@@ -24,7 +24,14 @@ export function workspaceRoutes(deps: ServerDeps) {
   router.get("/workspaces/:id/config", (c) => {
     const id = c.req.param("id") as WorkspaceID
     const config = deps.workspaceManager.getConfig(id)
-    if (!config) return c.json({ apiBaseUrl: "", apiKey: "", modelName: "" })
+    if (!config) {
+      return c.json({
+        apiBaseUrl: "",
+        apiKey: "",
+        modelName: "",
+        contextWindowTokens: DEFAULT_CONTEXT_WINDOW_TOKENS,
+      })
+    }
     const masked = { ...config, apiKey: config.apiKey.slice(0, 6) + "..." }
     return c.json(masked)
   })
