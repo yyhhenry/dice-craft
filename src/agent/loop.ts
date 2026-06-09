@@ -347,6 +347,15 @@ export class AgentLoop {
         const assistantMessage: ChatCompletionMessageParam = { role: "assistant", content: result.content }
         messages.push(assistantMessage)
         rawMessages.push(assistantMessage)
+
+        const eventMessages = this.flushEvents()
+        if (eventMessages.length > 0) {
+          messages.push(...eventMessages)
+          rawMessages.push(...eventMessages)
+          this.estimator.update(rawMessages)
+          continue
+        }
+
         this.estimator.update(rawMessages)
         this.savedHistory = [...rawMessages]
         return { response: result.content, history: this.savedHistory }
@@ -404,6 +413,15 @@ export class AgentLoop {
         const assistantMessage: ChatCompletionMessageParam = { role: "assistant", content: result.content }
         messages.push(assistantMessage)
         rawMessages.push(assistantMessage)
+
+        const eventMessages = this.flushEvents()
+        if (eventMessages.length > 0) {
+          messages.push(...eventMessages)
+          rawMessages.push(...eventMessages)
+          this.estimator.update(rawMessages)
+          continue
+        }
+
         this.estimator.update(rawMessages)
         this.savedHistory = [...rawMessages]
         return { response: result.content, history: this.savedHistory }
