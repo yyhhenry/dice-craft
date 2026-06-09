@@ -1,9 +1,15 @@
 import { z } from "zod"
 
+// --- Compaction constants ---
+export const DEFAULT_CONTEXT_WINDOW_TOKENS = 1_000_000
+export const COMPACT_THRESHOLD_RATIO = 0.8
+export const COMPACT_RECENT_TURNS = 4
+
 export const WorkspaceConfigSchema = z.object({
   apiBaseUrl: z.url(),
   apiKey: z.string().min(1),
   modelName: z.string().min(1),
+  contextWindowTokens: z.number().int().positive().default(DEFAULT_CONTEXT_WINDOW_TOKENS),
 })
 
 export type WorkspaceConfig = z.infer<typeof WorkspaceConfigSchema>
@@ -13,6 +19,18 @@ export const SendMessageSchema = z.object({
 })
 
 export type SendMessagePayload = z.infer<typeof SendMessageSchema>
+
+// --- ContextUsage schema ---
+
+export const ContextUsageSchema = z.object({
+  tokens: z.number().int().nonnegative(),
+  thresholdTokens: z.number().int().positive(),
+  percent: z.number().min(0),
+  compacted: z.boolean(),
+  compactedMessageCount: z.number().int().nonnegative(),
+})
+
+export type ContextUsage = z.infer<typeof ContextUsageSchema>
 
 // --- SceneState schemas ---
 

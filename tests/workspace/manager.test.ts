@@ -80,41 +80,20 @@ describe("WorkspaceManager", () => {
     expect(manager.get(wsId("ws1"))).toBeUndefined()
   })
 
-  test("initCLI creates default workspace", () => {
-    const ws = manager.initCLI()
-    expect(ws.id).toBe(wsId("cli"))
-    expect(ws.name).toBe("CLI Workspace")
-    expect(fs.existsSync(ws.path)).toBe(true)
-    expect(fs.existsSync(ws.skillsDir)).toBe(true)
-  })
-
-  test("initCLI returns existing workspace on second call", () => {
-    const ws1 = manager.initCLI()
-    const ws2 = manager.initCLI()
-    expect(ws1.id).toBe(ws2.id)
-    expect(ws1.createdAt).toBe(ws2.createdAt)
-  })
-
   test("create workspace copies template skills", () => {
     const ws = manager.create(wsId("tpl-ws"), {
       name: "Template Test",
       ownerId: userId("user1"),
     })
 
-    // dice skill template should be copied
-    const diceDir = path.join(ws.path, "skills", "dice")
-    expect(fs.existsSync(diceDir)).toBe(true)
-    expect(fs.existsSync(path.join(diceDir, "SKILL.md"))).toBe(true)
-    expect(fs.existsSync(path.join(diceDir, "dice.py"))).toBe(true)
+    // dnd skill template should be copied
+    const dndDir = path.join(ws.path, "skills", "dnd")
+    expect(fs.existsSync(dndDir)).toBe(true)
+    expect(fs.existsSync(path.join(dndDir, "SKILL.md"))).toBe(true)
+    expect(fs.existsSync(path.join(dndDir, "scripts", "roll.py"))).toBe(true)
 
     // SKILL.md should have frontmatter
-    const content = fs.readFileSync(path.join(diceDir, "SKILL.md"), "utf-8")
-    expect(content).toContain("name: dice")
-  })
-
-  test("initCLI also copies templates", () => {
-    const ws = manager.initCLI()
-    const diceDir = path.join(ws.path, "skills", "dice")
-    expect(fs.existsSync(path.join(diceDir, "SKILL.md"))).toBe(true)
+    const content = fs.readFileSync(path.join(dndDir, "SKILL.md"), "utf-8")
+    expect(content).toContain("name: dnd")
   })
 })

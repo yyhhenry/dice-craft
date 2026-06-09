@@ -1,0 +1,12 @@
+# 大型酒馆
+# 10x8 two-story tavern with kitchen and storage
+# overlay: door at 4,7 — main entrance
+# overlay: door at 5,3 — kitchen/storage passage
+wall,wall,wall,wall,wall,wall,wall,wall,wall,wall
+wall,wood,wood,wood,wood,wall,stone,stone,stone,wall
+wall,wood,wood,wood,wood,wall,stone,stone,stone,wall
+wall,wood,wood,dirt,dirt,wood,wood,stone,stone,wall
+wall,wood,wood,dirt,dirt,wood,wood,wood,wood,wall
+wall,wood,wood,wood,wood,wood,wood,wood,wood,wall
+wall,stone.light,stone.light,stone.light,stone.light,wood,wood,wood,wood,wall
+wall,wall,wall,wall,wall,wall,wall,wall,wall,wall

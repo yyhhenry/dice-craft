@@ -3,6 +3,7 @@ import { MessageSquareText } from "lucide-react"
 import { MessageList } from "./MessageList"
 import { ChatInput } from "./ChatInput"
 import { ChatStatus } from "./ChatStatus"
+import { ContextUsage } from "./ContextUsage"
 import { useMessages } from "@/hooks/useMessages"
 import type { ChatMessage } from "@/lib/api"
 import type { AgentStatus } from "@/hooks/useWebSocket"
@@ -37,6 +38,7 @@ export function ChatPanel({ sessionId, wsMessages, status, connected, send, acti
       <MessageList messages={allMessages} loading={loading} />
       <ChatInput onSend={send} disabled={!connected} active={active}>
         <ChatStatus status={status} connected={connected} />
+        <ContextUsage usage={status.contextUsage} />
       </ChatInput>
     </div>
   )

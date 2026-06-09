@@ -1,0 +1,8 @@
+# 河岸渡口
+# 8x6 river crossing with bridge
+grass,grass,grass,sand,sand,grass,grass,grass
+grass,dirt,sand,water,water,sand,dirt,grass
+grass,sand,water,water,water,water,sand,grass
+grass,sand,water,wood,wood,water,sand,grass
+grass,dirt,sand,water,water,sand,dirt,grass
+grass,grass,grass,sand,sand,grass,grass,grass

@@ -4,7 +4,7 @@ import type { SessionManager } from "../session/manager"
 import type { WorkspaceID } from "../workspace/types"
 import type { ModelConfig } from "../model/openai"
 import type { ChatMessage } from "../chat/types"
-import type { SceneState } from "../shared/schemas"
+import { DEFAULT_CONTEXT_WINDOW_TOKENS, type ContextUsage, type SceneState } from "../shared/schemas"
 import type { ChatCompletionMessageParam } from "openai/resources/chat/completions"
 
 export interface AppPoolDeps {
@@ -31,8 +31,14 @@ export class AppPool {
     workspaceId: WorkspaceID,
     callbacks: {
       onMessage?: (sessionId: string, msg: ChatMessage) => void
-      onStatusChange?: (sessionId: string, primaryActive: boolean, subagentCount: number) => void
+      onStatusChange?: (
+        sessionId: string,
+        primaryActive: boolean,
+        subagentCount: number,
+        contextUsage: ContextUsage,
+      ) => void
       onSceneUpdate?: (sessionId: string, state: SceneState) => void
+      onIterationComplete?: (sessionId: string) => void
     },
   ): AppInstance {
     const existing = this.instances.get(sessionId)
@@ -50,6 +56,8 @@ export class AppPool {
       model: config.modelName,
     }
 
+    const contextWindowTokens = config.contextWindowTokens ?? DEFAULT_CONTEXT_WINDOW_TOKENS
+
     const app = createApp({
       dataDir: "data",
       workspaceId,
@@ -57,6 +65,7 @@ export class AppPool {
       skillsDir: ws.skillsDir,
       primarySessionId: sessionId,
       modelConfig,
+      contextWindowTokens,
     })
 
     // Restore session history
@@ -68,6 +77,11 @@ export class AppPool {
       })
       app.primaryAgent.setHistory(history)
 
+      const compactState = this.deps.sessionManager.getCompactState(sessionId)
+      if (compactState) {
+        app.primaryAgent.restoreCompactState(compactState)
+      }
+
       // Restore active (non-dismissed) subagent sessions
       const subagents = this.deps.sessionManager.listSubagents(sessionId)
       for (const sub of subagents) {
@@ -78,11 +92,15 @@ export class AppPool {
 
     // Wire status callbacks
     app.primaryAgent.onStatusChange = (running) => {
-      callbacks.onStatusChange?.(sessionId, running, app.dispatcher.getNpcCount())
+      callbacks.onStatusChange?.(sessionId, running, app.dispatcher.getNpcCount(), app.primaryAgent.getContextUsage())
     }
 
     app.dispatcher.onNpcCountChange = (count) => {
-      callbacks.onStatusChange?.(sessionId, app.primaryAgent.isRunning(), count)
+      callbacks.onStatusChange?.(sessionId, app.primaryAgent.isRunning(), count, app.primaryAgent.getContextUsage())
+    }
+
+    app.primaryAgent.onIterationComplete = () => {
+      callbacks.onIterationComplete?.(sessionId)
     }
 
     // Wire message callback — pass message directly to avoid re-reading from disk

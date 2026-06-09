@@ -1,0 +1,30 @@
+[
+  {
+    "id": "monster_goblin",
+    "name": "Goblin Scout",
+    "challenge_rating": "1/4",
+    "stats": {
+      "strength": 8,
+      "dexterity": 14,
+      "constitution": 10,
+      "intelligence": 10,
+      "wisdom": 8,
+      "charisma": 8,
+      "armor_class": 13,
+      "proficiency_bonus": 2
+    },
+    "hp": { "current": 7, "max": 7, "temporary": 0 },
+    "actions": [
+      {
+        "id": "action_scimitar",
+        "name": "Scimitar",
+        "action_type": "action",
+        "attack_bonus": 4,
+        "damage": "1d6+2 slashing",
+        "description": "Melee weapon attack"
+      }
+    ],
+    "loot": [],
+    "tactics": "Uses cover, flees below half HP"
+  }
+]

@@ -3,7 +3,8 @@ import type { AppPool } from "./app-pool"
 import type { SessionManager } from "../session/manager"
 import type { ChatMessage } from "../chat/types"
 import type { WorkspaceID } from "../workspace/types"
-import type { SceneState } from "../shared/schemas"
+import type { ContextUsage, SceneState } from "../shared/schemas"
+import type { App } from "../app"
 
 export interface WsData {
   sessionId: string
@@ -30,7 +31,12 @@ export class WsManager {
     // If App already exists, send current status
     const instance = this.appPool.get(sessionId)
     if (instance) {
-      this.sendStatus(sessionId, instance.app.primaryAgent.isRunning(), instance.app.dispatcher.getNpcCount())
+      this.sendStatus(
+        sessionId,
+        instance.app.primaryAgent.isRunning(),
+        instance.app.dispatcher.getNpcCount(),
+        instance.app.primaryAgent.getContextUsage(),
+      )
     }
   }
 
@@ -69,9 +75,28 @@ export class WsManager {
     let instance
     try {
       instance = this.appPool.getOrCreate(sessionId, workspaceId, {
-        onMessage: (sid, msg) => this.broadcastMessage(sid, msg),
-        onStatusChange: (sid, primaryActive, npcCount) => this.sendStatus(sid, primaryActive, npcCount),
+        onMessage: (sid, msg) => {
+          this.broadcastMessage(sid, msg)
+          const current = this.appPool.get(sid)
+          if (current) {
+            this.sendStatus(
+              sid,
+              current.app.primaryAgent.isRunning(),
+              current.app.dispatcher.getNpcCount(),
+              current.app.primaryAgent.getContextUsage(),
+            )
+            this.saveHistory(sid, current.app)
+          }
+        },
+        onStatusChange: (sid, primaryActive, npcCount, contextUsage) =>
+          this.sendStatus(sid, primaryActive, npcCount, contextUsage),
         onSceneUpdate: (sid, state) => this.broadcastScene(sid, state),
+        onIterationComplete: process.env.EAGER_SAVE
+          ? (sid) => {
+              const current = this.appPool.get(sid)
+              if (current) this.saveHistory(sid, current.app)
+            }
+          : undefined,
       })
     } catch (err) {
       this.broadcast(
@@ -108,13 +133,19 @@ export class WsManager {
     app.primaryAgent
       .waitForIdle()
       .then(() => {
-        const history = app.primaryAgent.getHistory()
-        this.sessionManager.clearMessages(sessionId)
-        for (const msg of history) {
-          this.sessionManager.appendMessage(sessionId, msg)
-        }
+        this.saveHistory(sessionId, app)
+        this.sessionManager.saveCompactState(sessionId, app.primaryAgent.getCompactState())
+        this.sendStatus(sessionId, false, app.dispatcher.getNpcCount(), app.primaryAgent.getContextUsage())
       })
       .catch(() => {})
+  }
+
+  private saveHistory(sessionId: string, app: App): void {
+    const history = app.primaryAgent.getHistory()
+    this.sessionManager.clearMessages(sessionId)
+    for (const msg of history) {
+      this.sessionManager.appendMessage(sessionId, msg)
+    }
   }
 
   private broadcastMessage(sessionId: string, msg: ChatMessage): void {
@@ -125,12 +156,12 @@ export class WsManager {
     this.broadcast(sessionId, JSON.stringify({ type: "scene.updated", payload: state }))
   }
 
-  private sendStatus(sessionId: string, primaryActive: boolean, npcCount: number): void {
+  private sendStatus(sessionId: string, primaryActive: boolean, npcCount: number, contextUsage?: ContextUsage): void {
     this.broadcast(
       sessionId,
       JSON.stringify({
         type: "status",
-        payload: { primaryActive, npcCount },
+        payload: { primaryActive, npcCount, contextUsage: contextUsage ?? null },
       }),
     )
   }

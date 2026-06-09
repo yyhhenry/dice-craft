@@ -1,0 +1,12 @@
+# 地下洞穴
+# 8x8 dungeon with corridors and a chamber
+# overlay: stairs at 1,1 — entrance from above
+# overlay: chest at 5,6 — treasure in dark chamber
+wall,wall,wall,wall,wall,wall,wall,wall
+wall,stone,stone,wall,wall,stone,stone,wall
+wall,stone,stone,wall,wall,stone,stone,wall
+wall,stone,stone,stone,stone,stone,stone,wall
+wall,wall,wall,stone,stone,wall,wall,wall
+wall,stone.dark,stone.dark,stone,stone,stone.dark,wall,wall
+wall,stone.dark,stone.dark,stone.dark,stone.dark,stone.dark,wall,wall
+wall,wall,wall,wall,wall,wall,wall,wall

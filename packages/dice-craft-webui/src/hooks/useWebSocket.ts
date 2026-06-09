@@ -1,15 +1,16 @@
 import { useState, useEffect, useRef, useCallback } from "react"
 import type { ChatMessage } from "@/lib/api"
-import type { SceneState } from "@shared/schemas"
+import type { ContextUsage, SceneState } from "@shared/schemas"
 
 export interface AgentStatus {
   primaryActive: boolean
   npcCount: number
+  contextUsage: ContextUsage | null
 }
 
 export function useWebSocket(sessionId: string | null, workspaceId: string | null) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
-  const [status, setStatus] = useState<AgentStatus>({ primaryActive: false, npcCount: 0 })
+  const [status, setStatus] = useState<AgentStatus>({ primaryActive: false, npcCount: 0, contextUsage: null })
   const [scene, setScene] = useState<SceneState | null>(null)
   const [connected, setConnected] = useState(false)
   const wsRef = useRef<WebSocket | null>(null)
@@ -24,7 +25,7 @@ export function useWebSocket(sessionId: string | null, workspaceId: string | nul
     if (!sessionId || !workspaceId) return
 
     setMessages([])
-    setStatus({ primaryActive: false, npcCount: 0 })
+    setStatus({ primaryActive: false, npcCount: 0, contextUsage: null })
     setScene(null)
     setConnected(false)
 
