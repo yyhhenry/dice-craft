@@ -1,18 +1,34 @@
 ---
 name: dnd
-description: DND adventures — build instances, play with dnd-runtime + map skills.
+description: DND adventures — build instances and play them with d20 scripts and scene maps.
 ---
 
-# DND Package
+# DND Skill
 
-| When | Skill | Doc |
-|------|-------|-----|
-| Build | `dnd-builder` | `skills/dnd/builder/BUILD.md` |
-| Play | `dnd-runtime` | `skills/dnd/runtime/SKILL.md` |
-| Maps (either mode) | `map` | `skills/map/GUIDE.md` |
+Build and play DND-style tabletop adventures. Also load `skill("map")` for CSV grid maps and `update_scene`.
 
-- Instances: `skills/dnd/instances/<slug>/` (demo: `example_ring`)
-- Per-game state: `instances/<slug>/runtime/state.json`
-- Scripts: `skills/dnd/runtime/scripts/` — **not** `skills/dice/`
+## Modes
 
-Workspace path: `data/workspaces/<id>/skills/dnd/`. Start demo: `/play example_ring`
+| Mode | Doc | When |
+|------|-----|------|
+| Build | `builder.md` | Creating a new adventure instance |
+| Play (GM) | `gm.md` | Running a game session as DM |
+
+## Directory Layout
+
+```
+skills/dnd/
+├── SKILL.md            (this file)
+├── builder.md          (build workflow, schema, checklist)
+├── gm.md              (GM startup, tools, NPC flow)
+├── templates/          (instance file skeletons)
+├── instances/<slug>/   (one per adventure)
+└── scripts/            (roll.py, state.py)
+```
+
+## Key Rules
+
+- Scripts: `skills/dnd/scripts/` — **never** use `skills/dice/`
+- State: `skills/dnd/instances/<slug>/runtime/state.json`
+- Maps: CSV format per `skill("map")`
+- NPC dialogue: always via `notify` → subagent, never speak NPC lines as GM

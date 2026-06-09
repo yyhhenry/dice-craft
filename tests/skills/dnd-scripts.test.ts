@@ -3,8 +3,8 @@ import fs from "fs"
 import path from "path"
 
 const ROOT = path.resolve(import.meta.dir, "../..")
-const ROLL = path.join(ROOT, "templates/skills/dnd/runtime/scripts/roll.py")
-const STATE = path.join(ROOT, "templates/skills/dnd/runtime/scripts/state.py")
+const ROLL = path.join(ROOT, "templates/skills/dnd/scripts/roll.py")
+const STATE = path.join(ROOT, "templates/skills/dnd/scripts/state.py")
 const WORK_DIR = path.join("/tmp", `dnd-state-${Date.now()}`)
 
 afterEach(() => {
@@ -39,18 +39,18 @@ describe("dnd runtime scripts", () => {
     })
     expect(await init.exited).toBe(0)
 
-    const set = Bun.spawn(
-      ["python", STATE, "set", "--instance", "test_adv", "--path", "party.0.hp", "--json", "10"],
-      { cwd: WORK_DIR, stdout: "pipe" },
-    )
+    const set = Bun.spawn(["python", STATE, "set", "--instance", "test_adv", "--path", "party.0.hp", "--json", "10"], {
+      cwd: WORK_DIR,
+      stdout: "pipe",
+    })
     const setOut = await new Response(set.stdout).text()
     expect(await set.exited).toBe(0)
     expect(JSON.parse(setOut.trim()).ok).toBe(true)
 
-    const get = Bun.spawn(
-      ["python", STATE, "get", "--instance", "test_adv", "--path", "party.0.hp"],
-      { cwd: WORK_DIR, stdout: "pipe" },
-    )
+    const get = Bun.spawn(["python", STATE, "get", "--instance", "test_adv", "--path", "party.0.hp"], {
+      cwd: WORK_DIR,
+      stdout: "pipe",
+    })
     const getOut = await new Response(get.stdout).text()
     expect(await get.exited).toBe(0)
     expect(JSON.parse(getOut.trim()).value).toBe(10)
