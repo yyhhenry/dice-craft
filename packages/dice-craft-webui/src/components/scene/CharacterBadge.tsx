@@ -1,5 +1,6 @@
 import type { SceneCharacter } from "@shared/schemas"
 import { ROLE_COLORS } from "./terrain"
+import { getAvatarText } from "@/lib/utils"
 
 interface CharacterBadgeProps {
   character: SceneCharacter
@@ -15,7 +16,7 @@ export function CharacterBadge({ character }: CharacterBadgeProps) {
           className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
           style={{ backgroundColor: color }}
         >
-          {character.name.charAt(0).toUpperCase()}
+          {getAvatarText(character.name)}
         </div>
         <div className="min-w-0">
           <div className="truncate text-sm font-medium">{character.name}</div>

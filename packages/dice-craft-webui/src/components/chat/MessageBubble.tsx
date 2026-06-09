@@ -1,5 +1,6 @@
 import { Wrench, User } from "lucide-react"
 import type { ChatMessage } from "@/lib/api"
+import { getAvatarText } from "@/lib/utils"
 
 interface MessageBubbleProps {
   message: ChatMessage
@@ -39,7 +40,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
         {senderRole === "agent" ? (
           <Wrench className="h-4 w-4" />
         ) : (
-          <span className="text-xs font-medium">{senderName.charAt(0).toUpperCase()}</span>
+          <span className="text-xs font-medium">{getAvatarText(senderName)}</span>
         )}
       </div>
       <div className="max-w-[70%] min-w-0">

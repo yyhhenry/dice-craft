@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useMemo } from "react"
 import type { SceneMap, SceneCharacter } from "@shared/schemas"
 import { CELL_SIZE, PATTERN_SIZE, ROLE_COLORS, OVERLAY_SYMBOLS, resolveTerrainPattern } from "./terrain"
+import { getAvatarText } from "@/lib/utils"
 
 interface TileMapSvgProps {
   map: SceneMap
@@ -15,10 +16,6 @@ function parseLocation(loc?: string): { x: number; y: number } | null {
   const y = parseInt(parts[1]!, 10)
   if (isNaN(x) || isNaN(y)) return null
   return { x, y }
-}
-
-function getInitial(name: string): string {
-  return name.charAt(0).toUpperCase()
 }
 
 export function TileMapSvg({ map, characters }: TileMapSvgProps) {
@@ -218,6 +215,8 @@ export function TileMapSvg({ map, characters }: TileMapSvgProps) {
         const cy = pos.y * C + C / 2
         const r = C * 0.35
         const color = ROLE_COLORS[ch.role] ?? ROLE_COLORS.neutral
+        const avatarText = getAvatarText(ch.name)
+        const fontSize = avatarText.length > 1 ? C * 0.22 : C * 0.28
         return (
           <g key={`ch-${ch.id}`}>
             <circle cx={cx} cy={cy} r={r} fill={color} stroke="#fff" strokeWidth={1.5} />
@@ -226,12 +225,12 @@ export function TileMapSvg({ map, characters }: TileMapSvgProps) {
               y={cy}
               textAnchor="middle"
               dominantBaseline="central"
-              fontSize={C * 0.28}
+              fontSize={fontSize}
               fill="#fff"
               fontWeight="bold"
               style={{ pointerEvents: "none" }}
             >
-              {getInitial(ch.name)}
+              {avatarText}
             </text>
           </g>
         )
