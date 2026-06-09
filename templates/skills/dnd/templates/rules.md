@@ -1,6 +1,6 @@
 # Rules (minimal d20)
 
-Use **DND runtime scripts** — not `skills/dice/`:
+Use **DND runtime scripts**:
 
 ```bash
 python skills/dnd/runtime/scripts/roll.py check --mod MOD --dc DC --reason "Reason"

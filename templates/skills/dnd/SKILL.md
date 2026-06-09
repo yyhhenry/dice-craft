@@ -1,6 +1,6 @@
 ---
 name: dnd
-description: DND adventures — build instances and play them with d20 scripts and scene maps.
+description: "Load when user wants to create or play a DND/TRPG adventure. Provides build workflow, GM play mode, d20 scripts, NPC subagent flow, and scene integration."
 ---
 
 # DND Skill
@@ -28,7 +28,7 @@ skills/dnd/
 
 ## Key Rules
 
-- Scripts: `skills/dnd/scripts/` — **never** use `skills/dice/`
+- Scripts: `skills/dnd/scripts/` (roll.py, state.py)
 - State: `skills/dnd/instances/<slug>/runtime/state.json`
 - Maps: CSV format per `skill("map")`
 - NPC dialogue: always via `notify` → subagent, never speak NPC lines as GM

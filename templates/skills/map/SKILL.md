@@ -1,6 +1,6 @@
 ---
 name: map
-description: CSV grid maps and update_scene — terrain tokens, overlays, characters on grid.
+description: "Load when you need to create, edit, or display a grid map. Provides CSV format spec, terrain tokens, overlay/label placement, and update_scene rules. Also load alongside dnd skill for adventure maps."
 ---
 
 # Map Skill
