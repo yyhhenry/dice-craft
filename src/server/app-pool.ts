@@ -4,7 +4,7 @@ import type { SessionManager } from "../session/manager"
 import type { WorkspaceID } from "../workspace/types"
 import type { ModelConfig } from "../model/openai"
 import type { ChatMessage } from "../chat/types"
-import type { SceneState } from "../shared/schemas"
+import type { ContextUsage, SceneState } from "../shared/schemas"
 import type { ChatCompletionMessageParam } from "openai/resources/chat/completions"
 
 export interface AppPoolDeps {
@@ -31,7 +31,12 @@ export class AppPool {
     workspaceId: WorkspaceID,
     callbacks: {
       onMessage?: (sessionId: string, msg: ChatMessage) => void
-      onStatusChange?: (sessionId: string, primaryActive: boolean, subagentCount: number) => void
+      onStatusChange?: (
+        sessionId: string,
+        primaryActive: boolean,
+        subagentCount: number,
+        contextUsage: ContextUsage,
+      ) => void
       onSceneUpdate?: (sessionId: string, state: SceneState) => void
     },
   ): AppInstance {
@@ -78,11 +83,11 @@ export class AppPool {
 
     // Wire status callbacks
     app.primaryAgent.onStatusChange = (running) => {
-      callbacks.onStatusChange?.(sessionId, running, app.dispatcher.getNpcCount())
+      callbacks.onStatusChange?.(sessionId, running, app.dispatcher.getNpcCount(), app.primaryAgent.getContextUsage())
     }
 
     app.dispatcher.onNpcCountChange = (count) => {
-      callbacks.onStatusChange?.(sessionId, app.primaryAgent.isRunning(), count)
+      callbacks.onStatusChange?.(sessionId, app.primaryAgent.isRunning(), count, app.primaryAgent.getContextUsage())
     }
 
     // Wire message callback — pass message directly to avoid re-reading from disk

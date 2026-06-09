@@ -14,6 +14,20 @@ export const SendMessageSchema = z.object({
 
 export type SendMessagePayload = z.infer<typeof SendMessageSchema>
 
+export const ContextUsageSchema = z.object({
+  rawEstimatedTokens: z.number().int().nonnegative(),
+  contextEstimatedTokens: z.number().int().nonnegative(),
+  thresholdTokens: z.number().int().positive(),
+  percent: z.number().min(0),
+  compacted: z.boolean(),
+  rawMessageCount: z.number().int().nonnegative(),
+  compactedMessageCount: z.number().int().nonnegative(),
+  recentMessageCount: z.number().int().nonnegative(),
+  summaryEstimatedTokens: z.number().int().nonnegative(),
+})
+
+export type ContextUsage = z.infer<typeof ContextUsageSchema>
+
 // --- SceneState schemas ---
 
 export const SceneMapCellSchema = z.object({

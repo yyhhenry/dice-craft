@@ -3,6 +3,7 @@ import { ChatHeader } from "./ChatHeader"
 import { MessageList } from "./MessageList"
 import { ChatInput } from "./ChatInput"
 import { ChatStatus } from "./ChatStatus"
+import { ContextUsage } from "./ContextUsage"
 import { useMessages } from "@/hooks/useMessages"
 import { useWebSocket } from "@/hooks/useWebSocket"
 
@@ -27,7 +28,10 @@ export function ChatView({ sessionId, workspaceId, sessionTitle, onBack }: ChatV
   return (
     <div className="flex h-full min-h-0 flex-col">
       <ChatHeader title={sessionTitle} onBack={onBack}>
-        <ChatStatus status={status} connected={connected} />
+        <div className="flex items-center gap-3">
+          <ChatStatus status={status} connected={connected} />
+          <ContextUsage usage={status.contextUsage} />
+        </div>
       </ChatHeader>
       <MessageList messages={allMessages} loading={loading} />
       <ChatInput onSend={send} disabled={!connected} />

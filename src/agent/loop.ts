@@ -1,6 +1,7 @@
 import type { ChatCompletionMessageParam } from "openai/resources/chat/completions"
 import { OpenAIModel, type StreamCallbacks } from "../model/openai"
 import { ToolRegistry } from "../tool/base"
+import type { ContextUsage } from "../shared/schemas"
 
 export interface PendingEvent {
   source: string
@@ -38,6 +39,7 @@ export class AgentLoop {
   private compactThresholdTokens: number
   private recentTurnsToKeep: number
   private compactState: CompactState | null = null
+  private contextUsage: ContextUsage
   private eventQueue: PendingEvent[] = []
   private savedHistory: ChatCompletionMessageParam[] = []
   private running = false
@@ -53,6 +55,7 @@ export class AgentLoop {
     this.systemPrompt = config.systemPrompt
     this.compactThresholdTokens = config.compactThresholdTokens ?? 12000
     this.recentTurnsToKeep = config.recentTurnsToKeep ?? 6
+    this.contextUsage = this.createContextUsage([], [])
     this.onResponse = config.onResponse
     this.onStatusChange = config.onStatusChange
   }
@@ -60,10 +63,21 @@ export class AgentLoop {
   setHistory(history: ChatCompletionMessageParam[]): void {
     this.savedHistory = [...history]
     this.compactState = null
+    this.contextUsage = this.createContextUsage(
+      this.savedHistory,
+      this.buildInspectableModelMessages(this.savedHistory),
+    )
   }
 
   getHistory(): ChatCompletionMessageParam[] {
     return [...this.savedHistory]
+  }
+
+  getContextUsage(): ContextUsage {
+    const rawMessages = this.savedHistory
+    const modelMessages = this.buildInspectableModelMessages(rawMessages)
+    const usage = this.createContextUsage(rawMessages, modelMessages)
+    return this.contextUsage.contextEstimatedTokens > usage.contextEstimatedTokens ? this.contextUsage : usage
   }
 
   injectEvent(source: string, content: string): void {
@@ -127,6 +141,56 @@ export class AgentLoop {
   private estimateTokens(messages: ChatCompletionMessageParam[]): number {
     const chars = messages.reduce((sum, msg) => sum + JSON.stringify(msg).length, 0)
     return Math.ceil(chars / 4)
+  }
+
+  private estimateTextTokens(text: string | undefined): number {
+    if (!text) return 0
+    return Math.ceil(text.length / 4)
+  }
+
+  private createContextUsage(
+    rawMessages: ChatCompletionMessageParam[],
+    modelMessages: ChatCompletionMessageParam[],
+  ): ContextUsage {
+    const split = this.splitContext(rawMessages)
+    const contextEstimatedTokens = this.estimateTokens(modelMessages)
+    return {
+      rawEstimatedTokens: this.estimateTokens(rawMessages),
+      contextEstimatedTokens,
+      thresholdTokens: this.compactThresholdTokens,
+      percent:
+        this.compactThresholdTokens > 0 ? Math.round((contextEstimatedTokens / this.compactThresholdTokens) * 100) : 0,
+      compacted: Boolean(this.compactState && split),
+      rawMessageCount: rawMessages.length,
+      compactedMessageCount: this.compactState?.compactedMessageCount ?? 0,
+      recentMessageCount: split?.recentMessages.length ?? rawMessages.length,
+      summaryEstimatedTokens: this.estimateTextTokens(this.compactState?.summary),
+    }
+  }
+
+  private buildInspectableModelMessages(rawMessages: ChatCompletionMessageParam[]): ChatCompletionMessageParam[] {
+    const messages: ChatCompletionMessageParam[] = []
+    if (this.systemPrompt) {
+      messages.push({ role: "system", content: this.systemPrompt })
+    }
+
+    const split = this.splitContext(rawMessages)
+    if (!split || !this.compactState) {
+      messages.push(...rawMessages)
+      return messages
+    }
+
+    messages.push({
+      role: "system",
+      content: [
+        "Compact summary of earlier conversation context.",
+        "Use this as authoritative background together with the recent raw messages that follow.",
+        "",
+        this.compactState.summary,
+      ].join("\n"),
+    })
+    messages.push(...split.recentMessages)
+    return messages
   }
 
   private recentStartIndex(messages: ChatCompletionMessageParam[]): number {
@@ -269,6 +333,7 @@ export class AgentLoop {
     const effectiveHistory = history ?? this.savedHistory
     const rawMessages: ChatCompletionMessageParam[] = [...effectiveHistory, { role: "user", content: userMessage }]
     messages.push(...(await this.buildModelContext(rawMessages)))
+    this.contextUsage = this.createContextUsage(rawMessages, messages)
 
     const tools = this.registry.all()
     let iterations = 0
