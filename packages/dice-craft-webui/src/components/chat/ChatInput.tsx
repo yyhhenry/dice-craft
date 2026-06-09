@@ -54,8 +54,8 @@ export function ChatInput({ onSend, disabled, active, children }: ChatInputProps
           rows={2}
           className="w-full resize-none bg-transparent px-4 pt-3 pb-2 text-sm outline-none placeholder:text-muted-foreground disabled:opacity-50"
         />
-        <div className="flex items-center justify-between border-t px-3 py-1.5">
-          <div className="flex items-center">{children}</div>
+        <div className="flex items-center justify-between border-t px-3 py-2">
+          <div className="flex items-center gap-3">{children}</div>
           <Button size="icon" className="h-7 w-7 rounded-lg" onClick={handleSend} disabled={disabled || !value.trim()}>
             <ArrowUp className="h-4 w-4" />
           </Button>

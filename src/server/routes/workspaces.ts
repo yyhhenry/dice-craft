@@ -45,8 +45,13 @@ export function workspaceRoutes(deps: ServerDeps) {
     const parsed = WorkspaceConfigSchema.safeParse(body)
     if (!parsed.success) return c.json({ error: parsed.error.issues }, 400)
 
+    const existing = deps.workspaceManager.getConfig(id)
+    if (existing && parsed.data.apiKey === existing.apiKey.slice(0, 6) + "...") {
+      parsed.data.apiKey = existing.apiKey
+    }
+
     deps.workspaceManager.setConfig(id, parsed.data)
-    return c.json(parsed.data)
+    return c.json({ ...parsed.data, apiKey: parsed.data.apiKey.slice(0, 6) + "..." })
   })
 
   return router
