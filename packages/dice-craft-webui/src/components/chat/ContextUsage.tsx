@@ -34,7 +34,6 @@ export function ContextUsage({ usage }: ContextUsageProps) {
             <div className={`h-full ${tone}`} style={{ width: `${percent}%` }} />
           </div>
           <span>{percent}%</span>
-          {usage.compacted && <span className="text-[10px] uppercase text-sky-600">compact</span>}
         </div>
       </TooltipTrigger>
       <TooltipContent>
