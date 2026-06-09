@@ -10,17 +10,24 @@ Choose a lowercase slug: `[a-z][a-z0-9_]*`, max 40 chars (e.g. `ring_adventure`)
 
 `skills/dnd/instances/<slug>/`
 
-## 3. Files to create
+## 3. Build Loop — 边建边展示
 
-| File | Source |
-|------|--------|
-| `meta.json` | New — title, slug, theme, skill, status, created_at |
-| `world.md` | From `skills/dnd/templates/world.md` |
-| `adventure.json` | From `skills/dnd/templates/adventure.json` |
-| `monsters.json` | From `skills/dnd/templates/monsters.json` |
-| `rules.md` | From `skills/dnd/templates/rules.md` |
-| `items.md` | From `skills/dnd/templates/items.md` |
-| `maps/opening.map.csv` | Optional 6×6 to 10×10 CSV map |
+For each scene/map in the adventure, repeat this cycle:
+
+1. **Create files** — write the map CSV + related data (monsters, items, NPCs for this scene)
+2. **Preview** — `update_scene` with `map.mapFile` pointing at the new map, place relevant characters on grid
+3. **Describe** — `message` to player: scene name, what's here, key NPCs present, atmosphere
+
+Do NOT wait for user confirmation between scenes — keep building. The user sees each scene flash by as a progress indicator.
+
+### File creation order
+
+| Step | Files | Preview |
+|------|-------|---------|
+| Instance skeleton | `meta.json`, `world.md`, `rules.md`, `items.md` | message: 世界观概述 |
+| Adventure structure | `adventure.json` | message: 任务概览 |
+| Scene 1 (opening) | `maps/opening.map.csv`, monsters/NPCs for scene | update_scene + message |
+| Scene 2..N | `maps/<name>.map.csv`, related data | update_scene + message |
 
 ## 4. meta.json
 
@@ -37,24 +44,29 @@ Choose a lowercase slug: `[a-z][a-z0-9_]*`, max 40 chars (e.g. `ring_adventure`)
 
 ## 5. Review
 
-```
-spawn_subagent(review, "Review skills/dnd/instances/<slug>/ using the checklist in skills/dnd/builder.md section 8")
-```
+Run through **Section 9 (Review Checklist)** yourself. Fix critical issues.
 
-Fix critical issues before delivery.
+Only spawn a separate review subagent when:
+- The instance is complex (3+ quests, 5+ NPCs, multiple maps)
+- The user explicitly asks for a thorough review
+
+```
+spawn_subagent(review, "Review skills/dnd/instances/<slug>/ using the checklist in skills/dnd/builder.md section 9")
+```
 
 ## 6. Deliver
 
 `message` to player:
 
-- Adventure title and one-line summary
-- Review verdict
-- **Type `/play <slug>` to start playing**
+- Adventure ready — title and one-line summary
+- Scene count and highlights
+- Any issues found during review
+- Ask if the user wants adjustments or is ready to play
 
 ## 7. Build mode restrictions
 
-- Do NOT use `update_scene`
-- Do NOT spawn `npc` subagents for play
+- Do NOT spawn `npc` subagents (no play-mode dialogue during build)
+- `update_scene` is used for preview only — show maps and NPC placement as you build
 
 ---
 

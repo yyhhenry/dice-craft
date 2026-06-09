@@ -80,21 +80,6 @@ describe("WorkspaceManager", () => {
     expect(manager.get(wsId("ws1"))).toBeUndefined()
   })
 
-  test("initCLI creates default workspace", () => {
-    const ws = manager.initCLI()
-    expect(ws.id).toBe(wsId("cli"))
-    expect(ws.name).toBe("CLI Workspace")
-    expect(fs.existsSync(ws.path)).toBe(true)
-    expect(fs.existsSync(ws.skillsDir)).toBe(true)
-  })
-
-  test("initCLI returns existing workspace on second call", () => {
-    const ws1 = manager.initCLI()
-    const ws2 = manager.initCLI()
-    expect(ws1.id).toBe(ws2.id)
-    expect(ws1.createdAt).toBe(ws2.createdAt)
-  })
-
   test("create workspace copies template skills", () => {
     const ws = manager.create(wsId("tpl-ws"), {
       name: "Template Test",
@@ -110,11 +95,5 @@ describe("WorkspaceManager", () => {
     // SKILL.md should have frontmatter
     const content = fs.readFileSync(path.join(dndDir, "SKILL.md"), "utf-8")
     expect(content).toContain("name: dnd")
-  })
-
-  test("initCLI also copies templates", () => {
-    const ws = manager.initCLI()
-    const dndDir = path.join(ws.path, "skills", "dnd")
-    expect(fs.existsSync(path.join(dndDir, "SKILL.md"))).toBe(true)
   })
 })

@@ -4,7 +4,7 @@ import { type WorkspaceID, type UserID, type WorkspaceInfo } from "./types"
 import { type WorkspaceConfig } from "../shared/schemas"
 import { loadTemplates } from "./templates.macro" with { type: "macro" }
 
-// At bundle time, this becomes a literal { "skills/dice/SKILL.md": "...", ... }
+// At bundle time, this becomes a literal { "skills/dnd/SKILL.md": "...", ... }
 const TEMPLATES = loadTemplates()
 
 export class WorkspaceManager {
@@ -14,13 +14,6 @@ export class WorkspaceManager {
   constructor(baseDir: string) {
     this.baseDir = path.resolve(baseDir)
     this.metaDir = path.join(this.baseDir, ".meta")
-  }
-
-  initCLI(): WorkspaceInfo {
-    const id = "cli" as WorkspaceID
-    const existing = this.get(id)
-    if (existing) return existing
-    return this.create(id, { name: "CLI Workspace", ownerId: "local" as UserID })
   }
 
   create(id: WorkspaceID, opts: { name: string; ownerId: UserID }): WorkspaceInfo {
