@@ -414,6 +414,7 @@ export class AgentLoop {
         rawMessages.push(...eventMessages)
 
         this.estimator.update(rawMessages)
+        this.savedHistory = [...rawMessages]
         continue
       }
 

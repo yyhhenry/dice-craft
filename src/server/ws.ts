@@ -4,6 +4,7 @@ import type { SessionManager } from "../session/manager"
 import type { ChatMessage } from "../chat/types"
 import type { WorkspaceID } from "../workspace/types"
 import type { ContextUsage, SceneState } from "../shared/schemas"
+import type { App } from "../app"
 
 export interface WsData {
   sessionId: string
@@ -84,6 +85,7 @@ export class WsManager {
               current.app.dispatcher.getNpcCount(),
               current.app.primaryAgent.getContextUsage(),
             )
+            this.saveHistory(sid, current.app)
           }
         },
         onStatusChange: (sid, primaryActive, npcCount, contextUsage) =>
@@ -125,15 +127,19 @@ export class WsManager {
     app.primaryAgent
       .waitForIdle()
       .then(() => {
-        const history = app.primaryAgent.getHistory()
-        this.sessionManager.clearMessages(sessionId)
-        for (const msg of history) {
-          this.sessionManager.appendMessage(sessionId, msg)
-        }
+        this.saveHistory(sessionId, app)
         this.sessionManager.saveCompactState(sessionId, app.primaryAgent.getCompactState())
         this.sendStatus(sessionId, false, app.dispatcher.getNpcCount(), app.primaryAgent.getContextUsage())
       })
       .catch(() => {})
+  }
+
+  private saveHistory(sessionId: string, app: App): void {
+    const history = app.primaryAgent.getHistory()
+    this.sessionManager.clearMessages(sessionId)
+    for (const msg of history) {
+      this.sessionManager.appendMessage(sessionId, msg)
+    }
   }
 
   private broadcastMessage(sessionId: string, msg: ChatMessage): void {

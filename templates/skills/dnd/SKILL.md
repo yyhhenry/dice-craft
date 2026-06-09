@@ -9,10 +9,12 @@ Build and play DND-style tabletop adventures. Also load `skill("map")` for CSV g
 
 ## Modes
 
+**Default is Build mode.** Only enter Play mode when the user explicitly says to play/start (e.g. "开始玩", "play").
+
 | Mode | Doc | When |
 |------|-----|------|
-| Build | `builder.md` | Creating a new adventure instance |
-| Play (GM) | `gm.md` | Running a game session as DM |
+| Build | `builder.md` | Default — creating or editing adventure content |
+| Play (GM) | `gm.md` | User explicitly says to play/start a game |
 
 ## Directory Layout
 
