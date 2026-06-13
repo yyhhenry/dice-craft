@@ -18,8 +18,8 @@ export class VoiceSynthesizer {
         { role: "user", content: description },
         { role: "assistant", content: text },
       ],
-      modalities: ["audio"],
-      audio: { format: "wav", voice: "alloy" },
+      // @ts-expect-error MiMo TTS: audio without voice field (voicedesign generates its own)
+      audio: { format: "wav" },
     })
 
     return this.extractAudio(response)
@@ -31,7 +31,6 @@ export class VoiceSynthesizer {
     const response = await this.client.chat.completions.create({
       model: "mimo-v2.5-tts-voiceclone",
       messages: [{ role: "assistant", content: text }],
-      modalities: ["audio"],
       audio: { format: "wav", voice: dataUrl },
     })
 
