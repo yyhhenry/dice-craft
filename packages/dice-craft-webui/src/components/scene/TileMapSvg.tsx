@@ -3,9 +3,24 @@ import type { SceneMap, SceneCharacter } from "@shared/schemas"
 import { CELL_SIZE, PATTERN_SIZE, ROLE_COLORS, OVERLAY_SYMBOLS, resolveTerrainPattern } from "./terrain"
 import { getAvatarText } from "@/lib/utils"
 
+export interface CellClickInfo {
+  x: number
+  y: number
+  screenX: number
+  screenY: number
+}
+
+export interface CharacterClickInfo {
+  character: SceneCharacter
+  screenX: number
+  screenY: number
+}
+
 interface TileMapSvgProps {
   map: SceneMap
   characters: SceneCharacter[]
+  onCellClick?: (info: CellClickInfo) => void
+  onCharacterClick?: (info: CharacterClickInfo) => void
 }
 
 function parseLocation(loc?: string): { x: number; y: number } | null {
@@ -18,7 +33,7 @@ function parseLocation(loc?: string): { x: number; y: number } | null {
   return { x, y }
 }
 
-export function TileMapSvg({ map, characters }: TileMapSvgProps) {
+export function TileMapSvg({ map, characters, onCellClick, onCharacterClick }: TileMapSvgProps) {
   const { width = 0, height = 0, cells = [], overlays = [], labels = [] } = map
   const C = CELL_SIZE
 
@@ -29,7 +44,9 @@ export function TileMapSvg({ map, characters }: TileMapSvgProps) {
   const defaultVB = { x: -PAD, y: -PAD, w: svgW + PAD * 2, h: svgH + PAD * 2 }
   const [viewBox, setViewBox] = useState(defaultVB)
   const [dragging, setDragging] = useState(false)
+  const [hoveredCell, setHoveredCell] = useState<{ x: number; y: number } | null>(null)
   const dragStart = useRef({ x: 0, y: 0, vx: 0, vy: 0 })
+  const dragMoved = useRef(false)
   const svgRef = useRef<SVGSVGElement>(null)
 
   const prevDims = useRef({ w: svgW, h: svgH })
@@ -75,6 +92,7 @@ export function TileMapSvg({ map, characters }: TileMapSvgProps) {
     (e: React.MouseEvent) => {
       if (e.button !== 0) return
       setDragging(true)
+      dragMoved.current = false
       dragStart.current = { x: e.clientX, y: e.clientY, vx: viewBox.x, vy: viewBox.y }
     },
     [viewBox],
@@ -82,24 +100,74 @@ export function TileMapSvg({ map, characters }: TileMapSvgProps) {
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent) => {
-      if (!dragging) return
+      const svg = svgRef.current
+      if (!svg) return
+
+      if (dragging) {
+        dragMoved.current = true
+        const rect = svg.getBoundingClientRect()
+        const scale = viewBox.w / rect.width
+        const dx = (e.clientX - dragStart.current.x) * scale
+        const dy = (e.clientY - dragStart.current.y) * scale
+        setViewBox((v) => ({
+          ...v,
+          x: dragStart.current.vx - dx,
+          y: dragStart.current.vy - dy,
+        }))
+      } else {
+        // Hover detection
+        const rect = svg.getBoundingClientRect()
+        const svgX = ((e.clientX - rect.left) / rect.width) * viewBox.w + viewBox.x
+        const svgY = ((e.clientY - rect.top) / rect.height) * viewBox.h + viewBox.y
+        const cellX = Math.floor(svgX / C)
+        const cellY = Math.floor(svgY / C)
+        if (cellX >= 0 && cellX < width && cellY >= 0 && cellY < height) {
+          setHoveredCell({ x: cellX, y: cellY })
+        } else {
+          setHoveredCell(null)
+        }
+      }
+    },
+    [dragging, viewBox, C, width, height],
+  )
+
+  const handleMouseUp = useCallback(
+    (e: React.MouseEvent) => {
+      const wasDragging = dragMoved.current
+      setDragging(false)
+      if (wasDragging) return
+
+      // Click (not drag) — determine what was clicked
       const svg = svgRef.current
       if (!svg) return
       const rect = svg.getBoundingClientRect()
-      const scale = viewBox.w / rect.width
-      const dx = (e.clientX - dragStart.current.x) * scale
-      const dy = (e.clientY - dragStart.current.y) * scale
-      setViewBox((v) => ({
-        ...v,
-        x: dragStart.current.vx - dx,
-        y: dragStart.current.vy - dy,
-      }))
+      const svgX = ((e.clientX - rect.left) / rect.width) * viewBox.w + viewBox.x
+      const svgY = ((e.clientY - rect.top) / rect.height) * viewBox.h + viewBox.y
+      const cellX = Math.floor(svgX / C)
+      const cellY = Math.floor(svgY / C)
+
+      // Check if a character was clicked
+      const clickedChar = visibleChars.find((ch) => {
+        const pos = parseLocation(ch.location)
+        if (!pos) return false
+        const cx = pos.x * C + C / 2
+        const cy = pos.y * C + C / 2
+        const dist = Math.hypot(svgX - cx, svgY - cy)
+        return dist < C * 0.4
+      })
+
+      if (clickedChar && onCharacterClick) {
+        onCharacterClick({ character: clickedChar, screenX: e.clientX, screenY: e.clientY })
+      } else if (cellX >= 0 && cellX < width && cellY >= 0 && cellY < height && onCellClick) {
+        onCellClick({ x: cellX, y: cellY, screenX: e.clientX, screenY: e.clientY })
+      }
     },
-    [dragging, viewBox.w],
+    [viewBox, C, width, height, visibleChars, onCellClick, onCharacterClick],
   )
 
-  const handleMouseUp = useCallback(() => {
+  const handleMouseLeave = useCallback(() => {
     setDragging(false)
+    setHoveredCell(null)
   }, [])
 
   if (width <= 0 || height <= 0) return null
@@ -114,7 +182,7 @@ export function TileMapSvg({ map, characters }: TileMapSvgProps) {
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp}
+      onMouseLeave={handleMouseLeave}
     >
       {/* Pattern definitions — pixel art tiles */}
       <defs>
@@ -206,6 +274,20 @@ export function TileMapSvg({ map, characters }: TileMapSvgProps) {
           {l.text}
         </text>
       ))}
+
+      {/* Hover highlight */}
+      {hoveredCell && !dragging && (
+        <rect
+          x={hoveredCell.x * C}
+          y={hoveredCell.y * C}
+          width={C}
+          height={C}
+          fill="rgba(255,255,255,0.1)"
+          stroke="rgba(255,255,255,0.4)"
+          strokeWidth={1}
+          style={{ pointerEvents: "none" }}
+        />
+      )}
 
       {/* Character tokens */}
       {visibleChars.map((ch) => {

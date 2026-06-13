@@ -8,9 +8,10 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 
 interface PlaySurfaceProps {
   scene: SceneState | null
+  onSend?: (content: string) => void
 }
 
-export function PlaySurface({ scene }: PlaySurfaceProps) {
+export function PlaySurface({ scene, onSend }: PlaySurfaceProps) {
   const hasContent = scene && scene.version > 0
 
   const otherCharacters = useMemo(
@@ -51,7 +52,7 @@ export function PlaySurface({ scene }: PlaySurfaceProps) {
         )}
 
         <div className="min-w-0 flex-1 overflow-hidden rounded-2xl">
-          <MapPanel scene={scene} />
+          <MapPanel scene={scene} onSend={onSend} />
         </div>
       </div>
 

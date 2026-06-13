@@ -80,7 +80,7 @@ export function App() {
                     <span className="text-xs font-medium text-foreground">Scene</span>
                   </div>
                 )}
-                <PlaySurface scene={scene} />
+                <PlaySurface scene={scene} onSend={send} />
               </div>
             </ResizablePanel>
             <ResizableHandle />

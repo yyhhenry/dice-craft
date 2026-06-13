@@ -1,12 +1,41 @@
+import { useState, useCallback } from "react"
 import type { SceneState } from "@shared/schemas"
-import { TileMapSvg } from "./TileMapSvg"
+import { TileMapSvg, type CellClickInfo, type CharacterClickInfo } from "./TileMapSvg"
+import { MapActionMenu } from "./MapActionMenu"
 import { Dice5 } from "lucide-react"
 
 interface MapPanelProps {
   scene: SceneState | null
+  onSend?: (content: string) => void
 }
 
-export function MapPanel({ scene }: MapPanelProps) {
+type MenuState =
+  | { type: "cell"; x: number; y: number; screenX: number; screenY: number }
+  | { type: "character"; character: SceneState["characters"][number]; screenX: number; screenY: number }
+  | null
+
+export function MapPanel({ scene, onSend }: MapPanelProps) {
+  const [menu, setMenu] = useState<MenuState>(null)
+
+  const handleCellClick = useCallback((info: CellClickInfo) => {
+    setMenu({ type: "cell", x: info.x, y: info.y, screenX: info.screenX, screenY: info.screenY })
+  }, [])
+
+  const handleCharacterClick = useCallback((info: CharacterClickInfo) => {
+    setMenu({ type: "character", character: info.character, screenX: info.screenX, screenY: info.screenY })
+  }, [])
+
+  const handleAction = useCallback(
+    (event: string) => {
+      onSend?.(event)
+    },
+    [onSend],
+  )
+
+  const handleCloseMenu = useCallback(() => {
+    setMenu(null)
+  }, [])
+
   if (!scene) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -32,8 +61,25 @@ export function MapPanel({ scene }: MapPanelProps) {
   }
 
   return (
-    <div className="h-full">
-      <TileMapSvg map={scene.map} characters={scene.characters} />
+    <div className="relative h-full">
+      <TileMapSvg
+        map={scene.map}
+        characters={scene.characters}
+        onCellClick={handleCellClick}
+        onCharacterClick={handleCharacterClick}
+      />
+      {menu && (
+        <MapActionMenu
+          position={{ x: menu.screenX, y: menu.screenY }}
+          target={
+            menu.type === "cell"
+              ? { type: "cell", x: menu.x, y: menu.y }
+              : { type: "character", character: menu.character }
+          }
+          onAction={handleAction}
+          onClose={handleCloseMenu}
+        />
+      )}
     </div>
   )
 }
