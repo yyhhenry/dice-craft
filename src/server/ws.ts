@@ -111,23 +111,32 @@ export class WsManager {
 
     const { app } = instance
 
-    // Update session title from first user message
-    const session = this.sessionManager.get(sessionId)
-    if (session && session.title === "New conversation") {
-      this.sessionManager.update(sessionId, { title: content.slice(0, 50) })
+    const isMapEvent = content.startsWith("<event")
+
+    // Update session title from first user message (not for map events)
+    if (!isMapEvent) {
+      const session = this.sessionManager.get(sessionId)
+      if (session && session.title === "New conversation") {
+        this.sessionManager.update(sessionId, { title: content.slice(0, 50) })
+      }
     }
 
-    // Write user message to chat (triggers onMessage → broadcast)
-    app.chatManager.sendMessage(sessionId, {
-      content,
-      senderId: "user",
-      senderName: "Player",
-      senderRole: "user",
-    })
+    if (isMapEvent) {
+      // Map events go directly to agent without appearing in chat
+      app.primaryAgent.receiveMessage(content)
+    } else {
+      // Write user message to chat (triggers onMessage → broadcast)
+      app.chatManager.sendMessage(sessionId, {
+        content,
+        senderId: "user",
+        senderName: "Player",
+        senderRole: "user",
+      })
 
-    // Send to primary agent (non-blocking)
-    const chatXml = `<chat sender="user" sender_name="Player">${content}</chat>`
-    app.primaryAgent.receiveMessage(chatXml)
+      // Send to primary agent (non-blocking)
+      const chatXml = `<chat sender="user" sender_name="Player">${content}</chat>`
+      app.primaryAgent.receiveMessage(chatXml)
+    }
 
     // Persist history when agent finishes
     app.primaryAgent

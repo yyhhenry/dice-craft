@@ -5,13 +5,13 @@ import type { ChatMessage } from "@/lib/api"
 interface MessageListProps {
   messages: ChatMessage[]
   loading: boolean
+  autoPlayIds?: Set<string>
 }
 
-export function MessageList({ messages, loading }: MessageListProps) {
+export function MessageList({ messages, loading, autoPlayIds }: MessageListProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
-  const seenIdsRef = useRef<Set<string>>(new Set())
-  const initializedRef = useRef(false)
+  const playedIdsRef = useRef<Set<string>>(new Set())
   const [voiceQueue, setVoiceQueue] = useState<string[]>([])
   const [playingId, setPlayingId] = useState<string | null>(null)
 
@@ -19,30 +19,20 @@ export function MessageList({ messages, loading }: MessageListProps) {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
 
-  // Detect new voice messages and queue them for auto-play
-  // Skip auto-play for the initial batch (history load)
+  // Queue new auto-play voice messages
   useEffect(() => {
-    if (!initializedRef.current && messages.length > 0) {
-      initializedRef.current = true
-      for (const msg of messages) {
-        seenIdsRef.current.add(msg.id)
-      }
-      return
-    }
-
-    const newVoiceIds: string[] = []
-    for (const msg of messages) {
-      if (!seenIdsRef.current.has(msg.id)) {
-        seenIdsRef.current.add(msg.id)
-        if (msg.voice) {
-          newVoiceIds.push(msg.id)
-        }
+    if (!autoPlayIds || autoPlayIds.size === 0) return
+    const newIds: string[] = []
+    for (const id of autoPlayIds) {
+      if (!playedIdsRef.current.has(id)) {
+        playedIdsRef.current.add(id)
+        newIds.push(id)
       }
     }
-    if (newVoiceIds.length > 0) {
-      setVoiceQueue((prev) => [...prev, ...newVoiceIds])
+    if (newIds.length > 0) {
+      setVoiceQueue((prev) => [...prev, ...newIds])
     }
-  }, [messages])
+  }, [autoPlayIds])
 
   // Start playing next in queue when nothing is playing
   useEffect(() => {

@@ -7,7 +7,9 @@
   "private": true,
   "workspaces": ["packages/*"],
   "scripts": {
-    "dev": "bun run src/index.ts",
+    "dev": "bun run dev:backend & bun run dev:webui & wait",
+    "dev:backend": "bun run src/index.ts",
+    "dev:webui": "cd packages/dice-craft-webui && bun run dev",
     "build:webui": "cd packages/dice-craft-webui && bun run build",
     "test": "bun test tests/",
     "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",

@@ -26,6 +26,12 @@ export function ChatPanel({ sessionId, wsMessages, status, connected, send, acti
     return [...historyMessages, ...newMsgs]
   }, [historyMessages, wsMessages])
 
+  // Only auto-play voice from WS messages (not history)
+  const autoPlayIds = useMemo(() => {
+    const historyIds = new Set(historyMessages.map((m) => m.id))
+    return new Set(wsMessages.filter((m) => m.voice && !historyIds.has(m.id)).map((m) => m.id))
+  }, [historyMessages, wsMessages])
+
   return (
     <div className="relative flex h-full flex-col">
       {active && (
@@ -35,7 +41,7 @@ export function ChatPanel({ sessionId, wsMessages, status, connected, send, acti
         </div>
       )}
       <div className="h-8 shrink-0" />
-      <MessageList messages={allMessages} loading={loading} />
+      <MessageList messages={allMessages} loading={loading} autoPlayIds={autoPlayIds} />
       <ChatInput onSend={send} disabled={!connected} active={active}>
         <ChatStatus status={status} connected={connected} />
         <ContextUsage usage={status.contextUsage} />

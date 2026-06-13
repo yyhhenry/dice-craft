@@ -75,6 +75,11 @@ export const SceneMapSchema = z.object({
 
 export const CharacterRoleSchema = z.enum(["npc", "player", "enemy", "ally", "neutral"])
 
+export const CharacterActionSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+})
+
 export const SceneCharacterSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -84,6 +89,8 @@ export const SceneCharacterSchema = z.object({
   status: z.string().optional(),
   location: z.string().optional(),
   hidden: z.boolean().optional(),
+  movePath: z.array(z.string()).optional(),
+  actions: z.array(CharacterActionSchema).optional(),
 })
 
 export const SceneObjectiveSchema = z.object({

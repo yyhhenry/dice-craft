@@ -79,6 +79,23 @@ export function createUpdateSceneTool(
               status: { type: "string" },
               location: { type: "string", description: 'Grid position as "x,y"' },
               hidden: { type: "boolean", description: "Set true to hide from the player" },
+              movePath: {
+                type: "array",
+                items: { type: "string" },
+                description: 'Movement path as array of "x,y" from start to end. Triggers animation on frontend.',
+              },
+              actions: {
+                type: "array",
+                description: "Custom interaction actions shown when player clicks this character.",
+                items: {
+                  type: "object",
+                  properties: {
+                    id: { type: "string", description: "Action identifier (e.g. attack, heal, trade)" },
+                    label: { type: "string", description: "Display text (e.g. 攻击, 治疗, 交易)" },
+                  },
+                  required: ["id", "label"],
+                },
+              },
             },
             required: ["id"],
           },

@@ -1,11 +1,27 @@
-import { useState, useCallback, useRef, useMemo } from "react"
+import { useState, useCallback, useRef, useMemo, useEffect } from "react"
 import type { SceneMap, SceneCharacter } from "@shared/schemas"
 import { CELL_SIZE, PATTERN_SIZE, ROLE_COLORS, OVERLAY_SYMBOLS, resolveTerrainPattern } from "./terrain"
 import { getAvatarText } from "@/lib/utils"
 
+export interface CellClickInfo {
+  x: number
+  y: number
+  screenX: number
+  screenY: number
+}
+
+export interface CharacterClickInfo {
+  character: SceneCharacter
+  screenX: number
+  screenY: number
+}
+
 interface TileMapSvgProps {
   map: SceneMap
   characters: SceneCharacter[]
+  replayTrigger?: number
+  onCellClick?: (info: CellClickInfo) => void
+  onCharacterClick?: (info: CharacterClickInfo) => void
 }
 
 function parseLocation(loc?: string): { x: number; y: number } | null {
@@ -18,7 +34,17 @@ function parseLocation(loc?: string): { x: number; y: number } | null {
   return { x, y }
 }
 
-export function TileMapSvg({ map, characters }: TileMapSvgProps) {
+function svgPoint(svg: SVGSVGElement, clientX: number, clientY: number): { x: number; y: number } | null {
+  const ctm = svg.getScreenCTM()
+  if (!ctm) return null
+  const pt = svg.createSVGPoint()
+  pt.x = clientX
+  pt.y = clientY
+  const transformed = pt.matrixTransform(ctm.inverse())
+  return { x: transformed.x, y: transformed.y }
+}
+
+export function TileMapSvg({ map, characters, replayTrigger, onCellClick, onCharacterClick }: TileMapSvgProps) {
   const { width = 0, height = 0, cells = [], overlays = [], labels = [] } = map
   const C = CELL_SIZE
 
@@ -29,7 +55,11 @@ export function TileMapSvg({ map, characters }: TileMapSvgProps) {
   const defaultVB = { x: -PAD, y: -PAD, w: svgW + PAD * 2, h: svgH + PAD * 2 }
   const [viewBox, setViewBox] = useState(defaultVB)
   const [dragging, setDragging] = useState(false)
+  const [hoveredCell, setHoveredCell] = useState<{ x: number; y: number } | null>(null)
+  const [animPositions, setAnimPositions] = useState<Map<string, { x: number; y: number }>>(new Map())
+  const prevPathsRef = useRef<Map<string, string>>(new Map())
   const dragStart = useRef({ x: 0, y: 0, vx: 0, vy: 0 })
+  const dragMoved = useRef(false)
   const svgRef = useRef<SVGSVGElement>(null)
 
   const prevDims = useRef({ w: svgW, h: svgH })
@@ -45,15 +75,115 @@ export function TileMapSvg({ map, characters }: TileMapSvgProps) {
 
   const visibleChars = useMemo(() => characters.filter((c) => !c.hidden), [characters])
 
+  // Detect new movePaths and trigger animation
+  useEffect(() => {
+    const newAnims: { charId: string; path: { x: number; y: number }[] }[] = []
+
+    for (const ch of characters) {
+      if (!ch.movePath || ch.movePath.length < 2) continue
+      const pathKey = ch.movePath.join("|")
+      if (prevPathsRef.current.get(ch.id) === pathKey) continue
+      prevPathsRef.current.set(ch.id, pathKey)
+
+      const parsed = ch.movePath.map(parseLocation).filter(Boolean) as { x: number; y: number }[]
+      if (parsed.length >= 2) {
+        newAnims.push({ charId: ch.id, path: parsed })
+      }
+    }
+
+    if (newAnims.length === 0) return
+
+    // Start all animations
+    const STEP_MS = 250
+    let step = 0
+    const maxSteps = Math.max(...newAnims.map((a) => a.path.length))
+
+    // Set initial positions
+    setAnimPositions((prev) => {
+      const next = new Map(prev)
+      for (const anim of newAnims) {
+        next.set(anim.charId, anim.path[0]!)
+      }
+      return next
+    })
+
+    const interval = setInterval(() => {
+      step++
+      if (step >= maxSteps - 1) {
+        clearInterval(interval)
+        setAnimPositions((prev) => {
+          const next = new Map(prev)
+          for (const anim of newAnims) {
+            next.delete(anim.charId)
+          }
+          return next
+        })
+        return
+      }
+      setAnimPositions((prev) => {
+        const next = new Map(prev)
+        for (const anim of newAnims) {
+          if (step < anim.path.length) {
+            next.set(anim.charId, anim.path[step]!)
+          }
+        }
+        return next
+      })
+    }, STEP_MS)
+
+    return () => clearInterval(interval)
+  }, [characters])
+
+  // Replay all current movePaths when replayTrigger changes
+  useEffect(() => {
+    if (replayTrigger === undefined || replayTrigger === 0) return
+
+    const anims: { charId: string; path: { x: number; y: number }[] }[] = []
+    for (const ch of characters) {
+      if (!ch.movePath || ch.movePath.length < 2) continue
+      const parsed = ch.movePath.map(parseLocation).filter(Boolean) as { x: number; y: number }[]
+      if (parsed.length >= 2) anims.push({ charId: ch.id, path: parsed })
+    }
+    if (anims.length === 0) return
+
+    const STEP_MS = 250
+    let step = 0
+    const maxSteps = Math.max(...anims.map((a) => a.path.length))
+
+    setAnimPositions(() => {
+      const m = new Map<string, { x: number; y: number }>()
+      for (const a of anims) m.set(a.charId, a.path[0]!)
+      return m
+    })
+
+    const interval = setInterval(() => {
+      step++
+      if (step >= maxSteps - 1) {
+        clearInterval(interval)
+        setAnimPositions(new Map())
+        return
+      }
+      setAnimPositions(() => {
+        const m = new Map<string, { x: number; y: number }>()
+        for (const a of anims) {
+          if (step < a.path.length) m.set(a.charId, a.path[step]!)
+        }
+        return m
+      })
+    }, STEP_MS)
+
+    return () => clearInterval(interval)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [replayTrigger])
+
   const handleWheel = useCallback(
     (e: React.WheelEvent) => {
       e.preventDefault()
       const svg = svgRef.current
       if (!svg) return
 
-      const rect = svg.getBoundingClientRect()
-      const mx = ((e.clientX - rect.left) / rect.width) * viewBox.w + viewBox.x
-      const my = ((e.clientY - rect.top) / rect.height) * viewBox.h + viewBox.y
+      const pt = svgPoint(svg, e.clientX, e.clientY)
+      if (!pt) return
 
       const factor = e.deltaY > 0 ? 1.1 : 0.9
       const minW = svgW * 0.25
@@ -62,8 +192,8 @@ export function TileMapSvg({ map, characters }: TileMapSvgProps) {
       const nh = (nw / svgW) * svgH
 
       setViewBox({
-        x: mx - ((mx - viewBox.x) / viewBox.w) * nw,
-        y: my - ((my - viewBox.y) / viewBox.h) * nh,
+        x: pt.x - ((pt.x - viewBox.x) / viewBox.w) * nw,
+        y: pt.y - ((pt.y - viewBox.y) / viewBox.h) * nh,
         w: nw,
         h: nh,
       })
@@ -75,6 +205,7 @@ export function TileMapSvg({ map, characters }: TileMapSvgProps) {
     (e: React.MouseEvent) => {
       if (e.button !== 0) return
       setDragging(true)
+      dragMoved.current = false
       dragStart.current = { x: e.clientX, y: e.clientY, vx: viewBox.x, vy: viewBox.y }
     },
     [viewBox],
@@ -82,24 +213,73 @@ export function TileMapSvg({ map, characters }: TileMapSvgProps) {
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent) => {
-      if (!dragging) return
       const svg = svgRef.current
       if (!svg) return
-      const rect = svg.getBoundingClientRect()
-      const scale = viewBox.w / rect.width
-      const dx = (e.clientX - dragStart.current.x) * scale
-      const dy = (e.clientY - dragStart.current.y) * scale
-      setViewBox((v) => ({
-        ...v,
-        x: dragStart.current.vx - dx,
-        y: dragStart.current.vy - dy,
-      }))
+
+      if (dragging) {
+        dragMoved.current = true
+        const rect = svg.getBoundingClientRect()
+        const scale = viewBox.w / rect.width
+        const dx = (e.clientX - dragStart.current.x) * scale
+        const dy = (e.clientY - dragStart.current.y) * scale
+        setViewBox((v) => ({
+          ...v,
+          x: dragStart.current.vx - dx,
+          y: dragStart.current.vy - dy,
+        }))
+      } else {
+        // Hover detection
+        const pt = svgPoint(svg, e.clientX, e.clientY)
+        if (pt) {
+          const cellX = Math.floor(pt.x / C)
+          const cellY = Math.floor(pt.y / C)
+          if (cellX >= 0 && cellX < width && cellY >= 0 && cellY < height) {
+            setHoveredCell({ x: cellX, y: cellY })
+          } else {
+            setHoveredCell(null)
+          }
+        }
+      }
     },
-    [dragging, viewBox.w],
+    [dragging, viewBox, C, width, height],
   )
 
-  const handleMouseUp = useCallback(() => {
+  const handleMouseUp = useCallback(
+    (e: React.MouseEvent) => {
+      const wasDragging = dragMoved.current
+      setDragging(false)
+      if (wasDragging) return
+
+      // Click (not drag) — determine what was clicked
+      const svg = svgRef.current
+      if (!svg) return
+      const pt = svgPoint(svg, e.clientX, e.clientY)
+      if (!pt) return
+      const cellX = Math.floor(pt.x / C)
+      const cellY = Math.floor(pt.y / C)
+
+      // Check if a character was clicked
+      const clickedChar = visibleChars.find((ch) => {
+        const pos = parseLocation(ch.location)
+        if (!pos) return false
+        const cx = pos.x * C + C / 2
+        const cy = pos.y * C + C / 2
+        const dist = Math.hypot(pt.x - cx, pt.y - cy)
+        return dist < C * 0.4
+      })
+
+      if (clickedChar && onCharacterClick) {
+        onCharacterClick({ character: clickedChar, screenX: e.clientX, screenY: e.clientY })
+      } else if (cellX >= 0 && cellX < width && cellY >= 0 && cellY < height && onCellClick) {
+        onCellClick({ x: cellX, y: cellY, screenX: e.clientX, screenY: e.clientY })
+      }
+    },
+    [C, width, height, visibleChars, onCellClick, onCharacterClick],
+  )
+
+  const handleMouseLeave = useCallback(() => {
     setDragging(false)
+    setHoveredCell(null)
   }, [])
 
   if (width <= 0 || height <= 0) return null
@@ -114,7 +294,7 @@ export function TileMapSvg({ map, characters }: TileMapSvgProps) {
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp}
+      onMouseLeave={handleMouseLeave}
     >
       {/* Pattern definitions — pixel art tiles */}
       <defs>
@@ -207,9 +387,24 @@ export function TileMapSvg({ map, characters }: TileMapSvgProps) {
         </text>
       ))}
 
+      {/* Hover highlight */}
+      {hoveredCell && !dragging && (
+        <rect
+          x={hoveredCell.x * C}
+          y={hoveredCell.y * C}
+          width={C}
+          height={C}
+          fill="rgba(255,255,255,0.1)"
+          stroke="rgba(255,255,255,0.4)"
+          strokeWidth={1}
+          style={{ pointerEvents: "none" }}
+        />
+      )}
+
       {/* Character tokens */}
       {visibleChars.map((ch) => {
-        const pos = parseLocation(ch.location)
+        const animPos = animPositions.get(ch.id)
+        const pos = animPos ?? parseLocation(ch.location)
         if (!pos) return null
         const cx = pos.x * C + C / 2
         const cy = pos.y * C + C / 2
@@ -218,7 +413,7 @@ export function TileMapSvg({ map, characters }: TileMapSvgProps) {
         const avatarText = getAvatarText(ch.name)
         const fontSize = avatarText.length > 1 ? C * 0.22 : C * 0.28
         return (
-          <g key={`ch-${ch.id}`}>
+          <g key={`ch-${ch.id}`} style={{ transition: animPos ? "transform 0.2s ease" : "none" }}>
             <circle cx={cx} cy={cy} r={r} fill={color} stroke="#fff" strokeWidth={1.5} />
             <text
               x={cx}
