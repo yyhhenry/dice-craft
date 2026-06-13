@@ -13,9 +13,9 @@ export function createNotifyTool(notifyFn: NotifyFn): Tool {
     description:
       "Send a notification to one or more NPC agents. " +
       "Use this to forward user messages to NPCs, inform NPCs of scene events, " +
-      "or instruct NPCs to respond. " +
+      "or prompt NPCs to react. " +
       "This does NOT write to the chat - it only sends to the NPC's context. " +
-      "The NPC will use their own message tool to speak if expect_reply is true.",
+      "The NPC decides whether to speak based on the notification content.",
     parameters: {
       type: "object",
       properties: {
@@ -35,7 +35,10 @@ export function createNotifyTool(notifyFn: NotifyFn): Tool {
               },
               expect_reply: {
                 type: "boolean",
-                description: "Whether the NPC should reply via message tool (default false, just update context)",
+                description:
+                  "Whether to wait for the NPC to finish processing before continuing. " +
+                  "true = block until NPC is done (use when you need their response before your next action). " +
+                  "false = fire and forget (default, NPC processes in background).",
               },
             },
             required: ["session_id"],
