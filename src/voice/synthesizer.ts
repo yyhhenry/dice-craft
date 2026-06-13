@@ -18,8 +18,8 @@ export class VoiceSynthesizer {
         { role: "user", content: description },
         { role: "assistant", content: text },
       ],
-      // @ts-expect-error MiMo TTS extension: audio param not in OpenAI types
-      audio: { format: "wav" },
+      modalities: ["audio"],
+      audio: { format: "wav", voice: "alloy" },
     })
 
     return this.extractAudio(response)
@@ -31,6 +31,7 @@ export class VoiceSynthesizer {
     const response = await this.client.chat.completions.create({
       model: "mimo-v2.5-tts-voiceclone",
       messages: [{ role: "assistant", content: text }],
+      modalities: ["audio"],
       audio: { format: "wav", voice: dataUrl },
     })
 
@@ -38,9 +39,7 @@ export class VoiceSynthesizer {
   }
 
   private extractAudio(response: OpenAI.ChatCompletion): Buffer {
-    const message = response.choices[0]?.message
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const audio = (message as any)?.audio
+    const audio = response.choices[0]?.message.audio
     if (!audio?.data) {
       throw new Error("No audio data returned from TTS API")
     }
