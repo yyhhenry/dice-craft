@@ -1,36 +1,36 @@
 ---
 name: dnd
-description: "Load when user wants to create or play a DND/TRPG adventure. Provides build workflow, GM play mode, d20 scripts, NPC subagent flow, and scene integration."
+description: "DND/TRPG 冒险创建与游玩。提供构建工作流、GM 游玩模式、d20 脚本、NPC 子 agent 流程、场景集成。"
 ---
 
-# DND Skill
+# DND 技能
 
-Build and play DND-style tabletop adventures. Also load `skill("map")` for CSV grid maps and `update_scene`.
+构建和游玩 DND 风格的桌游冒险。同时加载 `skill("map")` 获取 CSV 网格地图和 `update_scene` 规则。
 
-## Modes
+## 模式
 
-**Default is Build mode.** Only enter Play mode when the user explicitly says to play/start (e.g. "开始玩", "play").
+**默认 Build 模式。** 只有用户明确说要玩/开始（如"开始玩"、"play"）时才进入 Play 模式。
 
-| Mode | Doc | When |
-|------|-----|------|
-| Build | `builder.md` | Default — creating or editing adventure content |
-| Play (GM) | `gm.md` | User explicitly says to play/start a game |
+| 模式 | 文档 | 触发条件 |
+|------|------|----------|
+| Build | `builder.md` | 默认 — 创建或编辑冒险内容 |
+| Play (GM) | `gm.md` | 用户明确说要开始游戏 |
 
-## Directory Layout
+## 目录结构
 
 ```
 skills/dnd/
-├── SKILL.md            (this file)
-├── builder.md          (build workflow, schema, checklist)
-├── gm.md              (GM startup, tools, NPC flow)
-├── templates/          (instance file skeletons)
-├── instances/<slug>/   (one per adventure)
+├── SKILL.md            (本文件)
+├── builder.md          (构建工作流、schema、检查清单)
+├── gm.md              (GM 启动、工具、NPC 流程)
+├── templates/          (实例文件骨架)
+├── instances/<slug>/   (每个冒险一个)
 └── scripts/            (roll.py, state.py)
 ```
 
-## Key Rules
+## 关键规则
 
-- Scripts: `skills/dnd/scripts/` (roll.py, state.py)
-- State: `skills/dnd/instances/<slug>/runtime/state.json`
-- Maps: CSV format per `skill("map")`
-- NPC dialogue: always via `notify` → subagent, never speak NPC lines as GM
+- 脚本：`skills/dnd/scripts/`（roll.py, state.py）
+- 状态：`skills/dnd/instances/<slug>/runtime/state.json`
+- 地图：CSV 格式，参见 `skill("map")`
+- NPC 对话：总是通过 `notify` → 收到回应后用 `message(sender_name="角色名")` 转发

@@ -1,121 +1,121 @@
-# DND Builder — Build Mode
+# DND 构建模式
 
-Load `skill("map")` when creating `maps/*.map.csv` files.
+创建地图时加载 `skill("map")`。
 
 ## 1. Slug
 
-Choose a lowercase slug: `[a-z][a-z0-9_]*`, max 40 chars (e.g. `ring_adventure`).
+选择小写 slug：`[a-z][a-z0-9_]*`，最多 40 字符（如 `ring_adventure`）。
 
-## 2. Output path
+## 2. 输出路径
 
 `skills/dnd/instances/<slug>/`
 
-## 3. Build Loop — 边建边展示
+## 3. 构建循环 — 边建边展示
 
-For each scene/map in the adventure, repeat this cycle:
+对冒险中的每个场景/地图，重复此循环：
 
-1. **Create files** — write the map CSV + related data (monsters, items, NPCs for this scene)
-2. **Preview** — `update_scene` with `map.mapFile` pointing at the new map, place relevant characters on grid
-3. **Describe** — `message` to player: scene name, what's here, key NPCs present, atmosphere
+1. **创建文件** — 写 map CSV + 相关数据（怪物、物品、NPC）
+2. **预览** — `update_scene` 指向新地图，放置相关角色到网格
+3. **描述** — `message` 告诉玩家：场景名、这里有什么、关键 NPC、氛围
 
-Do NOT wait for user confirmation between scenes — keep building. The user sees each scene flash by as a progress indicator.
+不用等用户确认每个场景——持续构建。用户会看到每个场景闪过作为进度指示。
 
-### File creation order
+### 文件创建顺序
 
-| Step | Files | Preview |
-|------|-------|---------|
-| Instance skeleton | `meta.json`, `world.md`, `rules.md`, `items.md` | message: 世界观概述 |
-| Adventure structure | `adventure.json` | message: 任务概览 |
-| Scene 1 (opening) | `maps/opening.map.csv`, monsters/NPCs for scene | update_scene + message |
-| Scene 2..N | `maps/<name>.map.csv`, related data | update_scene + message |
+| 步骤 | 文件 | 预览 |
+|------|------|------|
+| 实例骨架 | `meta.json`、`world.md`、`rules.md`、`items.md` | message: 世界观概述 |
+| 冒险结构 | `adventure.json` | message: 任务概览 |
+| 场景 1（开场） | `maps/opening.map.csv`、怪物/NPC | update_scene + message |
+| 场景 2..N | `maps/<name>.map.csv`、相关数据 | update_scene + message |
 
 ## 4. meta.json
 
 ```json
 {
   "slug": "<slug>",
-  "title": "Adventure Title",
-  "theme": "player theme e.g. lord_of_the_rings_style",
+  "title": "冒险标题",
+  "theme": "主题风格",
   "skill": "dnd",
   "status": "ready",
   "created_at": "<ISO8601>"
 }
 ```
 
-## 5. Review
+## 5. 审查
 
-Run through **Section 9 (Review Checklist)** yourself. Fix critical issues.
+自己过一遍**第 9 节（审查清单）**。修复严重问题。
 
-Only spawn a separate review subagent when:
-- The instance is complex (3+ quests, 5+ NPCs, multiple maps)
-- The user explicitly asks for a thorough review
+只在以下情况创建审查子 agent：
+- 实例很复杂（3+ 任务、5+ NPC、多张地图）
+- 用户明确要求彻底审查
 
 ```
-spawn_subagent(review, "Review skills/dnd/instances/<slug>/ using the checklist in skills/dnd/builder.md section 9")
+spawn_subagent(review, "审查 skills/dnd/instances/<slug>/，使用 skills/dnd/builder.md 第 9 节的检查清单")
 ```
 
-## 6. Deliver
+## 6. 交付
 
-`message` to player:
+`message` 告诉玩家：
 
-- Adventure ready — title and one-line summary
-- Scene count and highlights
-- Any issues found during review
-- Ask if the user wants adjustments or is ready to play
+- 冒险准备好了 — 标题和一行总结
+- 场景数量和亮点
+- 审查中发现的问题
+- 询问是否要调整或准备开始游戏
 
-## 7. Build mode restrictions
+## 7. Build 模式限制
 
-- Do NOT spawn `npc` subagents (no play-mode dialogue during build)
-- `update_scene` is used for preview only — show maps and NPC placement as you build
+- 不要创建 `npc` 子 agent（构建时没有游玩对话）
+- `update_scene` 仅用于预览——展示地图和 NPC 位置
 
 ---
 
-## 8. Field Visibility (Schema)
+## 8. 字段可见性（Schema）
 
-### Player-visible (safe in `message` and `update_scene`)
+### 玩家可见（可以出现在 `message` 和 `update_scene` 中）
 
-- `world.md` — summary and factions table
-- `adventure.json` — `premise`, `quests[].player_visible_goal`, `maps[].description`, `characters[].public_background`
-- `monsters.json` — name and public description only when encountered
-- `items.md` — player-visible descriptions
+- `world.md` — 概要和阵营表
+- `adventure.json` — `premise`、`quests[].player_visible_goal`、`maps[].description`、`characters[].public_background`
+- `monsters.json` — 遇到时只显示名字和公开描述
+- `items.md` — 玩家可见描述
 
-### DM-only (never in chat or SceneState)
+### 仅 DM 可见（绝不出现在聊天或 SceneState 中）
 
-- `world.md` — section "DM Private Lore"
-- `adventure.json` — `hidden_clues`, `quests[].dm_private_goal`, `maps[].dm_private_notes`, NPC `private_goal`
-- `items.md` — DM notes sections
-- `instances/<slug>/runtime/state.json` — full file
+- `world.md` — "DM 私密设定" 部分
+- `adventure.json` — `hidden_clues`、`quests[].dm_private_goal`、`maps[].dm_private_notes`、NPC `private_goal`
+- `items.md` — DM 备注部分
+- `instances/<slug>/runtime/state.json` — 全部内容
 
-### NPC spawn fields
+### NPC spawn 字段
 
-From `important_npcs[]`: use `name`, `personality`, `public_identity`, `private_goal`, `known_information` in spawn prompt.
+从 `important_npcs[]` 中使用：`name`、`personality`、`public_identity`、`private_goal`、`known_information` 放入 spawn prompt。
 
 ---
 
-## 9. Review Checklist
+## 9. 审查清单
 
-Review all files under the given `skills/dnd/instances/<slug>/` path.
+审查给定 `skills/dnd/instances/<slug>/` 路径下的所有文件。
 
-### Logic
+### 逻辑
 
-- [ ] `opening_scene_id` references a map in `adventure.json`
-- [ ] Quest IDs referenced in `hidden_clues.related_entity_ids` exist
-- [ ] `important_npcs` IDs are unique
+- [ ] `opening_scene_id` 引用了 `adventure.json` 中存在的地图
+- [ ] `hidden_clues.related_entity_ids` 引用的任务 ID 存在
+- [ ] `important_npcs` ID 唯一
 
-### Balance
+### 平衡
 
-- [ ] Monster HP/CR reasonable for party level in `characters` or default level 1
-- [ ] Not more than 3 monsters for a minimal adventure
+- [ ] 怪物 HP/CR 对队伍等级合理
+- [ ] 最小冒险不超过 3 个怪物
 
-### Info leaks
+### 信息泄露
 
-- [ ] No `dm_private_*` or `hidden_clues` text copied into `premise` or `summary`
-- [ ] `hidden_clues[].revealed` is false at build time
+- [ ] 没有把 `dm_private_*` 或 `hidden_clues` 文本复制到 `premise` 或 `summary`
+- [ ] `hidden_clues[].revealed` 在构建时为 false
 
-### Completeness
+### 完整性
 
-- [ ] `meta.json`, `world.md`, `adventure.json`, `monsters.json`, `rules.md`, `items.md` exist
-- [ ] `adventure.json` has at least one quest and one map
-- [ ] `premise` is non-empty
+- [ ] `meta.json`、`world.md`、`adventure.json`、`monsters.json`、`rules.md`、`items.md` 存在
+- [ ] `adventure.json` 至少有一个任务和一张地图
+- [ ] `premise` 非空
 
-Output: Summary, Issues (Critical/Warning/Info), Verdict (Ready / Needs fixes).
+输出：摘要、问题（严重/警告/信息）、结论（就绪 / 需要修复）。

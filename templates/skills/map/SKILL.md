@@ -1,21 +1,21 @@
 ---
 name: map
-description: "Load when you need to create, edit, or display a grid map. Provides CSV format spec, terrain tokens, overlay/label placement, and update_scene rules. Also load alongside dnd skill for adventure maps."
+description: "网格地图创建与展示。CSV 格式规范、地形 token、覆盖物/标签放置、update_scene 规则。"
 ---
 
-# Map Skill
+# 地图技能
 
-Read **`skills/map/GUIDE.md`** for format spec, terrain tokens, overlays, and update_scene rules.
+阅读 **`skills/map/GUIDE.md`** 获取格式规范、地形 token、覆盖物和 update_scene 规则。
 
-- **Build mode:** write `.map.csv` files only (no `update_scene`).
-- **Play mode:** `update_scene` with `map.mapFile` pointing at a workspace CSV path.
+- **Build 模式：** 只写 `.map.csv` 文件（不调 `update_scene`）
+- **Play 模式：** `update_scene` 的 `map.mapFile` 指向工作区中的 CSV 路径
 
-## Examples
+## 示例
 
-Reference maps in `skills/map/examples/`:
+参考地图在 `skills/map/examples/`：
 
-| File | Scene |
-|------|-------|
+| 文件 | 场景 |
+|------|------|
 | `tavern.map.csv` | 标准酒馆 (6×6) |
 | `tavern-large.map.csv` | 大型酒馆 (10×8) |
 | `tavern-small.map.csv` | 路边小酒馆 (5×4) |
@@ -25,6 +25,6 @@ Reference maps in `skills/map/examples/`:
 | `river-crossing.map.csv` | 河岸渡口 (8×6) |
 | `castle-hall.map.csv` | 城堡大厅 (8×10) |
 | `market-street.map.csv` | 市集街道 (10×6) |
-| `opening-scene.patch.json` | update_scene payload 示例 |
+| `opening-scene.patch.json` | update_scene 参数示例 |
 
-Use these as starting points — copy and modify for your scenario.
+以这些为起点——复制并修改适配你的场景。
