@@ -121,7 +121,7 @@ describe("SubagentDispatcher", () => {
 
     const first = await dispatcher.spawn("explore", "First message", { background: true })
     await new Promise((r) => setTimeout(r, 10))
-    await dispatcher.send(first.sessionId, "Second message", true)
+    await dispatcher.send(first.sessionId, "Second message")
 
     expect(callCount).toBe(2)
   })
@@ -140,7 +140,7 @@ describe("SubagentDispatcher", () => {
       sessionManager.workspaceId,
     )
 
-    expect(() => dispatcher.send("nonexistent-session", "test", false)).toThrow(
+    expect(() => dispatcher.send("nonexistent-session", "test")).toThrow(
       "Session not found: nonexistent-session",
     )
   })
@@ -251,7 +251,7 @@ describe("SubagentDispatcher", () => {
     await new Promise((r) => setTimeout(r, 10))
 
     await dispatcher.notifyMultiple(
-      [{ session_id: r1.sessionId }, { session_id: r2.sessionId, expect_reply: true }],
+      [{ session_id: r1.sessionId }, { session_id: r2.sessionId }],
       "notification content",
     )
   })
