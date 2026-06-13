@@ -1,4 +1,6 @@
 import { Hono } from "hono"
+import fs from "fs"
+import path from "path"
 import type { ServerDeps } from "../index"
 import type { WorkspaceID } from "../../workspace/types"
 
@@ -57,6 +59,26 @@ export function sessionRoutes(deps: ServerDeps) {
 
   router.post("/sessions/:id/messages", (c) => {
     return c.json({ error: "Not implemented" }, 501)
+  })
+
+  router.get("/sessions/:id/voice/:filename", (c) => {
+    const id = c.req.param("id")
+    const filename = c.req.param("filename")
+    if (!filename || filename.includes("..")) {
+      return c.json({ error: "Invalid filename" }, 400)
+    }
+    const filePath = path.join("data", "sessions", id, "voice", filename)
+    if (!fs.existsSync(filePath)) {
+      return c.json({ error: "Not found" }, 404)
+    }
+    const buffer = fs.readFileSync(filePath)
+    return new Response(buffer, {
+      headers: {
+        "Content-Type": "audio/wav",
+        "Content-Length": buffer.length.toString(),
+        "Cache-Control": "public, max-age=86400",
+      },
+    })
   })
 
   return router

@@ -5,11 +5,19 @@ export const DEFAULT_CONTEXT_WINDOW_TOKENS = 1_000_000
 export const COMPACT_THRESHOLD_RATIO = 0.8
 export const COMPACT_RECENT_TURNS = 4
 
+export const TtsConfigSchema = z.object({
+  apiBaseUrl: z.string().url().default("https://api.xiaomimimo.com/v1"),
+  apiKey: z.string().min(1),
+})
+
+export type TtsConfig = z.infer<typeof TtsConfigSchema>
+
 export const WorkspaceConfigSchema = z.object({
   apiBaseUrl: z.url(),
   apiKey: z.string().min(1),
   modelName: z.string().min(1),
   contextWindowTokens: z.number().int().positive().default(DEFAULT_CONTEXT_WINDOW_TOKENS),
+  tts: TtsConfigSchema.optional(),
 })
 
 export type WorkspaceConfig = z.infer<typeof WorkspaceConfigSchema>

@@ -1,6 +1,6 @@
 import fs from "fs"
 import path from "path"
-import type { ChatMessage, SenderRole } from "./types"
+import type { ChatMessage, SenderRole, VoiceAsset } from "./types"
 
 function generateId(): string {
   return `msg_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
@@ -25,16 +25,19 @@ export class ChatManager {
       senderId: string
       senderName: string
       senderRole: SenderRole
+      voice?: VoiceAsset
+      id?: string
     },
   ): ChatMessage {
     const msg: ChatMessage = {
-      id: generateId(),
+      id: opts.id ?? generateId(),
       sessionId: primarySessionId,
       senderId: opts.senderId,
       senderName: opts.senderName,
       senderRole: opts.senderRole,
       content: opts.content,
       timestamp: new Date().toISOString(),
+      ...(opts.voice ? { voice: opts.voice } : {}),
     }
     this.persist(primarySessionId, msg)
     for (const listener of this.messageListeners) {

@@ -112,3 +112,13 @@ The workspace has a `skills/` directory. Use the `skill` tool to load relevant s
 - Maps and terrain: see `skill("map")`
 - Array fields (characters, overlays, labels, mainQuest) are **full replacement** — include ALL items you want to keep
 - Never leak hidden info into SceneState
+
+## Voice (TTS)
+
+When `voice_design` and `voice_speak` tools are available:
+
+- Use `skill("voice")` for detailed writing guidelines
+- Create voice for important NPCs during build phase (`voice_design` + `save_as`)
+- During play, use `voice_speak` selectively at impactful moments
+- The voice message appears as the character speaking — player doesn't know you triggered it
+- Keep voice lines short (≤30 chars) — extract the highlight, don't repeat the full message

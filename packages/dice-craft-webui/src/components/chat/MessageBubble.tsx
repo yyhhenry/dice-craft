@@ -1,13 +1,18 @@
 import { Wrench, User } from "lucide-react"
 import type { ChatMessage } from "@/lib/api"
 import { getAvatarText } from "@/lib/utils"
+import { VoicePlayer } from "./VoicePlayer"
 
 interface MessageBubbleProps {
   message: ChatMessage
+  autoPlayVoice?: boolean
+  onVoiceEnded?: () => void
 }
 
-export function MessageBubble({ message }: MessageBubbleProps) {
-  const { senderRole, senderName, content } = message
+export function MessageBubble({ message, autoPlayVoice, onVoiceEnded }: MessageBubbleProps) {
+  const { senderRole, senderName, content, voice } = message
+
+  const voiceUrl = voice ? `/api/sessions/${message.sessionId}/voice/${message.id}.wav` : null
 
   if (senderRole === "system") {
     return (
@@ -45,7 +50,12 @@ export function MessageBubble({ message }: MessageBubbleProps) {
       </div>
       <div className="max-w-[70%] min-w-0">
         <div className="mb-1 text-xs text-muted-foreground">{senderName}</div>
-        <div className="overflow-hidden rounded-lg bg-muted px-3 py-2 text-sm break-words">{content}</div>
+        <div className="overflow-hidden rounded-lg bg-muted px-3 py-2 text-sm break-words">
+          {content}
+          {voiceUrl && (
+            <VoicePlayer url={voiceUrl} duration={voice!.duration} autoPlay={autoPlayVoice} onEnded={onVoiceEnded} />
+          )}
+        </div>
       </div>
     </div>
   )
