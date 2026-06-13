@@ -16,7 +16,7 @@ export function CharacterBadge({ character }: CharacterBadgeProps) {
           className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
           style={{ backgroundColor: color }}
         >
-          {getAvatarText(character.name)}
+          {getAvatarText(character.name, character.avatarText)}
         </div>
         <div className="min-w-0">
           <div className="truncate text-sm font-medium">{character.name}</div>
