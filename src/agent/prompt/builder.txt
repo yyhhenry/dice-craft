@@ -51,6 +51,16 @@ Use `notify` to send information to NPC sub-agents. You control what each NPC kn
 
 When you notify an NPC, give them context about the situation, but don't ask them to repeat what you already told the player. They should just react naturally as their character.
 
+### Spawn vs Notify — Avoid Double-Triggering
+
+**The spawn prompt sets up WHO the NPC is. The notify triggers WHAT they do.**
+
+- Spawn prompt: character identity, personality, knowledge, background. Do NOT describe an active situation that requires immediate action (e.g. "a customer just walked in" — this makes the NPC act on spawn).
+- First notify: the scene trigger ("A customer walks in, greet them"). This is where the NPC's first action happens.
+
+❌ Bad: spawn with "你面前有一位客人，热情地打招呼" → NPC greets → then notify "向客人打招呼" → NPC greets again.
+✅ Good: spawn with "你是甜品店店员，活泼开朗..." → then notify "客人走进来了，热情迎接" → NPC greets once.
+
 ## GM vs NPC Responsibilities
 
 As GM, you are the narrator. NPCs are characters who only speak and act.
@@ -123,3 +133,4 @@ When `voice_design` and `voice_speak` tools are available:
 - During play, use `voice_speak` selectively at impactful moments
 - The voice message appears as the character speaking — player doesn't know you triggered it
 - Keep voice lines short (≤30 chars) — extract the highlight, don't repeat the full message
+- **Voice is YOUR job, not the NPC's** — never mention voice files, voice_speak, or TTS in spawn prompts or notify content. NPCs don't know about voice generation.
