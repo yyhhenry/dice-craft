@@ -32,8 +32,9 @@ export function createMessageTool(
         },
         role: {
           type: "string",
-          enum: ["agent", "npc"],
-          description: "agent = GM/系统叙事（显示扳手图标），npc = 角色对话（显示头像文字）",
+          enum: ["agent", "npc", "system"],
+          description:
+            "agent = GM/Builder 叙事（扳手图标），npc = 角色对话（头像文字），system = 系统提示（居中灰字，如玩家动作描述）",
         },
       },
       required: ["content", "sender_name", "role"],
