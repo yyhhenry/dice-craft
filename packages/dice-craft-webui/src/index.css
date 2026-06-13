@@ -152,3 +152,63 @@
     background: oklch(0.8 0 0 / 40%);
   }
 }
+
+/* Markdown content in chat bubbles */
+.markdown-content {
+  & > *:first-child {
+    margin-top: 0;
+  }
+  & > *:last-child {
+    margin-bottom: 0;
+  }
+  p {
+    margin: 0.25em 0;
+  }
+  strong {
+    font-weight: 600;
+  }
+  em {
+    font-style: italic;
+  }
+  ul, ol {
+    margin: 0.25em 0;
+    padding-left: 1.5em;
+  }
+  ul {
+    list-style: disc;
+  }
+  ol {
+    list-style: decimal;
+  }
+  li {
+    margin: 0.1em 0;
+  }
+  code {
+    font-size: 0.85em;
+    padding: 0.15em 0.3em;
+    border-radius: 0.25em;
+    background: oklch(0 0 0 / 8%);
+  }
+  .dark & code {
+    background: oklch(1 0 0 / 10%);
+  }
+  pre code {
+    padding: 0;
+    background: none;
+    font-size: inherit;
+  }
+  blockquote {
+    margin: 0.25em 0;
+    padding-left: 0.75em;
+    border-left: 2px solid oklch(0.5 0 0 / 30%);
+    color: oklch(0.5 0 0);
+  }
+  h1, h2, h3, h4 {
+    font-weight: 600;
+    margin: 0.5em 0 0.25em;
+  }
+  hr {
+    margin: 0.5em 0;
+    border-color: oklch(0.5 0 0 / 20%);
+  }
+}
