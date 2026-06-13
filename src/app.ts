@@ -16,6 +16,9 @@ import { SessionManager } from "./session/manager"
 import { WorkspaceGuard } from "./workspace/guard"
 import { ChatManager } from "./chat/manager"
 import { SceneManager } from "./scene/manager"
+import { VoiceSynthesizer } from "./voice/synthesizer"
+import { createVoiceDesignTool, createVoiceSpeakTool } from "./voice/tools"
+import type { TtsConfig } from "./voice/types"
 import type { WorkspaceID } from "./workspace/types"
 import type { SceneState } from "./shared/schemas"
 
@@ -41,6 +44,7 @@ export function createApp(options: {
   primarySessionId?: string
   modelConfig: ModelConfig
   contextWindowTokens?: number
+  ttsConfig?: TtsConfig
   onMessage?: (senderName: string, content: string) => void
 }): App {
   const model = new OpenAIModel(options.modelConfig)
@@ -114,6 +118,20 @@ export function createApp(options: {
       if (onMessage) onMessage(name, _content)
     }),
   )
+
+  if (options.ttsConfig) {
+    const synthesizer = new VoiceSynthesizer(options.ttsConfig)
+    const voiceCtx = {
+      synthesizer,
+      chatManager,
+      workspacePath,
+      dataDir,
+      sessionRef,
+      onMessage,
+    }
+    toolRegistry.register(createVoiceDesignTool(voiceCtx))
+    toolRegistry.register(createVoiceSpeakTool(voiceCtx))
+  }
 
   const sceneUpdateRef: { fn?: (state: SceneState) => void } = {}
   toolRegistry.register(

@@ -1,9 +1,43 @@
 import fs from "fs"
+import path from "path"
 import type { Tool, ToolResult } from "./base"
 import type { WorkspaceGuard } from "../workspace/guard"
 
 const DEFAULT_LIMIT = 2000
 const MAX_LINE_LENGTH = 2000
+
+const BINARY_EXTENSIONS = new Set([
+  ".wav",
+  ".mp3",
+  ".ogg",
+  ".flac",
+  ".aac",
+  ".m4a",
+  ".png",
+  ".jpg",
+  ".jpeg",
+  ".gif",
+  ".bmp",
+  ".webp",
+  ".ico",
+  ".tiff",
+  ".zip",
+  ".tar",
+  ".gz",
+  ".bz2",
+  ".7z",
+  ".rar",
+  ".pdf",
+  ".wasm",
+  ".so",
+  ".dylib",
+  ".dll",
+  ".exe",
+  ".bin",
+  ".dat",
+  ".db",
+  ".sqlite",
+])
 
 export function createReadTool(guard: WorkspaceGuard): Tool {
   return {
@@ -70,6 +104,33 @@ export function createReadTool(guard: WorkspaceGuard): Tool {
         return { content: output }
       }
 
+      const ext = path.extname(resolved).toLowerCase()
+      if (BINARY_EXTENSIONS.has(ext)) {
+        const sizeKB = (stat.size / 1024).toFixed(1)
+
+        if (ext === ".wav") {
+          const meta = readWavMeta(resolved, stat.size)
+          return {
+            content:
+              `Audio file: ${filePath}\n` +
+              `Format: WAV\n` +
+              `Size: ${sizeKB} KB\n` +
+              `Duration: ${meta.duration.toFixed(1)}s\n` +
+              `Sample rate: ${meta.sampleRate} Hz\n` +
+              `Channels: ${meta.channels}\n` +
+              `Bit depth: ${meta.bitDepth}`,
+          }
+        }
+
+        return {
+          content:
+            `Binary file: ${filePath}\n` +
+            `Type: ${ext.slice(1).toUpperCase()}\n` +
+            `Size: ${sizeKB} KB\n` +
+            `(Binary files cannot be read as text.)`,
+        }
+      }
+
       const content = fs.readFileSync(resolved, "utf-8")
       const lines = content.split("\n")
       const start = offset - 1
@@ -96,4 +157,27 @@ export function createReadTool(guard: WorkspaceGuard): Tool {
       return { content: output }
     },
   }
+}
+
+interface WavMeta {
+  sampleRate: number
+  channels: number
+  bitDepth: number
+  duration: number
+}
+
+function readWavMeta(filePath: string, fileSize: number): WavMeta {
+  const fd = fs.openSync(filePath, "r")
+  const header = Buffer.alloc(44)
+  fs.readSync(fd, header, 0, 44, 0)
+  fs.closeSync(fd)
+
+  const channels = header.readUInt16LE(22)
+  const sampleRate = header.readUInt32LE(24)
+  const byteRate = header.readUInt32LE(28)
+  const bitDepth = header.readUInt16LE(34)
+  const dataSize = fileSize - 44
+  const duration = byteRate > 0 ? dataSize / byteRate : 0
+
+  return { sampleRate, channels, bitDepth, duration }
 }

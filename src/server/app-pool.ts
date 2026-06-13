@@ -66,6 +66,7 @@ export class AppPool {
       primarySessionId: sessionId,
       modelConfig,
       contextWindowTokens,
+      ttsConfig: config.tts,
     })
 
     // Restore session history

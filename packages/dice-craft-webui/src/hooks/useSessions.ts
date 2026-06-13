@@ -15,7 +15,7 @@ export function useSessions(workspaceId: string | null) {
     setError(null)
     api
       .getSessions(workspaceId)
-      .then(setSessions)
+      .then((list) => setSessions(list.sort((a, b) => b.createdAt.localeCompare(a.createdAt))))
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))
   }, [workspaceId])
@@ -28,7 +28,7 @@ export function useSessions(workspaceId: string | null) {
     async (title?: string) => {
       if (!workspaceId) return null
       const session = await api.createSession(workspaceId, title)
-      setSessions((prev) => [...prev, session])
+      setSessions((prev) => [session, ...prev])
       return session
     },
     [workspaceId],

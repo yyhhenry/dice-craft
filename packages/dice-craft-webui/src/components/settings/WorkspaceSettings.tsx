@@ -18,7 +18,10 @@ export function WorkspaceSettings({ workspaceId, open, onOpenChange }: Workspace
   const [apiKey, setApiKey] = useState("")
   const [modelName, setModelName] = useState("")
   const [contextWindowTokens, setContextWindowTokens] = useState("1000000")
+  const [ttsApiBaseUrl, setTtsApiBaseUrl] = useState("")
+  const [ttsApiKey, setTtsApiKey] = useState("")
   const [showKey, setShowKey] = useState(false)
+  const [showTtsKey, setShowTtsKey] = useState(false)
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
@@ -27,17 +30,23 @@ export function WorkspaceSettings({ workspaceId, open, onOpenChange }: Workspace
       setApiKey(config.apiKey)
       setModelName(config.modelName)
       setContextWindowTokens(String(config.contextWindowTokens ?? 1000000))
+      setTtsApiBaseUrl(config.tts?.apiBaseUrl ?? "")
+      setTtsApiKey(config.tts?.apiKey ?? "")
     }
   }, [config])
 
   const handleSave = async () => {
     setSaving(true)
     try {
+      const tts = ttsApiKey
+        ? { apiBaseUrl: ttsApiBaseUrl || "https://api.xiaomimimo.com/v1", apiKey: ttsApiKey }
+        : undefined
       await save({
         apiBaseUrl,
         apiKey,
         modelName,
         contextWindowTokens: Number.parseInt(contextWindowTokens, 10) || 1000000,
+        tts,
       })
       onOpenChange(false)
     } catch {
@@ -105,6 +114,40 @@ export function WorkspaceSettings({ workspaceId, open, onOpenChange }: Workspace
               placeholder="1000000"
             />
             <p className="text-xs text-muted-foreground">Compaction starts at 80% of this value.</p>
+          </div>
+          <div className="space-y-2 border-t pt-4">
+            <p className="text-sm font-medium">TTS (Voice)</p>
+            <p className="text-xs text-muted-foreground">Optional. Enable character voice generation.</p>
+            <div className="space-y-2">
+              <Label htmlFor="ttsApiBaseUrl">TTS API Base URL</Label>
+              <Input
+                id="ttsApiBaseUrl"
+                value={ttsApiBaseUrl}
+                onChange={(e) => setTtsApiBaseUrl(e.target.value)}
+                placeholder="https://api.xiaomimimo.com/v1"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="ttsApiKey">TTS API Key</Label>
+              <div className="relative">
+                <Input
+                  id="ttsApiKey"
+                  type={showTtsKey ? "text" : "password"}
+                  value={ttsApiKey}
+                  onChange={(e) => setTtsApiKey(e.target.value)}
+                  placeholder="Leave empty to disable TTS"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-1/2 right-1 h-7 w-7 -translate-y-1/2"
+                  onClick={() => setShowTtsKey(!showTtsKey)}
+                >
+                  {showTtsKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
           </div>
           <Button onClick={handleSave} disabled={saving} className="w-full">
             {saving ? "Saving..." : "Save"}
