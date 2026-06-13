@@ -34,6 +34,16 @@ function parseLocation(loc?: string): { x: number; y: number } | null {
   return { x, y }
 }
 
+function svgPoint(svg: SVGSVGElement, clientX: number, clientY: number): { x: number; y: number } | null {
+  const ctm = svg.getScreenCTM()
+  if (!ctm) return null
+  const pt = svg.createSVGPoint()
+  pt.x = clientX
+  pt.y = clientY
+  const transformed = pt.matrixTransform(ctm.inverse())
+  return { x: transformed.x, y: transformed.y }
+}
+
 export function TileMapSvg({ map, characters, replayTrigger, onCellClick, onCharacterClick }: TileMapSvgProps) {
   const { width = 0, height = 0, cells = [], overlays = [], labels = [] } = map
   const C = CELL_SIZE
@@ -172,9 +182,8 @@ export function TileMapSvg({ map, characters, replayTrigger, onCellClick, onChar
       const svg = svgRef.current
       if (!svg) return
 
-      const rect = svg.getBoundingClientRect()
-      const mx = ((e.clientX - rect.left) / rect.width) * viewBox.w + viewBox.x
-      const my = ((e.clientY - rect.top) / rect.height) * viewBox.h + viewBox.y
+      const pt = svgPoint(svg, e.clientX, e.clientY)
+      if (!pt) return
 
       const factor = e.deltaY > 0 ? 1.1 : 0.9
       const minW = svgW * 0.25
@@ -183,8 +192,8 @@ export function TileMapSvg({ map, characters, replayTrigger, onCellClick, onChar
       const nh = (nw / svgW) * svgH
 
       setViewBox({
-        x: mx - ((mx - viewBox.x) / viewBox.w) * nw,
-        y: my - ((my - viewBox.y) / viewBox.h) * nh,
+        x: pt.x - ((pt.x - viewBox.x) / viewBox.w) * nw,
+        y: pt.y - ((pt.y - viewBox.y) / viewBox.h) * nh,
         w: nw,
         h: nh,
       })
@@ -220,15 +229,15 @@ export function TileMapSvg({ map, characters, replayTrigger, onCellClick, onChar
         }))
       } else {
         // Hover detection
-        const rect = svg.getBoundingClientRect()
-        const svgX = ((e.clientX - rect.left) / rect.width) * viewBox.w + viewBox.x
-        const svgY = ((e.clientY - rect.top) / rect.height) * viewBox.h + viewBox.y
-        const cellX = Math.floor(svgX / C)
-        const cellY = Math.floor(svgY / C)
-        if (cellX >= 0 && cellX < width && cellY >= 0 && cellY < height) {
-          setHoveredCell({ x: cellX, y: cellY })
-        } else {
-          setHoveredCell(null)
+        const pt = svgPoint(svg, e.clientX, e.clientY)
+        if (pt) {
+          const cellX = Math.floor(pt.x / C)
+          const cellY = Math.floor(pt.y / C)
+          if (cellX >= 0 && cellX < width && cellY >= 0 && cellY < height) {
+            setHoveredCell({ x: cellX, y: cellY })
+          } else {
+            setHoveredCell(null)
+          }
         }
       }
     },
@@ -244,11 +253,10 @@ export function TileMapSvg({ map, characters, replayTrigger, onCellClick, onChar
       // Click (not drag) — determine what was clicked
       const svg = svgRef.current
       if (!svg) return
-      const rect = svg.getBoundingClientRect()
-      const svgX = ((e.clientX - rect.left) / rect.width) * viewBox.w + viewBox.x
-      const svgY = ((e.clientY - rect.top) / rect.height) * viewBox.h + viewBox.y
-      const cellX = Math.floor(svgX / C)
-      const cellY = Math.floor(svgY / C)
+      const pt = svgPoint(svg, e.clientX, e.clientY)
+      if (!pt) return
+      const cellX = Math.floor(pt.x / C)
+      const cellY = Math.floor(pt.y / C)
 
       // Check if a character was clicked
       const clickedChar = visibleChars.find((ch) => {
@@ -256,7 +264,7 @@ export function TileMapSvg({ map, characters, replayTrigger, onCellClick, onChar
         if (!pos) return false
         const cx = pos.x * C + C / 2
         const cy = pos.y * C + C / 2
-        const dist = Math.hypot(svgX - cx, svgY - cy)
+        const dist = Math.hypot(pt.x - cx, pt.y - cy)
         return dist < C * 0.4
       })
 
@@ -266,7 +274,7 @@ export function TileMapSvg({ map, characters, replayTrigger, onCellClick, onChar
         onCellClick({ x: cellX, y: cellY, screenX: e.clientX, screenY: e.clientY })
       }
     },
-    [viewBox, C, width, height, visibleChars, onCellClick, onCharacterClick],
+    [C, width, height, visibleChars, onCellClick, onCharacterClick],
   )
 
   const handleMouseLeave = useCallback(() => {
