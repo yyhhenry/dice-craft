@@ -81,8 +81,12 @@ export function VoicePlayer({ url, duration, autoPlay, onEnded }: VoicePlayerPro
           <Volume2 className="h-3 w-3" />
         )}
       </button>
-      <div className="h-1 flex-1 rounded-full bg-muted">
-        <div className="h-1 rounded-full bg-primary/60 transition-all" style={{ width: `${progress}%` }} />
+      <div className="relative flex h-3 flex-1 items-center">
+        <div className="absolute inset-x-0 h-px rounded-full bg-foreground/20" />
+        <div
+          className="absolute left-0 h-1 rounded-full bg-primary/60 transition-all"
+          style={{ width: `${progress}%` }}
+        />
       </div>
       <span className="text-[10px] text-muted-foreground tabular-nums">{formatDuration(duration)}</span>
     </div>
