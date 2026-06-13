@@ -1,5 +1,7 @@
 # DiceCraft WebUI API 文档
 
+> 未完全参考，标记为已完成
+
 - **服务名称**：DiceCraft WebUI Service
 - **接口版本**：v1
 - **最后更新时间**：2026-06-01
