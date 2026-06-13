@@ -1,6 +1,5 @@
 import { Wrench, User } from "lucide-react"
 import type { ChatMessage } from "@/lib/api"
-import { getAvatarText } from "@/lib/utils"
 import { Markdown } from "@/components/Markdown"
 import { VoicePlayer } from "./VoicePlayer"
 
@@ -43,10 +42,10 @@ export function MessageBubble({ message, autoPlayVoice, onVoiceEnded }: MessageB
   return (
     <div className="flex gap-2">
       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted">
-        {senderRole === "agent" ? (
-          <Wrench className="h-4 w-4" />
+        {message.avatarText ? (
+          <span className="text-xs font-medium">{message.avatarText}</span>
         ) : (
-          <span className="text-xs font-medium">{getAvatarText(senderName)}</span>
+          <Wrench className="h-4 w-4" />
         )}
       </div>
       <div className="max-w-[70%] min-w-0">

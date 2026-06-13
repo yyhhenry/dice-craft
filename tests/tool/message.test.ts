@@ -18,9 +18,9 @@ describe("createMessageTool", () => {
     fs.rmSync(tmpDir, { recursive: true, force: true })
   })
 
-  test("sends message to chat", async () => {
+  test("sends message to chat with role and avatar", async () => {
     const tool = createMessageTool(chatManager, { id: "sess_1" }, "agent", "agent")
-    const result = await tool.execute({ content: "hello", sender_name: "GM" })
+    const result = await tool.execute({ content: "hello", sender_name: "GM", avatar_text: "GM", role: "agent" })
     expect(result.content).toBe("Message sent.")
     expect(result.isError).toBeFalsy()
     const msgs = chatManager.getMessages("sess_1")
@@ -28,34 +28,36 @@ describe("createMessageTool", () => {
     expect(msgs[0]!.content).toBe("hello")
     expect(msgs[0]!.senderRole).toBe("agent")
     expect(msgs[0]!.senderName).toBe("GM")
+    expect(msgs[0]!.avatarText).toBe("GM")
   })
 
-  test("sends as npc with sender_name", async () => {
-    const tool = createMessageTool(chatManager, { id: "sess_1" }, "npc_1", "npc")
-    await tool.execute({ content: "欢迎", sender_name: "酒馆老板" })
+  test("sends as npc role with avatar_text", async () => {
+    const tool = createMessageTool(chatManager, { id: "sess_1" }, "agent", "agent")
+    await tool.execute({ content: "欢迎", sender_name: "酒馆老板", avatar_text: "陈", role: "npc" })
     const msg = chatManager.getMessages("sess_1")[0]!
     expect(msg.senderRole).toBe("npc")
     expect(msg.senderName).toBe("酒馆老板")
+    expect(msg.avatarText).toBe("陈")
   })
 
-  test("calls onMessage callback with senderName and content", async () => {
+  test("calls onMessage callback", async () => {
     const received: Array<{ name: string; content: string }> = []
     const tool = createMessageTool(chatManager, { id: "sess_1" }, "agent", "agent", (name, c) =>
       received.push({ name, content: c }),
     )
-    await tool.execute({ content: "test", sender_name: "GM" })
+    await tool.execute({ content: "test", sender_name: "GM", avatar_text: "GM", role: "agent" })
     expect(received).toEqual([{ name: "GM", content: "test" }])
   })
 
   test("returns error for empty content", async () => {
     const tool = createMessageTool(chatManager, { id: "sess_1" }, "agent", "agent")
-    const result = await tool.execute({ content: "", sender_name: "GM" })
+    const result = await tool.execute({ content: "", sender_name: "GM", avatar_text: "GM", role: "agent" })
     expect(result.isError).toBe(true)
   })
 
-  test("returns error for missing sender_name", async () => {
+  test("returns error for invalid avatar_text", async () => {
     const tool = createMessageTool(chatManager, { id: "sess_1" }, "agent", "agent")
-    const result = await tool.execute({ content: "hello" })
+    const result = await tool.execute({ content: "hi", sender_name: "GM", avatar_text: "太长了", role: "agent" })
     expect(result.isError).toBe(true)
   })
 })

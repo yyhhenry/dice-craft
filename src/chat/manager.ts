@@ -25,6 +25,7 @@ export class ChatManager {
       senderId: string
       senderName: string
       senderRole: SenderRole
+      avatarText?: string
       voice?: VoiceAsset
       id?: string
     },
@@ -35,6 +36,7 @@ export class ChatManager {
       senderId: opts.senderId,
       senderName: opts.senderName,
       senderRole: opts.senderRole,
+      avatarText: opts.avatarText,
       content: opts.content,
       timestamp: new Date().toISOString(),
       ...(opts.voice ? { voice: opts.voice } : {}),
