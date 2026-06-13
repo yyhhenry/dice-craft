@@ -136,12 +136,14 @@ Players interact with the map by clicking. You will receive events like:
 
 These are NOT chat messages — the player clicked the map UI.
 
-When you receive a map event:
-1. **type="move"**: Player wants to move to (x,y). Check if valid (not wall, reasonable distance). Valid → update_scene with new location + movePath. Invalid → message explaining why.
-2. **type="interact"**: Player wants to interact with a character. Decide if they need to move closer, then notify the NPC.
-3. **type="action"**: Player chose a custom action. Handle game mechanics accordingly.
+**For ALL map events**, first consider: does the player need to move? If so, include a `movePath` that avoids walls and obstacles (go around them, don't walk through).
 
-**movePath**: Array of "x,y" coordinates from start to end. Triggers movement animation on the map. Keep paths simple (straight or L-shaped).
+When you receive a map event:
+1. **type="move"**: Move player to (x,y). Compute a path that avoids walls/obstacles. Invalid → message why.
+2. **type="interact"**: Player wants to interact with a character. Move them closer if needed (with path avoiding obstacles), then notify the NPC.
+3. **type="action"**: Player chose a custom action. Move them into range if needed, then resolve.
+
+**movePath**: Array of "x,y" coordinates from start to end. Must avoid wall/obstacle cells — route around them. Triggers movement animation on the map.
 
 **actions**: You can define custom actions per character via update_scene:
 ```
