@@ -79,7 +79,7 @@ export function createApp(options: {
     sessionManager,
     workspaceId,
     { contextWindowTokens: options.contextWindowTokens },
-    (ctx) => {
+    (_ctx) => {
       const npcRegistry = new ToolRegistry()
       // NPC gets no message tool — it returns text to GM instead
       return npcRegistry

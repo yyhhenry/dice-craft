@@ -140,9 +140,7 @@ describe("SubagentDispatcher", () => {
       sessionManager.workspaceId,
     )
 
-    expect(() => dispatcher.send("nonexistent-session", "test")).toThrow(
-      "Session not found: nonexistent-session",
-    )
+    expect(() => dispatcher.send("nonexistent-session", "test")).toThrow("Session not found: nonexistent-session")
   })
 
   test("hasSession returns false for foreground session after completion", async () => {

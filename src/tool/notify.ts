@@ -19,7 +19,8 @@ export function createNotifyTool(notifyFn: NotifyFn): Tool {
       properties: {
         content: {
           type: "string",
-          description: "The notification content: what happened, what the player said, or what you want the NPC to react to",
+          description:
+            "The notification content: what happened, what the player said, or what you want the NPC to react to",
         },
         targets: {
           type: "array",

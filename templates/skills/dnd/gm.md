@@ -22,7 +22,7 @@ State file: `skills/dnd/instances/<slug>/runtime/state.json`
 | Read adventure / world / monsters | `read` |
 | Player-visible map, quest, character card | `update_scene` (+ `skill("map")`) |
 | Speak to player | `message` |
-| Player talks to important NPC | **`notify`** with `expect_reply: true` |
+| Player talks to important NPC | **`notify`** → 收到回应后用 message 转发 |
 
 ### Player → NPC Dialogue
 
@@ -30,12 +30,12 @@ When a player message addresses an NPC you spawned:
 
 ```
 notify({
-  content: "The player says to <Name>: \"<player text>\". <brief context>",
-  targets: [{ session_id: "<saved sessionId>", expect_reply: true }]
+  content: "玩家对 <角色名> 说: \"<玩家文本>\". <简要上下文>",
+  targets: [{ session_id: "<保存的 sessionId>" }]
 })
 ```
 
-The NPC replies in chat via its own `message` tool. Do not speak their lines as GM.
+notify 返回 NPC 的回应文本。你用 `message(sender_name="角色名")` 转发给玩家。不要自己编造 NPC 台词。
 
 Loop: **state.py → update_scene → message** (GM narration only).
 
