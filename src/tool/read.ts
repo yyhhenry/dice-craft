@@ -1,9 +1,43 @@
 import fs from "fs"
+import path from "path"
 import type { Tool, ToolResult } from "./base"
 import type { WorkspaceGuard } from "../workspace/guard"
 
 const DEFAULT_LIMIT = 2000
 const MAX_LINE_LENGTH = 2000
+
+const BINARY_EXTENSIONS = new Set([
+  ".wav",
+  ".mp3",
+  ".ogg",
+  ".flac",
+  ".aac",
+  ".m4a",
+  ".png",
+  ".jpg",
+  ".jpeg",
+  ".gif",
+  ".bmp",
+  ".webp",
+  ".ico",
+  ".tiff",
+  ".zip",
+  ".tar",
+  ".gz",
+  ".bz2",
+  ".7z",
+  ".rar",
+  ".pdf",
+  ".wasm",
+  ".so",
+  ".dylib",
+  ".dll",
+  ".exe",
+  ".bin",
+  ".dat",
+  ".db",
+  ".sqlite",
+])
 
 export function createReadTool(guard: WorkspaceGuard): Tool {
   return {
@@ -68,6 +102,18 @@ export function createReadTool(guard: WorkspaceGuard): Tool {
         ].join("\n")
 
         return { content: output }
+      }
+
+      const ext = path.extname(resolved).toLowerCase()
+      if (BINARY_EXTENSIONS.has(ext)) {
+        const sizeKB = (stat.size / 1024).toFixed(1)
+        return {
+          content:
+            `Binary file: ${filePath}\n` +
+            `Type: ${ext.slice(1).toUpperCase()}\n` +
+            `Size: ${sizeKB} KB\n` +
+            `(Binary files cannot be read as text. Use voice_speak with voice_file to reference audio files.)`,
+        }
       }
 
       const content = fs.readFileSync(resolved, "utf-8")
