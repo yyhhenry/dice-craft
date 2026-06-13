@@ -7,9 +7,14 @@ export function cn(...inputs: ClassValue[]) {
 
 export function getAvatarText(name: string): string {
   if (!name) return "?"
-  const hasChinese = /[一-鿿]/.test(name)
+  // Strip parenthetical notes and punctuation/whitespace
+  const clean = name.replace(/[（(][^）)]*[）)]/g, "").replace(/[\s\p{P}]/gu, "")
+  const display = clean || name.replace(/[\s\p{P}]/gu, "")
+  if (!display) return name.charAt(0)
+
+  const hasChinese = /[一-鿿]/.test(display)
   if (hasChinese) {
-    return name.length <= 2 ? name : name.slice(-2)
+    return display.length <= 2 ? display : display.slice(-2)
   }
   if (name.includes(" ")) {
     return name
@@ -19,5 +24,5 @@ export function getAvatarText(name: string): string {
       .map((w) => w.charAt(0).toUpperCase())
       .join("")
   }
-  return name.length <= 2 ? name : name.slice(0, 2)
+  return display.length <= 2 ? display : display.slice(0, 2)
 }
