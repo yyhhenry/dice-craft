@@ -23,8 +23,7 @@ skills/dnd/
 ├── SKILL.md            (本文件)
 ├── builder.md          (构建工作流、schema、检查清单)
 ├── gm.md              (GM 启动、工具、NPC 流程)
-├── templates/          (实例文件骨架)
-├── instances/<slug>/   (每个冒险一个)
+├── instances/<slug>/   (每个冒险一个，参考 example_ring)
 └── scripts/            (roll.py, state.py)
 ```
 
