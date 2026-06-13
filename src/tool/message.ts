@@ -28,20 +28,20 @@ export function createMessageTool(
         },
         avatar_text: {
           type: "string",
-          description: "头像文字（1-2字）。GM→GM，小柚→柚，老陈→陈",
+          description: "头像文字（1-2字，role=npc 时必填）。小柚→柚，老陈→陈。role=agent 时可省略。",
         },
         role: {
           type: "string",
           enum: ["agent", "npc"],
-          description: "agent = GM/系统叙事，npc = 角色对话",
+          description: "agent = GM/系统叙事（显示扳手图标），npc = 角色对话（显示头像文字）",
         },
       },
-      required: ["content", "sender_name", "avatar_text", "role"],
+      required: ["content", "sender_name", "role"],
     },
     async execute(args: Record<string, unknown>): Promise<ToolResult> {
       const content = args.content as string
       const senderName = args.sender_name as string
-      const avatarText = args.avatar_text as string
+      const avatarText = args.avatar_text as string | undefined
       const role = (args.role as SenderRole) || defaultRole
       if (!content) {
         return { content: "Error: content is required", isError: true }
@@ -49,8 +49,8 @@ export function createMessageTool(
       if (!senderName) {
         return { content: "Error: sender_name is required", isError: true }
       }
-      if (!avatarText || avatarText.length > 2) {
-        return { content: "Error: avatar_text is required (1-2 chars)", isError: true }
+      if (role === "npc" && (!avatarText || avatarText.length > 2)) {
+        return { content: "Error: avatar_text is required for npc role (1-2 chars)", isError: true }
       }
 
       const msg = chatManager.sendMessage(sessionRef.id, {
