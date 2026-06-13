@@ -11,6 +11,7 @@ export function MessageList({ messages, loading }: MessageListProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const seenIdsRef = useRef<Set<string>>(new Set())
+  const initializedRef = useRef(false)
   const [voiceQueue, setVoiceQueue] = useState<string[]>([])
   const [playingId, setPlayingId] = useState<string | null>(null)
 
@@ -19,7 +20,16 @@ export function MessageList({ messages, loading }: MessageListProps) {
   }, [messages])
 
   // Detect new voice messages and queue them for auto-play
+  // Skip auto-play for the initial batch (history load)
   useEffect(() => {
+    if (!initializedRef.current && messages.length > 0) {
+      initializedRef.current = true
+      for (const msg of messages) {
+        seenIdsRef.current.add(msg.id)
+      }
+      return
+    }
+
     const newVoiceIds: string[] = []
     for (const msg of messages) {
       if (!seenIdsRef.current.has(msg.id)) {
