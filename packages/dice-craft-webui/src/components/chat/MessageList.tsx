@@ -22,7 +22,9 @@ export function MessageList({ messages, loading }: MessageListProps) {
   // Detect new voice messages and queue them for auto-play
   // Skip auto-play for the initial batch (history load)
   useEffect(() => {
-    if (!initializedRef.current && messages.length > 0) {
+    if (loading) return
+
+    if (!initializedRef.current) {
       initializedRef.current = true
       for (const msg of messages) {
         seenIdsRef.current.add(msg.id)
@@ -42,7 +44,7 @@ export function MessageList({ messages, loading }: MessageListProps) {
     if (newVoiceIds.length > 0) {
       setVoiceQueue((prev) => [...prev, ...newVoiceIds])
     }
-  }, [messages])
+  }, [messages, loading])
 
   // Start playing next in queue when nothing is playing
   useEffect(() => {
