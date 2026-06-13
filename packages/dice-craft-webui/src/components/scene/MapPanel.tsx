@@ -2,7 +2,7 @@ import { useState, useCallback } from "react"
 import type { SceneState } from "@shared/schemas"
 import { TileMapSvg, type CellClickInfo, type CharacterClickInfo } from "./TileMapSvg"
 import { MapActionMenu } from "./MapActionMenu"
-import { Dice5 } from "lucide-react"
+import { Dice5, RotateCcw } from "lucide-react"
 
 interface MapPanelProps {
   scene: SceneState | null
@@ -16,6 +16,9 @@ type MenuState =
 
 export function MapPanel({ scene, onSend }: MapPanelProps) {
   const [menu, setMenu] = useState<MenuState>(null)
+  const [replayTrigger, setReplayTrigger] = useState(0)
+
+  const hasMovePaths = scene?.characters.some((c) => c.movePath && c.movePath.length >= 2)
 
   const handleCellClick = useCallback((info: CellClickInfo) => {
     setMenu({ type: "cell", x: info.x, y: info.y, screenX: info.screenX, screenY: info.screenY })
@@ -65,9 +68,19 @@ export function MapPanel({ scene, onSend }: MapPanelProps) {
       <TileMapSvg
         map={scene.map}
         characters={scene.characters}
+        replayTrigger={replayTrigger}
         onCellClick={handleCellClick}
         onCharacterClick={handleCharacterClick}
       />
+      {hasMovePaths && (
+        <button
+          className="absolute right-3 bottom-3 flex items-center gap-1 rounded-lg bg-card/80 px-2.5 py-1.5 text-xs shadow-sm backdrop-blur hover:bg-card"
+          onClick={() => setReplayTrigger((n) => n + 1)}
+        >
+          <RotateCcw className="h-3 w-3" />
+          Replay
+        </button>
+      )}
       {menu && (
         <MapActionMenu
           position={{ x: menu.screenX, y: menu.screenY }}

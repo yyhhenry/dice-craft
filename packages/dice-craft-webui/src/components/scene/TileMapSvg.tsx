@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useMemo } from "react"
+import { useState, useCallback, useRef, useMemo, useEffect } from "react"
 import type { SceneMap, SceneCharacter } from "@shared/schemas"
 import { CELL_SIZE, PATTERN_SIZE, ROLE_COLORS, OVERLAY_SYMBOLS, resolveTerrainPattern } from "./terrain"
 import { getAvatarText } from "@/lib/utils"
@@ -19,6 +19,7 @@ export interface CharacterClickInfo {
 interface TileMapSvgProps {
   map: SceneMap
   characters: SceneCharacter[]
+  replayTrigger?: number
   onCellClick?: (info: CellClickInfo) => void
   onCharacterClick?: (info: CharacterClickInfo) => void
 }
@@ -33,7 +34,7 @@ function parseLocation(loc?: string): { x: number; y: number } | null {
   return { x, y }
 }
 
-export function TileMapSvg({ map, characters, onCellClick, onCharacterClick }: TileMapSvgProps) {
+export function TileMapSvg({ map, characters, replayTrigger, onCellClick, onCharacterClick }: TileMapSvgProps) {
   const { width = 0, height = 0, cells = [], overlays = [], labels = [] } = map
   const C = CELL_SIZE
 
@@ -45,6 +46,8 @@ export function TileMapSvg({ map, characters, onCellClick, onCharacterClick }: T
   const [viewBox, setViewBox] = useState(defaultVB)
   const [dragging, setDragging] = useState(false)
   const [hoveredCell, setHoveredCell] = useState<{ x: number; y: number } | null>(null)
+  const [animPositions, setAnimPositions] = useState<Map<string, { x: number; y: number }>>(new Map())
+  const prevPathsRef = useRef<Map<string, string>>(new Map())
   const dragStart = useRef({ x: 0, y: 0, vx: 0, vy: 0 })
   const dragMoved = useRef(false)
   const svgRef = useRef<SVGSVGElement>(null)
@@ -61,6 +64,107 @@ export function TileMapSvg({ map, characters, onCellClick, onCharacterClick }: T
   }, [cells])
 
   const visibleChars = useMemo(() => characters.filter((c) => !c.hidden), [characters])
+
+  // Detect new movePaths and trigger animation
+  useEffect(() => {
+    const newAnims: { charId: string; path: { x: number; y: number }[] }[] = []
+
+    for (const ch of characters) {
+      if (!ch.movePath || ch.movePath.length < 2) continue
+      const pathKey = ch.movePath.join("|")
+      if (prevPathsRef.current.get(ch.id) === pathKey) continue
+      prevPathsRef.current.set(ch.id, pathKey)
+
+      const parsed = ch.movePath.map(parseLocation).filter(Boolean) as { x: number; y: number }[]
+      if (parsed.length >= 2) {
+        newAnims.push({ charId: ch.id, path: parsed })
+      }
+    }
+
+    if (newAnims.length === 0) return
+
+    // Start all animations
+    const STEP_MS = 250
+    let step = 0
+    const maxSteps = Math.max(...newAnims.map((a) => a.path.length))
+
+    // Set initial positions
+    setAnimPositions((prev) => {
+      const next = new Map(prev)
+      for (const anim of newAnims) {
+        next.set(anim.charId, anim.path[0]!)
+      }
+      return next
+    })
+
+    const interval = setInterval(() => {
+      step++
+      if (step >= maxSteps - 1) {
+        clearInterval(interval)
+        setAnimPositions((prev) => {
+          const next = new Map(prev)
+          for (const anim of newAnims) {
+            next.delete(anim.charId)
+          }
+          return next
+        })
+        return
+      }
+      setAnimPositions((prev) => {
+        const next = new Map(prev)
+        for (const anim of newAnims) {
+          if (step < anim.path.length) {
+            next.set(anim.charId, anim.path[step]!)
+          }
+        }
+        return next
+      })
+    }, STEP_MS)
+
+    return () => clearInterval(interval)
+  }, [characters])
+
+  // Replay all current movePaths when replayTrigger changes
+  useEffect(() => {
+    if (replayTrigger === undefined || replayTrigger === 0) return
+
+    const anims: { charId: string; path: { x: number; y: number }[] }[] = []
+    for (const ch of characters) {
+      if (!ch.movePath || ch.movePath.length < 2) continue
+      const parsed = ch.movePath.map(parseLocation).filter(Boolean) as { x: number; y: number }[]
+      if (parsed.length >= 2) anims.push({ charId: ch.id, path: parsed })
+    }
+    if (anims.length === 0) return
+
+    const STEP_MS = 250
+    let step = 0
+    const maxSteps = Math.max(...anims.map((a) => a.path.length))
+
+    setAnimPositions(() => {
+      const m = new Map<string, { x: number; y: number }>()
+      for (const a of anims) m.set(a.charId, a.path[0]!)
+      return m
+    })
+
+    const interval = setInterval(() => {
+      step++
+      if (step >= maxSteps - 1) {
+        clearInterval(interval)
+        setAnimPositions(new Map())
+        return
+      }
+      setAnimPositions(() => {
+        const m = new Map<string, { x: number; y: number }>()
+        for (const a of anims) {
+          if (step < a.path.length) m.set(a.charId, a.path[step]!)
+        }
+        return m
+      })
+    }, STEP_MS)
+
+    return () => clearInterval(interval)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [replayTrigger])
 
   const handleWheel = useCallback(
     (e: React.WheelEvent) => {
@@ -291,7 +395,8 @@ export function TileMapSvg({ map, characters, onCellClick, onCharacterClick }: T
 
       {/* Character tokens */}
       {visibleChars.map((ch) => {
-        const pos = parseLocation(ch.location)
+        const animPos = animPositions.get(ch.id)
+        const pos = animPos ?? parseLocation(ch.location)
         if (!pos) return null
         const cx = pos.x * C + C / 2
         const cy = pos.y * C + C / 2
@@ -300,7 +405,7 @@ export function TileMapSvg({ map, characters, onCellClick, onCharacterClick }: T
         const avatarText = getAvatarText(ch.name)
         const fontSize = avatarText.length > 1 ? C * 0.22 : C * 0.28
         return (
-          <g key={`ch-${ch.id}`}>
+          <g key={`ch-${ch.id}`} style={{ transition: animPos ? "transform 0.2s ease" : "none" }}>
             <circle cx={cx} cy={cy} r={r} fill={color} stroke="#fff" strokeWidth={1.5} />
             <text
               x={cx}

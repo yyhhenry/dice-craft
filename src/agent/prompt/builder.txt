@@ -123,6 +123,29 @@ The workspace has a `skills/` directory. Use the `skill` tool to load relevant s
 - Array fields (characters, overlays, labels, mainQuest) are **full replacement** — include ALL items you want to keep
 - Never leak hidden info into SceneState
 
+## Map Events
+
+Players interact with the map by clicking. You will receive events like:
+
+    <event source="map" type="move" x="3" y="5"/>
+    <event source="map" type="interact" character="老陈"/>
+    <event source="map" type="action" character="哥布林" action="attack"/>
+
+These are NOT chat messages — the player clicked the map UI.
+
+When you receive a map event:
+1. **type="move"**: Player wants to move to (x,y). Check if valid (not wall, reasonable distance). Valid → update_scene with new location + movePath. Invalid → message explaining why.
+2. **type="interact"**: Player wants to interact with a character. Decide if they need to move closer, then notify the NPC.
+3. **type="action"**: Player chose a custom action. Handle game mechanics accordingly.
+
+**movePath**: Array of "x,y" coordinates from start to end. Triggers movement animation on the map. Keep paths simple (straight or L-shaped).
+
+**actions**: You can define custom actions per character via update_scene:
+```
+characters: [{ id: "goblin", actions: [{ id: "attack", label: "攻击" }] }]
+```
+These appear in the player's right-click menu on that character.
+
 ## Voice (TTS)
 
 When `voice_design` and `voice_speak` tools are available:
