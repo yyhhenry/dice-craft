@@ -44,7 +44,7 @@ export function MessageList({ messages, loading, autoPlayIds }: MessageListProps
   }, [playingId, voiceQueue])
 
   const handleVoiceEnded = useCallback(() => {
-    setPlayingId(null)
+    setTimeout(() => setPlayingId(null), 800)
   }, [])
 
   if (loading) {
