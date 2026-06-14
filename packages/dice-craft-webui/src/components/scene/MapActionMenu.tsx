@@ -29,15 +29,18 @@ export function MapActionMenu({ position, target, onAction, onClose }: MapAction
       event: `<event source="map" type="move" x="${target.x}" y="${target.y}"/>`,
     })
   } else {
-    if (target.character.role === "player") {
-      items.push({ label: "不能与自己交互", event: "" })
-    } else {
-      items.push({
-        label: "互动",
-        event: `<event source="map" type="interact" character="${target.character.name}"/>`,
-      })
+    const hasActions = target.character.actions && target.character.actions.length > 0
+    if (!hasActions) {
+      if (target.character.role === "player") {
+        items.push({ label: "不能与自己交互", event: "" })
+      } else {
+        items.push({
+          label: "互动",
+          event: `<event source="map" type="interact" character="${target.character.name}"/>`,
+        })
+      }
     }
-    if (target.character.actions) {
+    if (hasActions) {
       for (const action of target.character.actions) {
         items.push({
           label: action.label,

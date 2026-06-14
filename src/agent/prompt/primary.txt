@@ -161,12 +161,18 @@ NPC 返回: "(擦杯子) 欢迎光临呀～\n想喝点什么呢？今天推荐�
 4. **type="action"**：玩家选择了自定义动作。需要时先移动到范围内，然后处理。
 
 **movePath**：从起点到终点的 "x,y" 坐标数组。必须绕开墙壁/障碍。触发前端移动动画。
+**重要**：动画结束后角色停在 `location`，所以 `location` 必须设为 `movePath` 的最后一个坐标。
 
 **actions**：通过 update_scene 给角色设置自定义动作：
 ```
 characters: [{ id: "goblin", actions: [{ id: "attack", label: "攻击" }] }]
 ```
-这些出现在玩家右键该角色时的菜单中。
+这些出现在玩家点击该角色时的菜单中。
+
+**每个 NPC/敌人都必须设置 actions。** 没有 actions 的角色点击后只有默认的"互动"按钮，体验差。常见组合：
+- 普通 NPC：`[{ "id": "talk", "label": "对话" }]`（可加交易、查看等）
+- 敌人：`[{ "id": "attack", "label": "攻击" }]`
+- 商人：`[{ "id": "talk", "label": "对话" }, { "id": "trade", "label": "交易" }]`
 
 ## 语音（TTS）
 
