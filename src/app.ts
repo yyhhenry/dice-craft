@@ -79,34 +79,20 @@ export function createApp(options: {
     sessionManager,
     workspaceId,
     { contextWindowTokens: options.contextWindowTokens },
-    (ctx) => {
+    (_ctx) => {
       const npcRegistry = new ToolRegistry()
-      for (const tool of toolRegistry.all()) {
-        npcRegistry.register(tool)
-      }
-      npcRegistry.register(
-        createMessageTool(chatManager, sessionRef, ctx.sessionId, "npc", (name, _content) => {
-          if (onMessage) onMessage(name, _content)
-        }),
-      )
+      // NPC gets no message tool — it returns text to GM instead
       return npcRegistry
     },
   )
 
   const notifyFn = async (content: string, targets: import("./tool/notify").NotifyTarget[]) => {
-    await dispatcher.notifyMultiple(targets, content)
+    return await dispatcher.notifyMultiple(targets, content)
   }
   toolRegistry.register(createNotifyTool(notifyFn))
 
   toolRegistry.register(createSpawnSubagentTool(dispatcher, sessionRef))
   toolRegistry.register(createDismissNpcTool(dispatcher))
-
-  dispatcher.onSubagentDone = (sessionId, agentName, content) => {
-    primaryAgent.injectEvent(
-      "subagent_done",
-      `<subagent type="${agentName}" session="${sessionId}">\n${content}\n</subagent>`,
-    )
-  }
 
   const skillsDir = options.skillsDir
   if (skillsDir) {

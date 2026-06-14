@@ -11,6 +11,7 @@ export interface ChatMessage {
   senderId: string
   senderName: string
   senderRole: SenderRole
+  avatarText?: string
   content: string
   timestamp: string
   voice?: VoiceAsset

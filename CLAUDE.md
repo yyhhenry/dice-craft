@@ -15,15 +15,14 @@
 
 ```bash
 bun install          # 安装依赖
-bun run dev          # 启动后端服务器（port 3001）
-bun test             # 运行测试
+bun run dev          # 同时启动后端 + 前端
+bun run dev:backend  # 单独启动后端（port 3001）
+bun run dev:webui    # 单独启动前端（port 5173）
+bun run test         # 运行测试（必须用 bun run test，不要裸跑 bun test）
 bun run lint         # ESLint 检查
 bun run typecheck    # 类型检查
 bun run check        # 测试 + 类型检查 + lint（每次改完代码必跑）
 bun run build:webui  # 构建前端
-
-# 前端开发（另开终端）
-cd packages/dice-craft-webui && bun run dev   # Vite dev server (port 5173)
 ```
 
 ## 项目结构

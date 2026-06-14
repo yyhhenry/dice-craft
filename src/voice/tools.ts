@@ -94,14 +94,19 @@ export function createVoiceSpeakTool(ctx: VoiceToolContext): Tool {
           type: "string",
           description: "角色名（作为消息发送者显示）",
         },
+        avatar_text: {
+          type: "string",
+          description: "头像文字（1-2字）",
+        },
       },
-      required: ["text", "character_name"],
+      required: ["text", "character_name", "avatar_text"],
     },
     async execute(args: Record<string, unknown>): Promise<ToolResult> {
       const text = args.text as string
       const voiceFile = args.voice_file as string | undefined
       const voiceDescription = args.voice_description as string | undefined
       const characterName = args.character_name as string
+      const avatarText = args.avatar_text as string
 
       if (!text || !characterName) {
         return { content: "Error: text and character_name are required", isError: true }
@@ -140,6 +145,7 @@ export function createVoiceSpeakTool(ctx: VoiceToolContext): Tool {
           senderId: "voice",
           senderName: characterName,
           senderRole: "npc",
+          avatarText,
           voice: { asset: `voice/${msgId}.wav`, duration },
         })
 

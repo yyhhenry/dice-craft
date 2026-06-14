@@ -112,30 +112,26 @@ export class SubagentDispatcher {
     return { content, sessionId: session.id }
   }
 
-  send(sessionId: string, content: string, expectReply: boolean): Promise<void> {
+  async send(sessionId: string, content: string): Promise<string> {
     const entry = this.activeLoops.get(sessionId)
     if (!entry) {
       throw new Error(`Session not found: ${sessionId}`)
     }
 
     entry.loop.receiveMessage(content)
-
-    if (expectReply) {
-      return entry.loop.waitForIdle().then(() => {
-        this.persistLoopHistory(sessionId, entry.loop)
-      })
-    }
-    entry.loop
-      .waitForIdle()
-      .then(() => {
-        this.persistLoopHistory(sessionId, entry.loop)
-      })
-      .catch(() => {})
-    return Promise.resolve()
+    await entry.loop.waitForIdle()
+    this.persistLoopHistory(sessionId, entry.loop)
+    return this.extractLastAssistantContent(entry.loop.getHistory())
   }
 
-  async notifyMultiple(targets: NotifyTarget[], content: string): Promise<void> {
-    await Promise.all(targets.map((t) => this.send(t.session_id, content, t.expect_reply ?? false)))
+  async notifyMultiple(targets: NotifyTarget[], content: string): Promise<{ sessionId: string; response: string }[]> {
+    const results = await Promise.all(
+      targets.map(async (t) => {
+        const response = await this.send(t.session_id, content)
+        return { sessionId: t.session_id, response }
+      }),
+    )
+    return results
   }
 
   dismiss(sessionId: string): void {

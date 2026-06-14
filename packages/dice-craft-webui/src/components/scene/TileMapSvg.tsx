@@ -1,7 +1,6 @@
 import { useState, useCallback, useRef, useMemo, useEffect } from "react"
 import type { SceneMap, SceneCharacter } from "@shared/schemas"
 import { CELL_SIZE, PATTERN_SIZE, ROLE_COLORS, OVERLAY_SYMBOLS, resolveTerrainPattern } from "./terrain"
-import { getAvatarText } from "@/lib/utils"
 
 export interface CellClickInfo {
   x: number
@@ -410,7 +409,7 @@ export function TileMapSvg({ map, characters, replayTrigger, onCellClick, onChar
         const cy = pos.y * C + C / 2
         const r = C * 0.35
         const color = ROLE_COLORS[ch.role] ?? ROLE_COLORS.neutral
-        const avatarText = getAvatarText(ch.name)
+        const avatarText = ch.avatarText
         const fontSize = avatarText.length > 1 ? C * 0.22 : C * 0.28
         return (
           <g key={`ch-${ch.id}`} style={{ transition: animPos ? "transform 0.2s ease" : "none" }}>

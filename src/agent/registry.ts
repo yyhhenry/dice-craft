@@ -29,7 +29,7 @@ export class AgentRegistry {
   }
 }
 
-import builderPrompt from "./prompt/builder.txt" with { type: "text" }
+import builderPrompt from "./prompt/primary.txt" with { type: "text" }
 import explorePrompt from "./prompt/explore.txt" with { type: "text" }
 import reviewPrompt from "./prompt/review.txt" with { type: "text" }
 import npcPrompt from "./prompt/npc.txt" with { type: "text" }

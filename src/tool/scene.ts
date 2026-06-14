@@ -74,6 +74,13 @@ export function createUpdateSceneTool(
               id: { type: "string" },
               name: { type: "string" },
               role: { type: "string", enum: ["npc", "player", "enemy", "ally", "neutral"] },
+              avatarText: {
+                type: "string",
+                description:
+                  "角色头像文字（必填，1-2字）。显示在地图 token 和聊天头像上。\n" +
+                  "规则：取角色名中最有辨识度的 1-2 个字，尽量短，不含标点空格。\n" +
+                  "示例：小柚→柚，三月七→三月，老陈→陈，Alice→A，玩家→你",
+              },
               sessionId: { type: "string" },
               summary: { type: "string" },
               status: { type: "string" },
@@ -97,7 +104,7 @@ export function createUpdateSceneTool(
                 },
               },
             },
-            required: ["id"],
+            required: ["id", "name", "role", "avatarText"],
           },
         },
         mainQuest: {

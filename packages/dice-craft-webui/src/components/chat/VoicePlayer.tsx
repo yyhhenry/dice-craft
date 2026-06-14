@@ -1,6 +1,23 @@
 import { useState, useRef, useEffect, useCallback } from "react"
 import { Volume2, Pause, Loader2 } from "lucide-react"
 
+const WAKE_UP_DELAY_MS = 300
+
+function wakeUpAudio(): Promise<void> {
+  return new Promise((resolve) => {
+    const ctx = new AudioContext()
+    const source = ctx.createBufferSource()
+    const buffer = ctx.createBuffer(1, ctx.sampleRate * 0.05, ctx.sampleRate)
+    source.buffer = buffer
+    source.connect(ctx.destination)
+    source.start()
+    setTimeout(() => {
+      ctx.close()
+      resolve()
+    }, WAKE_UP_DELAY_MS)
+  })
+}
+
 interface VoicePlayerProps {
   url: string
   duration: number
@@ -33,8 +50,8 @@ export function VoicePlayer({ url, duration, autoPlay, onEnded }: VoicePlayerPro
 
     if (autoPlay) {
       setLoading(true)
-      audio
-        .play()
+      wakeUpAudio()
+        .then(() => audio.play())
         .then(() => {
           setPlaying(true)
           setLoading(false)

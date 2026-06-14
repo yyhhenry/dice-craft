@@ -39,14 +39,14 @@ export class WorkspaceManager {
       createdAt: new Date().toISOString(),
     }
 
-    const metaPath = path.join(this.metaDir, `${id}.json`)
+    const metaPath = path.join(this.metaDir, `${id}-meta.json`)
     fs.writeFileSync(metaPath, JSON.stringify(info, null, 2))
 
     return info
   }
 
   get(id: WorkspaceID): WorkspaceInfo | undefined {
-    const metaPath = path.join(this.metaDir, `${id}.json`)
+    const metaPath = path.join(this.metaDir, `${id}-meta.json`)
     if (!fs.existsSync(metaPath)) return undefined
     return JSON.parse(fs.readFileSync(metaPath, "utf-8"))
   }
@@ -55,7 +55,7 @@ export class WorkspaceManager {
     if (!fs.existsSync(this.metaDir)) return []
     return fs
       .readdirSync(this.metaDir)
-      .filter((f) => f.endsWith(".json"))
+      .filter((f) => f.endsWith("-meta.json"))
       .map((f) => {
         try {
           return JSON.parse(fs.readFileSync(path.join(this.metaDir, f), "utf-8"))
@@ -75,7 +75,7 @@ export class WorkspaceManager {
     if (fs.existsSync(wsPath)) {
       fs.rmSync(wsPath, { recursive: true, force: true })
     }
-    const metaPath = path.join(this.metaDir, `${id}.json`)
+    const metaPath = path.join(this.metaDir, `${id}-meta.json`)
     if (fs.existsSync(metaPath)) {
       fs.unlinkSync(metaPath)
     }

@@ -84,6 +84,7 @@ export const SceneCharacterSchema = z.object({
   id: z.string(),
   name: z.string(),
   role: CharacterRoleSchema,
+  avatarText: z.string().min(1).max(2),
   sessionId: z.string().optional(),
   summary: z.string().optional(),
   status: z.string().optional(),

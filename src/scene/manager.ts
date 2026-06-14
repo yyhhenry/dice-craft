@@ -66,6 +66,14 @@ export class SceneManager {
     }
 
     if (patch.characters) {
+      for (const ch of patch.characters) {
+        const avatar = (ch as Record<string, unknown>).avatarText as string | undefined
+        if (!avatar || avatar.length < 1 || avatar.length > 2) {
+          throw new Error(
+            `Character "${(ch as Record<string, unknown>).name ?? (ch as Record<string, unknown>).id}" has invalid avatarText: "${avatar ?? ""}" (must be 1-2 chars)`,
+          )
+        }
+      }
       current.characters = patch.characters as SceneState["characters"]
     }
 
