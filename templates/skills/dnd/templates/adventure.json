@@ -1,0 +1,50 @@
+{
+  "premise": "玩家可见的冒险引子（一段话）。",
+  "opening_scene_id": "opening",
+  "maps": [
+    {
+      "id": "opening",
+      "name": "开场场景",
+      "file": "maps/opening.map.csv",
+      "description": "玩家进入时能看到的环境描述。",
+      "dm_private_notes": "仅 GM：埋伏、机关等。"
+    }
+  ],
+  "quests": [
+    {
+      "id": "main",
+      "title": "主线任务",
+      "player_visible_goal": "玩家知道要做什么。",
+      "dm_private_goal": "仅 GM：真实目标与分支。",
+      "status": "inactive"
+    }
+  ],
+  "important_npcs": [
+    {
+      "id": "npc_guide",
+      "name": "向导",
+      "personality": "性格与说话习惯。",
+      "public_identity": "玩家可见身份。",
+      "private_goal": "仅 GM：真实动机。",
+      "known_information": ["NPC 确定知道的事实"]
+    }
+  ],
+  "hidden_clues": [
+    {
+      "id": "clue_01",
+      "text": "线索内容（GM 用）",
+      "related_entity_ids": ["npc_guide"],
+      "reveal_condition": "何时可告诉玩家",
+      "revealed": false
+    }
+  ],
+  "characters": [
+    {
+      "id": "pc_hero",
+      "name": "主角",
+      "role": "player",
+      "public_background": "玩家可见背景。",
+      "stats": { "hp": 10, "max_hp": 10, "ac": 14, "attack_mod": 4 }
+    }
+  ]
+}
