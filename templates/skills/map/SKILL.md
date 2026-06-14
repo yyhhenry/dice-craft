@@ -1,16 +1,31 @@
 ---
 name: map
-description: "网格地图创建与展示。CSV 格式规范、地形 token、覆盖物/标签放置、update_scene 规则。"
+description: "网格地图创建与展示。CSV 格式、地形 token、互动按钮。"
 ---
 
 # 地图技能
 
-阅读 **`skills/map/GUIDE.md`** 获取格式规范、地形 token、覆盖物和 update_scene 规则。
+## CSV 格式
 
-- **Build 模式：** 只写 `.map.csv` 文件（不调 `update_scene`）
-- **Play 模式：** `update_scene` 的 `map.mapFile` 指向工作区中的 CSV 路径
+每格一个地形 token，逗号分隔行。以 `#` 开头的行被解析器忽略（用于标题、尺寸、GM 备注）。
 
-## 示例
+```
+# 标准酒馆
+# 6x6 带吧台
+# overlay: door at 2,5 — 正门
+wall,wall,wall,wall,wall,wall
+wall,wood,wood,wood,wood,wall
+wall,wood,dirt,dirt,wood,wall
+wall,wall,wall,wall,wall,wall
+```
+
+**地形 token：** `wall`、`grass`、`stone`、`wood`、`dirt`、`sand`、`water`、`lava`、`ice`、`void`（空格 = void）
+
+**色调变体：** `.dark` 或 `.light`（如 `wood.dark` 用于家具，`wood` 用于地板）
+
+**尺寸：** 6×6 到 12×12，每行宽度一致
+
+## 示例地图
 
 参考地图在 `skills/map/examples/`：
 
@@ -25,17 +40,14 @@ description: "网格地图创建与展示。CSV 格式规范、地形 token、�
 | `river-crossing.map.csv` | 河岸渡口 (8×6) |
 | `castle-hall.map.csv` | 城堡大厅 (8×10) |
 | `market-street.map.csv` | 市集街道 (10×6) |
-| `opening-scene.patch.json` | update_scene 参数示例（含 actions） |
 
 以这些为起点——复制并修改适配你的场景。
 
 ## 互动按钮（actions）
 
-玩家点击地图上的角色时弹出菜单。默认有"互动"按钮，可通过 `actions` 添加自定义按钮。
+玩家点击角色时弹出菜单。默认有"互动"按钮，可通过 `actions` 添加自定义按钮。
 
-### 设置方式
-
-在 `update_scene` 的 `characters` 中为角色添加 `actions`：
+在 `update_scene` 的 `characters` 中设置：
 
 ```json
 {
@@ -50,17 +62,9 @@ description: "网格地图创建与展示。CSV 格式规范、地形 token、�
 }
 ```
 
-### 事件格式
+玩家点击后收到：`<event source="map" type="action" character="老陈" action="talk"/>`
 
-玩家点击自定义按钮后，你会收到：
-
-```
-<event source="map" type="action" character="老陈" action="talk"/>
-```
-
-### 设计建议
-
-- **每个 NPC 都应该有 actions**——至少一个"对话"或角色特有的交互
-- 敌人角色用 `attack`（如 `{ "id": "attack", "label": "攻击" }`）
-- 可交互物品用 overlay + 合适的 label
-- label 用简短中文（2-4 字），如：对话、交易、攻击、查看、打开、拾取
+**设计建议：**
+- 每个 NPC 都应该有 actions——至少一个"对话"或角色特有的交互
+- 敌人用 `attack`，商人用 `talk` + `trade`
+- label 用简短中文（2-4 字）
