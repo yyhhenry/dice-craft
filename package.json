@@ -7,8 +7,8 @@
   "private": true,
   "workspaces": ["packages/*"],
   "scripts": {
-    "dev": "bun run sync:skills && bun run dev:backend & bun run dev:webui & wait",
-    "dev:backend": "bun run src/index.ts",
+    "dev": "run-p dev:backend dev:webui",
+    "dev:backend": "bun run sync:skills && bun run src/index.ts",
     "dev:webui": "cd packages/dice-craft-webui && bun run dev",
     "sync:skills": "test -d data/workspaces/ws_default && rm -rf data/workspaces/ws_default/skills && cp -r templates/skills data/workspaces/ws_default/skills || true",
     "build:webui": "cd packages/dice-craft-webui && bun run build",
@@ -25,6 +25,7 @@
     "eslint": "^10.4.0",
     "eslint-plugin-react": "^7.37.5",
     "globals": "^17.6.0",
+    "npm-run-all": "^4.1.5",
     "prettier": "^3.8.3",
     "typescript-eslint": "^8.59.4"
   },
