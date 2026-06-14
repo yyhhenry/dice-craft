@@ -8,8 +8,11 @@ Usage:
     python dice.py "2d20kh1"    # advantage
     python dice.py "2d20kl1"    # disadvantage
     python dice.py "2d6rh1"     # reroll 1s once
+    python dice.py "1d20+6" --dc 15   # check against DC 15
+    python dice.py "1d20+6" --ac 16   # attack against AC 16
 """
 
+import argparse
 import json
 import random
 import re
@@ -67,18 +70,52 @@ def parse_and_roll(notation: str, rng: random.Random | None = None) -> dict:
     }
 
 
-def main():
-    if len(sys.argv) < 2:
-        print(json.dumps({"error": "Usage: dice.py <notation>"}))
-        sys.exit(1)
+def _parse_dice(notation: str) -> list[tuple[int, int]]:
+    """Parse NdS notation and return list of (num, sides) tuples."""
+    pattern = r"^(\d+)d(\d+)"
+    m = re.match(pattern, notation.strip().lower())
+    if not m:
+        return []
+    return [(int(m.group(1)), int(m.group(2)))]
 
-    notation = sys.argv[1]
+
+def main():
+    parser = argparse.ArgumentParser(description="Dice roller with DND check support")
+    parser.add_argument("notation", help="Dice notation (e.g. 1d20+5, 2d6kh1)")
+    parser.add_argument("--dc", type=int, help="Difficulty Class for ability/save checks")
+    parser.add_argument("--ac", type=int, help="Armor Class for attack rolls")
+    args = parser.parse_args()
+
     try:
-        result = parse_and_roll(notation)
-        print(json.dumps(result))
+        result = parse_and_roll(args.notation)
     except ValueError as e:
         print(json.dumps({"error": str(e)}))
         sys.exit(1)
+
+    # Determine raw d20 value for crit detection (before modifiers)
+    is_d20 = any(s == 20 for _, s in _parse_dice(args.notation))
+    if is_d20 and result["rolls"]:
+        raw_d20 = result["rolls"][0]  # first d20 roll (before kh/kl filter)
+        result["natural"] = raw_d20
+        result["critical_success"] = raw_d20 == 20
+        result["critical_failure"] = raw_d20 == 1
+
+    target = args.dc or args.ac
+    if target is not None:
+        check_type = "attack" if args.ac else "check"
+        if result.get("critical_success"):
+            result["outcome"] = "critical_success"
+            result["success"] = True
+        elif result.get("critical_failure"):
+            result["outcome"] = "critical_failure"
+            result["success"] = False
+        else:
+            result["success"] = result["total"] >= target
+            result["outcome"] = "success" if result["success"] else "failure"
+        result["target"] = target
+        result["check_type"] = check_type
+
+    print(json.dumps(result))
 
 
 if __name__ == "__main__":

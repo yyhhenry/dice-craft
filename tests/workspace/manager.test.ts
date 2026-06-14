@@ -86,14 +86,14 @@ describe("WorkspaceManager", () => {
       ownerId: userId("user1"),
     })
 
-    // dnd skill template should be copied
-    const dndDir = path.join(ws.path, "skills", "dnd")
-    expect(fs.existsSync(dndDir)).toBe(true)
-    expect(fs.existsSync(path.join(dndDir, "SKILL.md"))).toBe(true)
-    expect(fs.existsSync(path.join(dndDir, "scripts", "roll.py"))).toBe(true)
+    // dice skill template should be copied
+    const diceDir = path.join(ws.path, "skills", "dice")
+    expect(fs.existsSync(diceDir)).toBe(true)
+    expect(fs.existsSync(path.join(diceDir, "SKILL.md"))).toBe(true)
+    expect(fs.existsSync(path.join(diceDir, "dice.py"))).toBe(true)
 
     // SKILL.md should have frontmatter
-    const content = fs.readFileSync(path.join(dndDir, "SKILL.md"), "utf-8")
-    expect(content).toContain("name: dnd")
+    const content = fs.readFileSync(path.join(diceDir, "SKILL.md"), "utf-8")
+    expect(content).toContain("name: dice")
   })
 })
