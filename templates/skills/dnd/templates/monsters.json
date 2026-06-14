@@ -1,0 +1,15 @@
+{
+  "monsters": [
+    {
+      "id": "goblin",
+      "name": "哥布林",
+      "cr": "1/4",
+      "ac": 13,
+      "hp": 7,
+      "attack_mod": 4,
+      "damage": "1d6+2",
+      "player_visible": "矮小绿皮人，手持生锈短刀。",
+      "dm_notes": "喜欢伏击；血量低时会逃跑。"
+    }
+  ]
+}
