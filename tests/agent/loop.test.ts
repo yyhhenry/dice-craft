@@ -27,6 +27,7 @@ describe("AgentLoop", () => {
   test("direct conversation (no tool calls) returns immediately", async () => {
     const model = createMockModel({
       content: "Hello!",
+      reasoningContent: null,
       toolCalls: null,
       finishReason: "stop",
     })
@@ -43,18 +44,20 @@ describe("AgentLoop", () => {
     registry.register(tool)
 
     let callCount = 0
-    const model = createMockModel({ content: "", toolCalls: null, finishReason: "stop" })
+    const model = createMockModel({ content: "", reasoningContent: null, toolCalls: null, finishReason: "stop" })
     model.chat = mock(() => {
       callCount++
       if (callCount === 1) {
         return Promise.resolve({
           content: null,
+          reasoningContent: null,
           toolCalls: [{ id: "call_1", name: "get_current_time", arguments: {} }],
           finishReason: "tool_calls",
         })
       }
       return Promise.resolve({
         content: "It is 2026-01-01 12:00:00.",
+        reasoningContent: null,
         toolCalls: null,
         finishReason: "stop",
       })
@@ -71,18 +74,20 @@ describe("AgentLoop", () => {
     const registry = new ToolRegistry()
 
     let callCount = 0
-    const model = createMockModel({ content: "", toolCalls: null, finishReason: "stop" })
+    const model = createMockModel({ content: "", reasoningContent: null, toolCalls: null, finishReason: "stop" })
     model.chat = mock(() => {
       callCount++
       if (callCount === 1) {
         return Promise.resolve({
           content: null,
+          reasoningContent: null,
           toolCalls: [{ id: "call_1", name: "nonexistent_tool", arguments: {} }],
           finishReason: "tool_calls",
         })
       }
       return Promise.resolve({
         content: "Sorry, I cannot perform that operation.",
+        reasoningContent: null,
         toolCalls: null,
         finishReason: "stop",
       })
@@ -99,10 +104,11 @@ describe("AgentLoop", () => {
     const registry = new ToolRegistry()
     registry.register(tool)
 
-    const model = createMockModel({ content: "", toolCalls: null, finishReason: "stop" })
+    const model = createMockModel({ content: "", reasoningContent: null, toolCalls: null, finishReason: "stop" })
     model.chat = mock(() =>
       Promise.resolve({
         content: null,
+        reasoningContent: null,
         toolCalls: [{ id: "call_1", name: "loop_tool", arguments: {} }],
         finishReason: "tool_calls",
       }),
@@ -118,6 +124,7 @@ describe("AgentLoop", () => {
   test("system prompt is correctly set", async () => {
     const model = createMockModel({
       content: "Acknowledged",
+      reasoningContent: null,
       toolCalls: null,
       finishReason: "stop",
     })
@@ -134,6 +141,7 @@ describe("AgentLoop", () => {
   test("no system message when systemPrompt is omitted", async () => {
     const model = createMockModel({
       content: "Hi there",
+      reasoningContent: null,
       toolCalls: null,
       finishReason: "stop",
     })
@@ -150,6 +158,7 @@ describe("AgentLoop", () => {
   test("history is correctly passed through", async () => {
     const model = createMockModel({
       content: "Continuing conversation",
+      reasoningContent: null,
       toolCalls: null,
       finishReason: "stop",
     })
@@ -167,6 +176,7 @@ describe("AgentLoop", () => {
   test("injectEvent adds events to queue", () => {
     const model = createMockModel({
       content: "Done",
+      reasoningContent: null,
       toolCalls: null,
       finishReason: "stop",
     })
@@ -186,18 +196,20 @@ describe("AgentLoop", () => {
     registry.register(tool)
 
     let callCount = 0
-    const model = createMockModel({ content: "", toolCalls: null, finishReason: "stop" })
+    const model = createMockModel({ content: "", reasoningContent: null, toolCalls: null, finishReason: "stop" })
     model.chat = mock(() => {
       callCount++
       if (callCount === 1) {
         return Promise.resolve({
           content: null,
+          reasoningContent: null,
           toolCalls: [{ id: "call_1", name: "test_tool", arguments: {} }],
           finishReason: "tool_calls",
         })
       }
       return Promise.resolve({
         content: "Final response",
+        reasoningContent: null,
         toolCalls: null,
         finishReason: "stop",
       })
@@ -225,18 +237,20 @@ describe("AgentLoop", () => {
     registry.register(tool)
 
     let callCount = 0
-    const model = createMockModel({ content: "", toolCalls: null, finishReason: "stop" })
+    const model = createMockModel({ content: "", reasoningContent: null, toolCalls: null, finishReason: "stop" })
     model.chat = mock(() => {
       callCount++
       if (callCount === 1) {
         return Promise.resolve({
           content: null,
+          reasoningContent: null,
           toolCalls: [{ id: "call_1", name: "test_tool", arguments: {} }],
           finishReason: "tool_calls",
         })
       }
       return Promise.resolve({
         content: "Done",
+        reasoningContent: null,
         toolCalls: null,
         finishReason: "stop",
       })
@@ -263,18 +277,20 @@ describe("AgentLoop", () => {
     registry.register(tool)
 
     let callCount = 0
-    const model = createMockModel({ content: "", toolCalls: null, finishReason: "stop" })
+    const model = createMockModel({ content: "", reasoningContent: null, toolCalls: null, finishReason: "stop" })
     model.chat = mock(() => {
       callCount++
       if (callCount === 1) {
         return Promise.resolve({
           content: null,
+          reasoningContent: null,
           toolCalls: [{ id: "call_1", name: "test_tool", arguments: {} }],
           finishReason: "tool_calls",
         })
       }
       return Promise.resolve({
         content: "Done",
+        reasoningContent: null,
         toolCalls: null,
         finishReason: "stop",
       })

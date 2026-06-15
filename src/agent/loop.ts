@@ -359,7 +359,11 @@ export class AgentLoop {
       }
 
       if (result.content && !result.toolCalls) {
-        const assistantMessage: ChatCompletionMessageParam = { role: "assistant", content: result.content }
+        const assistantMessage: ChatCompletionMessageParam = {
+          role: "assistant",
+          content: result.content,
+          ...(result.reasoningContent ? { reasoning_content: result.reasoningContent } : {}),
+        } as ChatCompletionMessageParam
         messages.push(assistantMessage)
         rawMessages.push(assistantMessage)
 
@@ -380,6 +384,7 @@ export class AgentLoop {
         const assistantMessage: ChatCompletionMessageParam = {
           role: "assistant",
           content: result.content,
+          ...(result.reasoningContent ? { reasoning_content: result.reasoningContent } : {}),
           tool_calls: result.toolCalls.map((tc) => ({
             id: tc.id,
             type: "function" as const,
@@ -388,7 +393,7 @@ export class AgentLoop {
               arguments: JSON.stringify(tc.arguments),
             },
           })),
-        }
+        } as ChatCompletionMessageParam
         messages.push(assistantMessage)
         rawMessages.push(assistantMessage)
 

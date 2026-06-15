@@ -1,5 +1,6 @@
 import OpenAI from "openai"
 import type { ChatCompletionMessageParam } from "openai/resources/chat/completions"
+import { z } from "zod"
 import type { Tool, ToolCall } from "../tool/base"
 
 export interface ModelConfig {
@@ -16,6 +17,7 @@ export interface ChatUsage {
 
 export interface ChatResponse {
   content: string | null
+  reasoningContent: string | null
   toolCalls: ToolCall[] | null
   finishReason: string | null
   usage?: ChatUsage | null
@@ -24,6 +26,27 @@ export interface ChatResponse {
 export interface StreamCallbacks {
   onToken?: (token: string) => void
   onToolCall?: (call: ToolCall) => void
+}
+
+const MessageSchema = z.object({
+  content: z.string().nullable().optional(),
+  reasoning_content: z.string().nullable().optional(),
+  tool_calls: z
+    .array(
+      z.object({
+        id: z.string(),
+        type: z.literal("function"),
+        function: z.object({
+          name: z.string(),
+          arguments: z.string(),
+        }),
+      }),
+    )
+    .optional(),
+})
+
+function parseMessage(raw: unknown): z.infer<typeof MessageSchema> {
+  return MessageSchema.parse(raw)
 }
 
 export class OpenAIModel {
@@ -64,21 +87,21 @@ export class OpenAIModel {
 
     const choice = response.choices[0]
     if (!choice) {
-      return { content: null, toolCalls: null, finishReason: null, usage: null }
+      return { content: null, reasoningContent: null, toolCalls: null, finishReason: null, usage: null }
     }
 
-    const content = choice.message.content || null
+    const message = parseMessage(choice.message)
+    const content = message.content || null
+    const reasoningContent = message.reasoning_content || null
     const finishReason = choice.finish_reason || null
 
     let toolCallsArray: ToolCall[] | null = null
-    if (choice.message.tool_calls && choice.message.tool_calls.length > 0) {
-      toolCallsArray = choice.message.tool_calls
-        .filter((tc): tc is Extract<typeof tc, { type: "function" }> => tc.type === "function")
-        .map((tc) => ({
-          id: tc.id,
-          name: tc.function.name,
-          arguments: JSON.parse(tc.function.arguments || "{}"),
-        }))
+    if (message.tool_calls && message.tool_calls.length > 0) {
+      toolCallsArray = message.tool_calls.map((tc) => ({
+        id: tc.id,
+        name: tc.function.name,
+        arguments: JSON.parse(tc.function.arguments || "{}"),
+      }))
     }
 
     const usage: ChatUsage | null = response.usage
@@ -89,6 +112,6 @@ export class OpenAIModel {
         }
       : null
 
-    return { content, toolCalls: toolCallsArray, finishReason, usage }
+    return { content, reasoningContent, toolCalls: toolCallsArray, finishReason, usage }
   }
 }

@@ -41,7 +41,7 @@ describe("SpawnSubagentTool", () => {
     toolRegistry = new ToolRegistry()
     sessionManager = createTestSessionManager()
     dispatcher = new SubagentDispatcher(
-      createMockModel({ content: "Done", toolCalls: null, finishReason: "stop" }),
+      createMockModel({ content: "Done", reasoningContent: null, toolCalls: null, finishReason: "stop" }),
       toolRegistry,
       agentRegistry,
       sessionManager.sessionManager,

@@ -40,6 +40,7 @@ describe("SubagentDispatcher", () => {
   test("spawn returns sessionId", async () => {
     const model = createMockModel({
       content: "Exploration complete",
+      reasoningContent: null,
       toolCalls: null,
       finishReason: "stop",
     })
@@ -59,6 +60,7 @@ describe("SubagentDispatcher", () => {
   test("spawn with background=true returns immediately", async () => {
     const model = createMockModel({
       content: "Background work done",
+      reasoningContent: null,
       toolCalls: null,
       finishReason: "stop",
     })
@@ -78,6 +80,7 @@ describe("SubagentDispatcher", () => {
   test("spawn throws error for unknown agent type", async () => {
     const model = createMockModel({
       content: "Should not reach here",
+      reasoningContent: null,
       toolCalls: null,
       finishReason: "stop",
     })
@@ -94,18 +97,20 @@ describe("SubagentDispatcher", () => {
 
   test("send continues conversation in existing session", async () => {
     let callCount = 0
-    const model = createMockModel({ content: "", toolCalls: null, finishReason: "stop" })
+    const model = createMockModel({ content: "", reasoningContent: null, toolCalls: null, finishReason: "stop" })
     model.chat = mock(() => {
       callCount++
       if (callCount === 1) {
         return Promise.resolve({
           content: "First response",
+          reasoningContent: null,
           toolCalls: null,
           finishReason: "stop",
         })
       }
       return Promise.resolve({
         content: "Second response",
+        reasoningContent: null,
         toolCalls: null,
         finishReason: "stop",
       })
@@ -129,6 +134,7 @@ describe("SubagentDispatcher", () => {
   test("send throws error for nonexistent session", async () => {
     const model = createMockModel({
       content: "Should not reach here",
+      reasoningContent: null,
       toolCalls: null,
       finishReason: "stop",
     })
@@ -146,6 +152,7 @@ describe("SubagentDispatcher", () => {
   test("hasSession returns false for foreground session after completion", async () => {
     const model = createMockModel({
       content: "Done",
+      reasoningContent: null,
       toolCalls: null,
       finishReason: "stop",
     })
@@ -166,6 +173,7 @@ describe("SubagentDispatcher", () => {
   test("hasSession returns true for background session", async () => {
     const model = createMockModel({
       content: "Background done",
+      reasoningContent: null,
       toolCalls: null,
       finishReason: "stop",
     })
@@ -185,6 +193,7 @@ describe("SubagentDispatcher", () => {
   test("spawn persists session to disk", async () => {
     const model = createMockModel({
       content: "Persisted",
+      reasoningContent: null,
       toolCalls: null,
       finishReason: "stop",
     })
@@ -207,6 +216,7 @@ describe("SubagentDispatcher", () => {
   test("restore loads session from disk into memory", async () => {
     const model = createMockModel({
       content: "Restored",
+      reasoningContent: null,
       toolCalls: null,
       finishReason: "stop",
     })
@@ -235,7 +245,7 @@ describe("SubagentDispatcher", () => {
   })
 
   test("notifyMultiple sends to multiple targets", async () => {
-    const model = createMockModel({ content: "ok", toolCalls: null, finishReason: "stop" })
+    const model = createMockModel({ content: "ok", reasoningContent: null, toolCalls: null, finishReason: "stop" })
     const dispatcher = new SubagentDispatcher(
       model,
       toolRegistry,
