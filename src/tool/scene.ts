@@ -31,7 +31,7 @@ export function createUpdateSceneTool(
             title: { type: "string" },
             mapFile: {
               type: "string",
-              description: "Path to CSV map file in workspace (e.g. .game-state/tavern.map.csv)",
+              description: "Path to CSV map file in workspace (e.g. games/tavern/maps/floor1.map.csv)",
             },
             overlays: {
               type: "array",
@@ -44,6 +44,15 @@ export function createUpdateSceneTool(
                   y: { type: "integer" },
                   type: { type: "string", description: "door, chest, trap, stairs, marker" },
                   label: { type: "string" },
+                  actions: {
+                    type: "array",
+                    description: "Interaction options shown when player clicks this overlay",
+                    items: {
+                      type: "object",
+                      properties: { id: { type: "string" }, label: { type: "string" } },
+                      required: ["id", "label"],
+                    },
+                  },
                 },
                 required: ["id"],
               },

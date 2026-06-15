@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useMemo, useEffect } from "react"
-import type { SceneMap, SceneCharacter } from "@shared/schemas"
+import type { SceneMap, SceneCharacter, SceneOverlay } from "@shared/schemas"
 import { CELL_SIZE, PATTERN_SIZE, ROLE_COLORS, OVERLAY_SYMBOLS, resolveTerrainPattern } from "./terrain"
 
 export interface CellClickInfo {
@@ -15,12 +15,19 @@ export interface CharacterClickInfo {
   screenY: number
 }
 
+export interface OverlayClickInfo {
+  overlay: SceneOverlay
+  screenX: number
+  screenY: number
+}
+
 interface TileMapSvgProps {
   map: SceneMap
   characters: SceneCharacter[]
   replayTrigger?: number
   onCellClick?: (info: CellClickInfo) => void
   onCharacterClick?: (info: CharacterClickInfo) => void
+  onOverlayClick?: (info: OverlayClickInfo) => void
 }
 
 function parseLocation(loc?: string): { x: number; y: number } | null {
@@ -43,7 +50,7 @@ function svgPoint(svg: SVGSVGElement, clientX: number, clientY: number): { x: nu
   return { x: transformed.x, y: transformed.y }
 }
 
-export function TileMapSvg({ map, characters, replayTrigger, onCellClick, onCharacterClick }: TileMapSvgProps) {
+export function TileMapSvg({ map, characters, replayTrigger, onCellClick, onCharacterClick, onOverlayClick }: TileMapSvgProps) {
   const { width = 0, height = 0, cells = [], overlays = [], labels = [] } = map
   const C = CELL_SIZE
 
@@ -257,23 +264,34 @@ export function TileMapSvg({ map, characters, replayTrigger, onCellClick, onChar
       const cellX = Math.floor(pt.x / C)
       const cellY = Math.floor(pt.y / C)
 
-      // Check if a character was clicked
+      if (cellX < 0 || cellX >= width || cellY < 0 || cellY >= height) return
+
+      // Check if a character is at this cell
       const clickedChar = visibleChars.find((ch) => {
         const pos = parseLocation(ch.location)
-        if (!pos) return false
-        const cx = pos.x * C + C / 2
-        const cy = pos.y * C + C / 2
-        const dist = Math.hypot(pt.x - cx, pt.y - cy)
-        return dist < C * 0.4
+        return pos !== null && pos.x === cellX && pos.y === cellY
       })
 
       if (clickedChar && onCharacterClick) {
         onCharacterClick({ character: clickedChar, screenX: e.clientX, screenY: e.clientY })
-      } else if (cellX >= 0 && cellX < width && cellY >= 0 && cellY < height && onCellClick) {
+        return
+      }
+
+      // Check if an overlay is at this cell
+      const overlays = map.overlays ?? []
+      const clickedOverlay = overlays.find((o) => o.x === cellX && o.y === cellY)
+
+      if (clickedOverlay && onOverlayClick) {
+        onOverlayClick({ overlay: clickedOverlay, screenX: e.clientX, screenY: e.clientY })
+        return
+      }
+
+      // Empty cell
+      if (onCellClick) {
         onCellClick({ x: cellX, y: cellY, screenX: e.clientX, screenY: e.clientY })
       }
     },
-    [C, width, height, visibleChars, onCellClick, onCharacterClick],
+    [C, width, height, visibleChars, map.overlays, onCellClick, onCharacterClick, onOverlayClick],
   )
 
   const handleMouseLeave = useCallback(() => {

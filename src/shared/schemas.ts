@@ -48,12 +48,18 @@ export const SceneMapCellSchema = z.object({
   terrain: z.string(),
 })
 
+export const CharacterActionSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+})
+
 export const SceneOverlaySchema = z.object({
   id: z.string(),
   x: z.number().int(),
   y: z.number().int(),
   type: z.string(),
   label: z.string().optional(),
+  actions: z.array(CharacterActionSchema).optional(),
 })
 
 export const MapLabelSchema = z.object({
@@ -74,11 +80,6 @@ export const SceneMapSchema = z.object({
 })
 
 export const CharacterRoleSchema = z.enum(["npc", "player", "enemy", "ally", "neutral"])
-
-export const CharacterActionSchema = z.object({
-  id: z.string(),
-  label: z.string(),
-})
 
 export const SceneCharacterSchema = z.object({
   id: z.string(),

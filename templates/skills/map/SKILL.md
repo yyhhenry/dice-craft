@@ -42,29 +42,3 @@ wall,wall,wall,wall,wall,wall
 | `market-street.map.csv` | 市集街道 (10×6) |
 
 以这些为起点——复制并修改适配你的场景。
-
-## 互动按钮（actions）
-
-玩家点击角色时弹出菜单。默认有"互动"按钮，可通过 `actions` 添加自定义按钮。
-
-在 `update_scene` 的 `characters` 中设置：
-
-```json
-{
-  "id": "bartender",
-  "name": "老陈",
-  "role": "npc",
-  "location": "2,2",
-  "actions": [
-    { "id": "talk", "label": "对话" },
-    { "id": "trade", "label": "交易" }
-  ]
-}
-```
-
-玩家点击后收到：`<event source="map" type="action" character="老陈" action="talk"/>`
-
-**设计建议：**
-- 每个 NPC 都应该有 actions——至少一个"对话"或角色特有的交互
-- 敌人用 `attack`，商人用 `talk` + `trade`
-- label 用简短中文（2-4 字）
