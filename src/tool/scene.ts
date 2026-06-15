@@ -44,6 +44,15 @@ export function createUpdateSceneTool(
                   y: { type: "integer" },
                   type: { type: "string", description: "door, chest, trap, stairs, marker" },
                   label: { type: "string" },
+                  actions: {
+                    type: "array",
+                    description: "Interaction options shown when player clicks this overlay",
+                    items: {
+                      type: "object",
+                      properties: { id: { type: "string" }, label: { type: "string" } },
+                      required: ["id", "label"],
+                    },
+                  },
                 },
                 required: ["id"],
               },

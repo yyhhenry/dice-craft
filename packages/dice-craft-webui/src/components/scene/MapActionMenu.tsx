@@ -1,9 +1,12 @@
 import { useRef, useEffect } from "react"
-import type { SceneCharacter } from "@shared/schemas"
+import type { SceneCharacter, SceneOverlay } from "@shared/schemas"
 
 interface MapActionMenuProps {
   position: { x: number; y: number }
-  target: { type: "cell"; x: number; y: number } | { type: "character"; character: SceneCharacter }
+  target:
+    | { type: "cell"; x: number; y: number }
+    | { type: "character"; character: SceneCharacter }
+    | { type: "overlay"; overlay: SceneOverlay }
   onAction: (event: string) => void
   onClose: () => void
 }
@@ -28,7 +31,7 @@ export function MapActionMenu({ position, target, onAction, onClose }: MapAction
       label: "移动到这里",
       event: `<event source="map" type="move" x="${target.x}" y="${target.y}"/>`,
     })
-  } else {
+  } else if (target.type === "character") {
     const hasActions = target.character.actions && target.character.actions.length > 0
     if (!hasActions) {
       if (target.character.role === "player") {
@@ -47,6 +50,21 @@ export function MapActionMenu({ position, target, onAction, onClose }: MapAction
           event: `<event source="map" type="action" character="${target.character.name}" action="${action.id}"/>`,
         })
       }
+    }
+  } else {
+    const hasActions = target.overlay.actions && target.overlay.actions.length > 0
+    if (hasActions) {
+      for (const action of target.overlay.actions) {
+        items.push({
+          label: action.label,
+          event: `<event source="map" type="action" overlay="${target.overlay.id}" action="${action.id}"/>`,
+        })
+      }
+    } else {
+      items.push({
+        label: "互动",
+        event: `<event source="map" type="interact" overlay="${target.overlay.id}"/>`,
+      })
     }
   }
 

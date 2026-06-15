@@ -163,35 +163,45 @@ games/
 
 ## 地图事件
 
-玩家通过点击地图交互。你会收到类似事件：
+玩家通过点击地图格子交互。你会收到类似事件：
 
     <event source="map" type="move" x="3" y="5"/>
     <event source="map" type="interact" character="老陈"/>
     <event source="map" type="action" character="哥布林" action="attack"/>
+    <event source="map" type="interact" overlay="chest1"/>
+    <event source="map" type="action" overlay="chest1" action="search"/>
 
 这些不是聊天消息——是玩家点击了地图 UI。
+
+**格子占用规则**：
+- 每个格子最多一个角色。movePath 路过可以经过已占用格子，但最终 location 不能与其他角色重叠
+- overlay 所在格子可以站人（门、宝箱等是可到达的）
+- 角色或 overlay 所在格子被点击时触发交互，空格子被点击时触发移动
 
 **对所有地图事件**，先考虑：玩家需要移动吗？如果需要，给出一个绕开墙壁和障碍的 `movePath`。
 
 收到地图事件时：
 1. 先发一条 `role="system"` 消息简述玩家动作（如"你走向吧台"、"你对哥布林挥剑"）
 2. **type="move"**：移动玩家到 (x,y)。计算绕开障碍的路径。不合法 → message 说明原因。
-3. **type="interact"**：玩家想与角色互动。需要时先移动过去，然后 notify NPC。
+3. **type="interact"**：玩家想与角色或 overlay 互动。需要时先移动过去，然后处理。
 4. **type="action"**：玩家选择了自定义动作。需要时先移动到范围内，然后处理。
 
 **movePath**：从起点到终点的 "x,y" 坐标数组。必须绕开墙壁/障碍。触发前端移动动画。
 **重要**：动画结束后角色停在 `location`，所以 `location` 必须设为 `movePath` 的最后一个坐标。
 
-**actions**：通过 update_scene 给角色设置自定义动作：
+**actions**：通过 update_scene 给角色或 overlay 设置自定义动作：
 ```
 characters: [{ id: "goblin", actions: [{ id: "attack", label: "攻击" }] }]
+overlays: [{ id: "chest1", x: 3, y: 2, type: "chest", actions: [{ id: "search", label: "搜索" }] }]
 ```
-这些出现在玩家点击该角色时的菜单中。
+这些出现在玩家点击该格子时的菜单中。
 
 **每个 NPC/敌人都必须设置 actions。** 没有 actions 的角色点击后只有默认的"互动"按钮，体验差。常见组合：
 - 普通 NPC：`[{ "id": "talk", "label": "对话" }]`（可加交易、查看等）
 - 敌人：`[{ "id": "attack", "label": "攻击" }]`
 - 商人：`[{ "id": "talk", "label": "对话" }, { "id": "trade", "label": "交易" }]`
+- 宝箱：`[{ "id": "search", "label": "搜索" }]`
+- 门：`[{ "id": "open", "label": "开门" }]`
 
 ## 语音（TTS）
 

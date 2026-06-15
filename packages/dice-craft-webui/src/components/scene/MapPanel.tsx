@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react"
-import type { SceneState } from "@shared/schemas"
-import { TileMapSvg, type CellClickInfo, type CharacterClickInfo } from "./TileMapSvg"
+import type { SceneState, SceneOverlay } from "@shared/schemas"
+import { TileMapSvg, type CellClickInfo, type CharacterClickInfo, type OverlayClickInfo } from "./TileMapSvg"
 import { MapActionMenu } from "./MapActionMenu"
 import { Dice5, RotateCcw } from "lucide-react"
 
@@ -12,6 +12,7 @@ interface MapPanelProps {
 type MenuState =
   | { type: "cell"; x: number; y: number; screenX: number; screenY: number }
   | { type: "character"; character: SceneState["characters"][number]; screenX: number; screenY: number }
+  | { type: "overlay"; overlay: SceneOverlay; screenX: number; screenY: number }
   | null
 
 export function MapPanel({ scene, onSend }: MapPanelProps) {
@@ -26,6 +27,10 @@ export function MapPanel({ scene, onSend }: MapPanelProps) {
 
   const handleCharacterClick = useCallback((info: CharacterClickInfo) => {
     setMenu({ type: "character", character: info.character, screenX: info.screenX, screenY: info.screenY })
+  }, [])
+
+  const handleOverlayClick = useCallback((info: OverlayClickInfo) => {
+    setMenu({ type: "overlay", overlay: info.overlay, screenX: info.screenX, screenY: info.screenY })
   }, [])
 
   const handleAction = useCallback(
@@ -63,6 +68,15 @@ export function MapPanel({ scene, onSend }: MapPanelProps) {
     )
   }
 
+  const menuTarget =
+    menu?.type === "cell"
+      ? { type: "cell" as const, x: menu.x, y: menu.y }
+      : menu?.type === "character"
+        ? { type: "character" as const, character: menu.character }
+        : menu?.type === "overlay"
+          ? { type: "overlay" as const, overlay: menu.overlay }
+          : null
+
   return (
     <div className="relative h-full">
       <TileMapSvg
@@ -71,6 +85,7 @@ export function MapPanel({ scene, onSend }: MapPanelProps) {
         replayTrigger={replayTrigger}
         onCellClick={handleCellClick}
         onCharacterClick={handleCharacterClick}
+        onOverlayClick={handleOverlayClick}
       />
       {hasMovePaths && (
         <button
@@ -81,14 +96,10 @@ export function MapPanel({ scene, onSend }: MapPanelProps) {
           Replay
         </button>
       )}
-      {menu && (
+      {menu && menuTarget && (
         <MapActionMenu
           position={{ x: menu.screenX, y: menu.screenY }}
-          target={
-            menu.type === "cell"
-              ? { type: "cell", x: menu.x, y: menu.y }
-              : { type: "character", character: menu.character }
-          }
+          target={menuTarget}
           onAction={handleAction}
           onClose={handleCloseMenu}
         />
