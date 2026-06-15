@@ -61,6 +61,7 @@ describe("AgentLoop compaction", () => {
   test("does not compact when below threshold", async () => {
     const model = createMockModel({
       content: "Response",
+      reasoningContent: null,
       toolCalls: null,
       finishReason: "stop",
       usage: { promptTokens: 100, completionTokens: 50, totalTokens: 150 },
@@ -80,6 +81,7 @@ describe("AgentLoop compaction", () => {
     const registry = new ToolRegistry()
     const model = createMockModel({
       content: "First response",
+      reasoningContent: null,
       toolCalls: null,
       finishReason: "stop",
     })
@@ -89,6 +91,7 @@ describe("AgentLoop compaction", () => {
       if (messages[0]?.content?.includes("summarization assistant")) {
         return Promise.resolve({
           content: "## 当前目标\n- Test goal\n\n## 游戏规则与约束\n- (none)",
+          reasoningContent: null,
           toolCalls: null,
           finishReason: "stop",
           usage: { promptTokens: 200, completionTokens: 100, totalTokens: 300 },
@@ -97,6 +100,7 @@ describe("AgentLoop compaction", () => {
       // Second call: the actual conversation
       return Promise.resolve({
         content: "Compacted response",
+        reasoningContent: null,
         toolCalls: null,
         finishReason: "stop",
         usage: { promptTokens: 500, completionTokens: 50, totalTokens: 550 },
@@ -136,6 +140,7 @@ describe("AgentLoop compaction", () => {
     const registry = new ToolRegistry()
     const model = createMockModel({
       content: "",
+      reasoningContent: null,
       toolCalls: null,
       finishReason: "stop",
     })
@@ -143,6 +148,7 @@ describe("AgentLoop compaction", () => {
       if (messages[0]?.content?.includes("summarization assistant")) {
         return Promise.resolve({
           content: "Summary of old context.",
+          reasoningContent: null,
           toolCalls: null,
           finishReason: "stop",
           usage: { promptTokens: 50, completionTokens: 30, totalTokens: 80 },
@@ -150,6 +156,7 @@ describe("AgentLoop compaction", () => {
       }
       return Promise.resolve({
         content: "Done",
+        reasoningContent: null,
         toolCalls: null,
         finishReason: "stop",
         usage: { promptTokens: 200, completionTokens: 50, totalTokens: 250 },
@@ -183,6 +190,7 @@ describe("AgentLoop compaction", () => {
     const registry = new ToolRegistry()
     const model = createMockModel({
       content: "",
+      reasoningContent: null,
       toolCalls: null,
       finishReason: "stop",
     })
@@ -192,6 +200,7 @@ describe("AgentLoop compaction", () => {
       if (messages[0]?.content?.includes("summarization assistant")) {
         return Promise.resolve({
           content: "Summarized context here.",
+          reasoningContent: null,
           toolCalls: null,
           finishReason: "stop",
         })
@@ -199,6 +208,7 @@ describe("AgentLoop compaction", () => {
       conversationMessages = messages
       return Promise.resolve({
         content: "Final",
+        reasoningContent: null,
         toolCalls: null,
         finishReason: "stop",
         usage: { promptTokens: 300, completionTokens: 50, totalTokens: 350 },
@@ -239,6 +249,7 @@ describe("AgentLoop compaction", () => {
     const registry = new ToolRegistry()
     const model = createMockModel({
       content: "",
+      reasoningContent: null,
       toolCalls: null,
       finishReason: "stop",
     })
@@ -248,6 +259,7 @@ describe("AgentLoop compaction", () => {
       }
       return Promise.resolve({
         content: "Still works",
+        reasoningContent: null,
         toolCalls: null,
         finishReason: "stop",
         usage: { promptTokens: 900, completionTokens: 50, totalTokens: 950 },
@@ -277,6 +289,7 @@ describe("AgentLoop compaction", () => {
     const registry = new ToolRegistry()
     const model = createMockModel({
       content: "",
+      reasoningContent: null,
       toolCalls: null,
       finishReason: "stop",
     })
@@ -288,12 +301,14 @@ describe("AgentLoop compaction", () => {
         summarizePrompts.push(userPrompt)
         return Promise.resolve({
           content: `Summary round ${summarizePrompts.length}`,
+          reasoningContent: null,
           toolCalls: null,
           finishReason: "stop",
         })
       }
       return Promise.resolve({
         content: "ok",
+        reasoningContent: null,
         toolCalls: null,
         finishReason: "stop",
         usage: { promptTokens: 900, completionTokens: 50, totalTokens: 950 },
@@ -340,6 +355,7 @@ describe("AgentLoop compaction", () => {
   test("getContextUsage reports correct values", async () => {
     const model = createMockModel({
       content: "Hi",
+      reasoningContent: null,
       toolCalls: null,
       finishReason: "stop",
       usage: { promptTokens: 500, completionTokens: 50, totalTokens: 550 },
@@ -362,6 +378,7 @@ describe("AgentLoop compaction", () => {
   test("getContextUsage uses estimator when no API usage available", () => {
     const model = createMockModel({
       content: "Hi",
+      reasoningContent: null,
       toolCalls: null,
       finishReason: "stop",
     })
@@ -383,6 +400,7 @@ describe("AgentLoop compaction", () => {
   test("compaction disabled when contextWindowTokens is 0", async () => {
     const model = createMockModel({
       content: "Response",
+      reasoningContent: null,
       toolCalls: null,
       finishReason: "stop",
       usage: { promptTokens: 999999, completionTokens: 50, totalTokens: 1000049 },
@@ -409,6 +427,7 @@ describe("AgentLoop compaction", () => {
   test("does not compact when too few messages for split", async () => {
     const model = createMockModel({
       content: "Response",
+      reasoningContent: null,
       toolCalls: null,
       finishReason: "stop",
       usage: { promptTokens: 900, completionTokens: 50, totalTokens: 950 },

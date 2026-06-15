@@ -1,12 +1,6 @@
 import type { WorkspaceID } from "../workspace/types"
-import type { ChatCompletionMessageParam } from "openai/resources/chat/completions"
 
-export type StoredMessage = ChatCompletionMessageParam & {
-  _meta?: {
-    id: string
-    timestamp: string
-  }
-}
+export type { ModelMessage, StoredMessage } from "../model/message"
 
 export interface SessionInfo {
   id: string
