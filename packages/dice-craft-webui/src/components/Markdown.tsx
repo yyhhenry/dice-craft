@@ -4,6 +4,7 @@ import { useMemo } from "react"
 import type React from "react"
 import type { Components } from "react-markdown"
 import ReactMarkdown from "react-markdown"
+import remarkGfm from "remark-gfm"
 
 function extractCodeBlock(children: React.ReactNode): { code: string; lang: string } | undefined {
   if (!children || typeof children !== "object" || !("props" in children) || !children.props) {
@@ -40,7 +41,9 @@ export function Markdown({ content }: { content: string }) {
   const rendered = useMemo(
     () => (
       <div className="markdown-content">
-        <ReactMarkdown components={markdownComponents}>{content}</ReactMarkdown>
+        <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+          {content}
+        </ReactMarkdown>
       </div>
     ),
     [content],

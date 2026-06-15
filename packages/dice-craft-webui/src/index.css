@@ -211,4 +211,20 @@
     margin: 0.5em 0;
     border-color: oklch(0.5 0 0 / 20%);
   }
+  table {
+    border-collapse: collapse;
+    margin: 0.25em 0;
+    font-size: 0.85em;
+  }
+  th, td {
+    border: 1px solid oklch(0.5 0 0 / 20%);
+    padding: 0.25em 0.5em;
+  }
+  th {
+    font-weight: 600;
+    background: oklch(0 0 0 / 4%);
+  }
+  .dark & th {
+    background: oklch(1 0 0 / 6%);
+  }
 }
