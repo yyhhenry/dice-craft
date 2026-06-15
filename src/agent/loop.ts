@@ -292,9 +292,15 @@ export class AgentLoop {
     this.running = true
     this.onStatusChange?.(true)
     try {
-      while (this.pendingMessage) {
-        const msg = this.pendingMessage
-        this.pendingMessage = null
+      while (this.pendingMessage || this.eventQueue.length > 0) {
+        let msg: string
+        if (this.pendingMessage) {
+          msg = this.pendingMessage
+          this.pendingMessage = null
+        } else {
+          const events = this.eventQueue.splice(0)
+          msg = events.map((e) => `<event source="${e.source}">\n${e.content}\n</event>`).join("\n")
+        }
         const { response } = await this.run(msg)
         if (response && this.onResponse) {
           this.onResponse(response)
