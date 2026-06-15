@@ -31,7 +31,7 @@ export function createUpdateSceneTool(
             title: { type: "string" },
             mapFile: {
               type: "string",
-              description: "Path to CSV map file in workspace (e.g. .game-state/tavern.map.csv)",
+              description: "Path to CSV map file in workspace (e.g. games/tavern/maps/floor1.map.csv)",
             },
             overlays: {
               type: "array",

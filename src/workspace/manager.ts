@@ -4,7 +4,7 @@ import { type WorkspaceID, type UserID, type WorkspaceInfo } from "./types"
 import { type WorkspaceConfig } from "../shared/schemas"
 import { loadTemplates } from "./templates.macro" with { type: "macro" }
 
-// At bundle time, this becomes a literal { "skills/dnd/SKILL.md": "...", ... }
+// At bundle time, this becomes a literal { "skills/dice/SKILL.md": "...", ... }
 const TEMPLATES = loadTemplates()
 
 export class WorkspaceManager {
