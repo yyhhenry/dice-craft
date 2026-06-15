@@ -1,4 +1,4 @@
-import type { ChatCompletionMessageParam } from "openai/resources/chat/completions"
+import type { ModelMessage } from "../model/message"
 import { OpenAIModel } from "../model/openai"
 import { ToolRegistry } from "../tool/base"
 import { AgentLoop, type AgentConfig } from "./loop"
@@ -145,9 +145,9 @@ export class SubagentDispatcher {
     if (!session) return
 
     const messages = this.sessionManager.getMessages(sessionId)
-    const history: ChatCompletionMessageParam[] = messages.map((m) => {
+    const history: ModelMessage[] = messages.map((m) => {
       const { _meta, ...rest } = m
-      return rest as ChatCompletionMessageParam
+      return rest as ModelMessage
     })
 
     const ctx = { sessionId, agentName: session.agentType }
@@ -195,13 +195,13 @@ export class SubagentDispatcher {
     }
   }
 
-  private persistHistory(sessionId: string, history: ChatCompletionMessageParam[]): void {
+  private persistHistory(sessionId: string, history: ModelMessage[]): void {
     for (const msg of history) {
       this.sessionManager.appendMessage(sessionId, msg)
     }
   }
 
-  private extractLastAssistantContent(history: ChatCompletionMessageParam[]): string {
+  private extractLastAssistantContent(history: ModelMessage[]): string {
     const last = history.filter((m) => m.role === "assistant" && m.content).pop()
     return (last?.content as string) ?? ""
   }

@@ -1,6 +1,6 @@
 import type { WorkspaceID } from "../workspace/types"
 import type { SessionInfo, StoredMessage } from "./types"
-import type { ChatCompletionMessageParam } from "openai/resources/chat/completions"
+import type { ModelMessage } from "../model/message"
 import type { CompactState } from "../agent/loop"
 import { SessionStore } from "./store"
 import { generateSessionID, generateMessageID } from "../workspace/types"
@@ -64,7 +64,7 @@ export class SessionManager {
       .filter((s): s is SessionInfo => s !== undefined && s.parentSessionId === parentSessionId)
   }
 
-  appendMessage(sessionId: string, message: ChatCompletionMessageParam): StoredMessage {
+  appendMessage(sessionId: string, message: ModelMessage): StoredMessage {
     const stored: StoredMessage = {
       ...message,
       _meta: {

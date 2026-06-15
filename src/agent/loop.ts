@@ -1,4 +1,4 @@
-import type { ChatCompletionMessageParam } from "openai/resources/chat/completions"
+import type { ModelMessage } from "../model/message"
 import { OpenAIModel, type StreamCallbacks } from "../model/openai"
 import { ToolRegistry } from "../tool/base"
 import { COMPACT_THRESHOLD_RATIO, COMPACT_RECENT_TURNS, type ContextUsage } from "../shared/schemas"
@@ -69,7 +69,7 @@ export class TokenEstimator {
   private knownBytes = 0
   private knownCount = 0
 
-  update(messages: ChatCompletionMessageParam[]): number {
+  update(messages: ModelMessage[]): number {
     if (messages.length > this.knownCount) {
       const encoder = new TextEncoder()
       for (let i = this.knownCount; i < messages.length; i++) {
@@ -102,7 +102,7 @@ export class AgentLoop {
   private estimator = new TokenEstimator()
   private lastPromptTokens: number | null = null
   private eventQueue: PendingEvent[] = []
-  private savedHistory: ChatCompletionMessageParam[] = []
+  private savedHistory: ModelMessage[] = []
   private running = false
   private pendingMessage: string | null = null
   private onResponse: ((response: string) => void) | undefined
@@ -122,7 +122,7 @@ export class AgentLoop {
     this.onStatusChange = config.onStatusChange
   }
 
-  setHistory(history: ChatCompletionMessageParam[]): void {
+  setHistory(history: ModelMessage[]): void {
     this.savedHistory = [...history]
     this.compactState = null
     this.lastPromptTokens = null
@@ -130,7 +130,7 @@ export class AgentLoop {
     this.estimator.update(this.savedHistory)
   }
 
-  getHistory(): ChatCompletionMessageParam[] {
+  getHistory(): ModelMessage[] {
     return [...this.savedHistory]
   }
 
@@ -186,9 +186,9 @@ export class AgentLoop {
     return this.estimator.tokens >= this.thresholdTokens
   }
 
-  private splitMessages(messages: ChatCompletionMessageParam[]): {
-    old: ChatCompletionMessageParam[]
-    recent: ChatCompletionMessageParam[]
+  private splitMessages(messages: ModelMessage[]): {
+    old: ModelMessage[]
+    recent: ModelMessage[]
   } | null {
     let userTurnsSeen = 0
     for (let i = messages.length - 1; i >= 0; i--) {
@@ -204,7 +204,7 @@ export class AgentLoop {
     return null
   }
 
-  private formatForSummary(messages: ChatCompletionMessageParam[]): string {
+  private formatForSummary(messages: ModelMessage[]): string {
     return messages
       .map((msg) => {
         const content = typeof msg.content === "string" ? msg.content : (JSON.stringify(msg.content) ?? "")
@@ -217,7 +217,7 @@ export class AgentLoop {
         }
         if (msg.role === "tool") {
           const truncated = content.length > 500 ? content.slice(0, 500) + "..." : content
-          const toolMsg = msg as Extract<ChatCompletionMessageParam, { role: "tool" }>
+          const toolMsg = msg as Extract<ModelMessage, { role: "tool" }>
           return `[tool ${toolMsg.tool_call_id}] ${truncated}`
         }
         return `[${msg.role}] ${content}`
@@ -225,7 +225,7 @@ export class AgentLoop {
       .join("\n\n")
   }
 
-  private async summarize(messages: ChatCompletionMessageParam[], previousSummary?: string): Promise<string> {
+  private async summarize(messages: ModelMessage[], previousSummary?: string): Promise<string> {
     const anchor = previousSummary
       ? [
           "Update the anchored summary below using the conversation context that follows.",
@@ -247,7 +247,7 @@ export class AgentLoop {
     return result.content?.trim() || "No context was extracted."
   }
 
-  private async buildModelContext(rawMessages: ChatCompletionMessageParam[]): Promise<ChatCompletionMessageParam[]> {
+  private async buildModelContext(rawMessages: ModelMessage[]): Promise<ModelMessage[]> {
     if (!this.shouldCompact()) {
       return [...rawMessages]
     }
@@ -316,7 +316,7 @@ export class AgentLoop {
     }
   }
 
-  private flushEvents(): ChatCompletionMessageParam[] {
+  private flushEvents(): ModelMessage[] {
     if (this.eventQueue.length === 0) return []
 
     const events = this.eventQueue.splice(0)
@@ -328,18 +328,18 @@ export class AgentLoop {
 
   async run(
     userMessage: string,
-    history?: ChatCompletionMessageParam[],
+    history?: ModelMessage[],
     callbacks?: StreamCallbacks,
-  ): Promise<{ response: string; history: ChatCompletionMessageParam[] }> {
+  ): Promise<{ response: string; history: ModelMessage[] }> {
     const effectiveHistory = history ?? this.savedHistory
-    const rawMessages: ChatCompletionMessageParam[] = [...effectiveHistory, { role: "user", content: userMessage }]
+    const rawMessages: ModelMessage[] = [...effectiveHistory, { role: "user", content: userMessage }]
 
     // Update estimator with the new user message
     this.estimator.reset()
     this.estimator.update(rawMessages)
 
     // Build model context (may compact old messages)
-    const messages: ChatCompletionMessageParam[] = []
+    const messages: ModelMessage[] = []
     if (this.systemPrompt) {
       messages.push({ role: "system", content: this.systemPrompt })
     }
@@ -359,11 +359,11 @@ export class AgentLoop {
       }
 
       if (result.content && !result.toolCalls) {
-        const assistantMessage: ChatCompletionMessageParam = {
+        const assistantMessage: ModelMessage = {
           role: "assistant",
           content: result.content,
           ...(result.reasoningContent ? { reasoning_content: result.reasoningContent } : {}),
-        } as ChatCompletionMessageParam
+        } as ModelMessage
         messages.push(assistantMessage)
         rawMessages.push(assistantMessage)
 
@@ -381,7 +381,7 @@ export class AgentLoop {
       }
 
       if (result.toolCalls) {
-        const assistantMessage: ChatCompletionMessageParam = {
+        const assistantMessage: ModelMessage = {
           role: "assistant",
           content: result.content,
           ...(result.reasoningContent ? { reasoning_content: result.reasoningContent } : {}),
@@ -393,7 +393,7 @@ export class AgentLoop {
               arguments: JSON.stringify(tc.arguments),
             },
           })),
-        } as ChatCompletionMessageParam
+        } as ModelMessage
         messages.push(assistantMessage)
         rawMessages.push(assistantMessage)
 
@@ -412,7 +412,7 @@ export class AgentLoop {
             toolResult = `Unknown tool: ${call.name}`
           }
 
-          const toolMessage: ChatCompletionMessageParam = {
+          const toolMessage: ModelMessage = {
             role: "tool",
             tool_call_id: call.id,
             content: toolResult,
@@ -432,7 +432,7 @@ export class AgentLoop {
       }
 
       if (result.content) {
-        const assistantMessage: ChatCompletionMessageParam = { role: "assistant", content: result.content }
+        const assistantMessage: ModelMessage = { role: "assistant", content: result.content }
         messages.push(assistantMessage)
         rawMessages.push(assistantMessage)
 

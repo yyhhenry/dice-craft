@@ -3,9 +3,9 @@ import type { WorkspaceManager } from "../workspace/manager"
 import type { SessionManager } from "../session/manager"
 import type { WorkspaceID } from "../workspace/types"
 import type { ModelConfig } from "../model/openai"
+import type { ModelMessage } from "../model/message"
 import type { ChatMessage } from "../chat/types"
 import { DEFAULT_CONTEXT_WINDOW_TOKENS, type ContextUsage, type SceneState } from "../shared/schemas"
-import type { ChatCompletionMessageParam } from "openai/resources/chat/completions"
 
 export interface AppPoolDeps {
   workspaceManager: WorkspaceManager
@@ -72,9 +72,9 @@ export class AppPool {
     // Restore session history
     const messages = this.deps.sessionManager.getMessages(sessionId)
     if (messages.length > 0) {
-      const history: ChatCompletionMessageParam[] = messages.map((m) => {
+      const history: ModelMessage[] = messages.map((m) => {
         const { _meta: _, ...rest } = m
-        return rest as ChatCompletionMessageParam
+        return rest as ModelMessage
       })
       app.primaryAgent.setHistory(history)
 

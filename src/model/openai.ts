@@ -1,7 +1,6 @@
 import OpenAI from "openai"
-import type { ChatCompletionMessageParam } from "openai/resources/chat/completions"
-import { z } from "zod"
 import type { Tool, ToolCall } from "../tool/base"
+import { AssistantMessageSchema, type ModelMessage } from "./message"
 
 export interface ModelConfig {
   baseUrl: string
@@ -28,27 +27,6 @@ export interface StreamCallbacks {
   onToolCall?: (call: ToolCall) => void
 }
 
-const MessageSchema = z.object({
-  content: z.string().nullable().optional(),
-  reasoning_content: z.string().nullable().optional(),
-  tool_calls: z
-    .array(
-      z.object({
-        id: z.string(),
-        type: z.literal("function"),
-        function: z.object({
-          name: z.string(),
-          arguments: z.string(),
-        }),
-      }),
-    )
-    .optional(),
-})
-
-function parseMessage(raw: unknown): z.infer<typeof MessageSchema> {
-  return MessageSchema.parse(raw)
-}
-
 export class OpenAIModel {
   private client: OpenAI
   private config: ModelConfig
@@ -61,11 +39,7 @@ export class OpenAIModel {
     })
   }
 
-  async chat(
-    messages: ChatCompletionMessageParam[],
-    tools?: Tool[],
-    _callbacks?: StreamCallbacks,
-  ): Promise<ChatResponse> {
+  async chat(messages: ModelMessage[], tools?: Tool[], _callbacks?: StreamCallbacks): Promise<ChatResponse> {
     const request: OpenAI.ChatCompletionCreateParams = {
       model: this.config.model,
       messages,
@@ -90,7 +64,7 @@ export class OpenAIModel {
       return { content: null, reasoningContent: null, toolCalls: null, finishReason: null, usage: null }
     }
 
-    const message = parseMessage(choice.message)
+    const message = AssistantMessageSchema.parse(choice.message)
     const content = message.content || null
     const reasoningContent = message.reasoning_content || null
     const finishReason = choice.finish_reason || null
